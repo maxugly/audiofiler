@@ -31,7 +31,7 @@ public:
         // 2. Look and Feel - Set up the "Sorta" Brand Colors
         setLookAndFeel (&modernLF);
         modernLF.setBaseOffColor(juce::Colour(0xff3a3a3a)); // Dark Grey
-        modernLF.setBaseOnColor(juce::Colour(0xff00bfff));  // Deep Sky Blue
+        modernLF.setBaseOnColor(juce::Colour(0xff0066cc));  // Deep Blue (changed from light sky blue)
         modernLF.setTextColor(juce::Colours::white);
 
         // 3. UI Components with [Shortcuts] in labels
@@ -96,14 +96,30 @@ public:
         addAndMakeVisible (loopInButton);
         loopInButton.setButtonText ("[I]n");
 
-        loopInButton.onLeftClick = [this] { loopInPosition = transportSource.getCurrentPosition(); repaint(); };
-        loopInButton.onRightClick = [this] { currentPlacementMode = PlacementMode::LoopIn; repaint(); };
+        loopInButton.onLeftClick = [this] { 
+            loopInPosition = transportSource.getCurrentPosition(); 
+            updateLoopButtonColors();
+            repaint(); 
+        };
+        loopInButton.onRightClick = [this] { 
+            currentPlacementMode = PlacementMode::LoopIn; 
+            updateLoopButtonColors();
+            repaint(); 
+        };
 
         addAndMakeVisible (loopOutButton);
         loopOutButton.setButtonText ("[O]ut");
 
-        loopOutButton.onLeftClick = [this] { loopOutPosition = transportSource.getCurrentPosition(); repaint(); };
-        loopOutButton.onRightClick = [this] { currentPlacementMode = PlacementMode::LoopOut; repaint(); };
+        loopOutButton.onLeftClick = [this] { 
+            loopOutPosition = transportSource.getCurrentPosition(); 
+            updateLoopButtonColors();
+            repaint(); 
+        };
+        loopOutButton.onRightClick = [this] { 
+            currentPlacementMode = PlacementMode::LoopOut; 
+            updateLoopButtonColors();
+            repaint(); 
+        };
 
         addAndMakeVisible (statsDisplay);
         statsDisplay.setReadOnly (true);
@@ -196,6 +212,7 @@ public:
                 DBG("Loop Out set by mouse click on waveform");
             }
             currentPlacementMode = PlacementMode::None; // Exit placement mode
+            updateLoopButtonColors();
             repaint(); // Repaint to update loop markers
         }
     }
@@ -338,8 +355,7 @@ public:
             debugInfo << "Approx Peak: " << thumbnail.getApproximatePeak() << "\n";
             float minV, maxV;
             thumbnail.getApproximateMinMax(0.0, thumbnail.getTotalLength(), 0, minV, maxV);
-            debugInfo << "Min/Max: " << minV << " / " << maxV << "\n";
-            debugInfo << "Position: " << juce::String(transportSource.getCurrentPosition(), 2) << "s";
+            debugInfo << "Min/Max: " << minV << " / " << maxV;
             statsDisplay.setText (debugInfo, false);
         }
         
@@ -388,7 +404,7 @@ public:
                     auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
                     auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
 
-                    g.setColour(juce::Colours::white.withAlpha(0.3f));
+                    g.setColour(juce::Colour(0xff0066cc).withAlpha(0.3f)); // Deep blue tint
                     g.fillRect(juce::Rectangle<float>(inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight()));
                 }
 
@@ -600,6 +616,44 @@ private:
     PlacementMode currentPlacementMode = PlacementMode::None;
     int mouseCursorX = -1, mouseCursorY = -1; // -1 indicates no active hover
     ChannelViewMode currentChannelViewMode = ChannelViewMode::Mono; // Default to mono view
+
+    // Update loop button colors based on placement mode and loop point status
+    void updateLoopButtonColors()
+    {
+        // Loop In Button
+        if (currentPlacementMode == PlacementMode::LoopIn)
+        {
+            // Armed (pink shade)
+            loopInButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xffff1493)); // Deep pink
+        }
+        else if (loopInPosition > -1.0)
+        {
+            // Set (blue shade)
+            loopInButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff0066cc)); // Deep blue
+        }
+        else
+        {
+            // Default (dark grey)
+            loopInButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff3a3a3a));
+        }
+
+        // Loop Out Button
+        if (currentPlacementMode == PlacementMode::LoopOut)
+        {
+            // Armed (pink shade)
+            loopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xffff1493)); // Deep pink
+        }
+        else if (loopOutPosition > -1.0)
+        {
+            // Set (blue shade)
+            loopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff0066cc)); // Deep blue
+        }
+        else
+        {
+            // Default (dark grey)
+            loopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff3a3a3a));
+        }
+    }
 
     // Helper function to format time as hh:mm:ss:ms
     juce::String formatTime(double seconds)
