@@ -12,6 +12,7 @@ class MainComponent  : public juce::AudioAppComponent,
 public:
     enum class ViewMode { Classic, Overlay };
     enum class PlacementMode { None, LoopIn, LoopOut };
+    enum class ChannelViewMode { Mono, Stereo };
 
     MainComponent() : thumbnailCache (5),
                       thumbnail (512, formatManager, thumbnailCache),
@@ -57,6 +58,17 @@ public:
             modeButton.setButtonText (currentMode == ViewMode::Classic ? "[V]iew 1" : "[V]iew 2");
             
             resized();
+            repaint();
+        };
+
+        // Channel View Button
+        addAndMakeVisible (channelViewButton);
+        channelViewButton.setButtonText ("[C]han");
+        channelViewButton.setClickingTogglesState (true);
+
+        channelViewButton.onClick = [this] {
+            currentChannelViewMode = channelViewButton.getToggleState() ? ChannelViewMode::Stereo : ChannelViewMode::Mono;
+            channelViewButton.setButtonText (currentChannelViewMode == ChannelViewMode::Mono ? "[C]han 1" : "[C]han 2");
             repaint();
         };
 
@@ -226,6 +238,7 @@ public:
         if (keyCode == 'd' || keyCode == 'D') { openButtonClicked(); return true; } // Changed from 'o' to 'd'
         if (keyCode == 's' || keyCode == 'S') { statsButton.triggerClick(); return true; }
         if (keyCode == 'v' || keyCode == 'V') { modeButton.triggerClick(); return true; }
+        if (keyCode == 'c' || keyCode == 'C') { channelViewButton.triggerClick(); return true; }
         if (keyCode == 'l' || keyCode == 'L') { loopButton.triggerClick(); return true; }
         if (keyCode == 'i' || keyCode == 'I') { loopInButton.triggerClick(); return true; }
         if (keyCode == 'o' || keyCode == 'O') { loopOutButton.triggerClick(); return true; } // 'O' for loopOut
@@ -251,6 +264,7 @@ public:
                     auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
                     transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
                     thumbnail.setSource (new juce::FileInputSource (file));
+                    DBG("AudioThumbnail: Num Channels = " << thumbnail.getNumChannels() << ", Total Length = " << thumbnail.getTotalLength());
                     playStopButton.setEnabled (true);
                     readerSource.reset (newSource.release());
                     updateButtonText();
@@ -338,10 +352,25 @@ public:
     void paint (juce::Graphics& g) override
     {
         g.fillAll (juce::Colours::black);
+        DBG("Paint: thumbnail.getNumChannels() = " << thumbnail.getNumChannels());
+
         if (thumbnail.getNumChannels() > 0)
         {
-            g.setColour (juce::Colours::deeppink);
-            thumbnail.drawChannels (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 1.0f);
+            // Draw waveform based on channel view mode
+            if (currentChannelViewMode == ChannelViewMode::Mono || thumbnail.getNumChannels() == 1)
+            {
+                // Draw only the first channel (mono view)
+                g.setColour (juce::Colours::deeppink); // Set color here, as drawChannel doesn't do it
+                DBG("Paint: Drawing Mono channel (0)");
+                thumbnail.drawChannel (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 0, 1.0f);
+            }
+            else // Stereo view
+            {
+                // Draw all available channels
+                g.setColour (juce::Colours::deeppink); // Set color here, as drawChannels doesn't do it
+                DBG("Paint: Drawing Stereo channels");
+                thumbnail.drawChannels (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 1.0f);
+            }
 
             auto audioLength = (float)thumbnail.getTotalLength();
 
@@ -467,6 +496,8 @@ public:
         modeButton.setBounds (bottomButtonsArea.removeFromRight (80));
         bottomButtonsArea.removeFromRight (5); // Spacer
         statsButton.setBounds (bottomButtonsArea.removeFromRight (80));
+        bottomButtonsArea.removeFromRight (5); // Spacer
+        channelViewButton.setBounds (bottomButtonsArea.removeFromRight (80));
 
         // --- Determine Waveform Bounds based on Mode ---
         if (currentMode == ViewMode::Classic)
@@ -517,7 +548,7 @@ private:
     ModernLookAndFeel modernLF;
 
 
-    juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton;
+    juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton;
     LoopButton loopInButton, loopOutButton;
     juce::TextEditor statsDisplay;
     std::unique_ptr<juce::FileChooser> chooser; // <--- The fix for your error!
@@ -530,6 +561,7 @@ private:
     double loopOutPosition = -1.0;
     PlacementMode currentPlacementMode = PlacementMode::None;
     int mouseCursorX = -1, mouseCursorY = -1; // -1 indicates no active hover
+    ChannelViewMode currentChannelViewMode = ChannelViewMode::Mono; // Default to mono view
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
