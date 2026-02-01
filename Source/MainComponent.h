@@ -101,8 +101,11 @@ public:
 
     ~MainComponent() override
     {
-        setLookAndFeel (nullptr); // Crucial: avoids using deleted LF during shutdown
         shutdownAudio();
+        thumbnail.removeChangeListener (this);
+        stopTimer();
+        chooser.reset();
+        setLookAndFeel (nullptr); // Crucial: avoids using deleted LF during shutdown
     }
 
     // --- MOUSE & KEYBOARD INTERACTION ---
@@ -332,30 +335,43 @@ public:
             auto audioLength = (float)thumbnail.getTotalLength();
 
             // Draw loop lines and shade
-            if (loopInPosition > -1.0 && loopOutPosition > -1.0 && audioLength > 0.0)
+            if (audioLength > 0.0)
             {
-                auto actualIn = juce::jmin (loopInPosition, loopOutPosition);
-                auto actualOut = juce::jmax (loopInPosition, loopOutPosition);
+                bool inIsSet = loopInPosition > -1.0;
+                bool outIsSet = loopOutPosition > -1.0;
 
-                auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
-                auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
+                // Draw shade if both are set
+                if (inIsSet && outIsSet)
+                {
+                    auto actualIn = juce::jmin(loopInPosition, loopOutPosition);
+                    auto actualOut = juce::jmax(loopInPosition, loopOutPosition);
+                    auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
+                    auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
 
-                // Draw shade
-                g.setColour (juce::Colours::white.withAlpha (0.3f));
-                g.fillRect (juce::Rectangle<float> (inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight()));
+                    g.setColour(juce::Colours::white.withAlpha(0.3f));
+                    g.fillRect(juce::Rectangle<float>(inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight()));
+                }
 
-                // Draw lines
-                g.setColour (juce::Colours::cyan);
-                g.drawVerticalLine ((int)inX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
-                g.drawVerticalLine ((int)outX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+                // Draw individual lines
+                g.setColour(juce::Colours::cyan);
+                if (inIsSet)
+                {
+                    auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopInPosition / audioLength);
+                    g.drawVerticalLine((int)inX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+                }
+                if (outIsSet)
+                {
+                    auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopOutPosition / audioLength);
+                    g.drawVerticalLine((int)outX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+                }
+
+                // Draw playhead
+                auto drawPosition = (float)transportSource.getCurrentPosition();
+                auto x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
+
+                g.setColour (juce::Colours::lime);
+                g.drawVerticalLine ((int)x, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
             }
-
-            // Draw playhead
-            auto drawPosition = (float)transportSource.getCurrentPosition();
-            auto x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
-
-            g.setColour (juce::Colours::white);
-            g.drawVerticalLine ((int)x, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
 
             // Draw mouse cursor line if active
             if (mouseCursorX != -1)
@@ -365,7 +381,7 @@ public:
                 g.fillRect (mouseCursorX - 2, waveformBounds.getY(), 5, waveformBounds.getHeight()); // 5 pixels wide
 
                 // Thin mouse cursor line
-                g.setColour (juce::Colours::lightgrey.withAlpha(0.7f)); // Distinct color and transparency
+                g.setColour (juce::Colours::yellow); // Distinct color and transparency
                 g.drawVerticalLine (mouseCursorX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
             }
         }
@@ -416,8 +432,8 @@ public:
 
 private:
     juce::AudioFormatManager formatManager;
-    juce::AudioTransportSource transportSource;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+    juce::AudioTransportSource transportSource;
     juce::AudioThumbnailCache thumbnailCache;
     juce::AudioThumbnail thumbnail;
 
