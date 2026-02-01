@@ -121,7 +121,8 @@ public:
     void mouseDrag (const juce::MouseEvent& e) override
     {
         if (e.mods.isRightButtonDown()) return;
-        if (waveformBounds.contains (e.getPosition()))
+        // Only seek if not in a placement mode
+        if (currentPlacementMode == PlacementMode::None && waveformBounds.contains (e.getPosition()))
             seekToPosition (e.x);
     }
 
@@ -139,15 +140,17 @@ public:
 
         if (waveformBounds.contains (e.getPosition()))
         {
-            if (mouseCursorX != e.x) // Only repaint if X coordinate changed
+            if (mouseCursorX != e.x || mouseCursorY != e.y) // Only repaint if X or Y coordinate changed
             {
                 mouseCursorX = e.x;
+                mouseCursorY = e.y;
                 repaint();
             }
         }
         else if (mouseCursorX != -1) // If mouse moved out of waveformBounds
         {
             mouseCursorX = -1;
+            mouseCursorY = -1;
             repaint();
         }
     }
@@ -353,7 +356,7 @@ public:
                 }
 
                 // Draw individual lines
-                g.setColour(juce::Colours::cyan);
+                g.setColour(juce::Colours::blue);
                 if (inIsSet)
                 {
                     auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopInPosition / audioLength);
@@ -365,10 +368,39 @@ public:
                     g.drawVerticalLine((int)outX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
                 }
 
-                // Draw playhead
+                // Calculate playhead position
                 auto drawPosition = (float)transportSource.getCurrentPosition();
                 auto x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
 
+                if (transportSource.isPlaying())
+                {
+                    // Draw fading green shadow behind playhead (when playing)
+                    juce::ColourGradient gradient (
+                        juce::Colours::lime.withAlpha(0.0f),         // Start colour (transparent lime)
+                        (float)x - 10.0f, (float)waveformBounds.getCentreY(), // Start point (left of tail)
+                        juce::Colours::lime.withAlpha(0.5f),         // End colour (semi-transparent lime)
+                        (float)x, (float)waveformBounds.getCentreY(), // End point (at playhead)
+                        false // Don't repeat
+                    );
+                    g.setGradientFill (gradient);
+                    g.fillRect (juce::Rectangle<float>((int)x - 10, (float)waveformBounds.getY(), 10, (float)waveformBounds.getHeight()));
+                }
+                else // When stopped: draw a shorter, centered "glow"
+                {
+                    juce::ColourGradient glowGradient;
+                    glowGradient.addColour (0.0, juce::Colours::lime.withAlpha(0.0f)); // Transparent at left edge of glow
+                    glowGradient.addColour (0.5, juce::Colours::lime.withAlpha(0.5f)); // Semi-transparent in middle (at playhead)
+                    glowGradient.addColour (1.0, juce::Colours::lime.withAlpha(0.0f)); // Transparent at right edge of glow
+                    
+                    glowGradient.point1 = { (float)x - 5.0f, (float)waveformBounds.getCentreY() };
+                    glowGradient.point2 = { (float)x + 5.0f, (float)waveformBounds.getCentreY() };
+
+                    g.setGradientFill (glowGradient);
+                    // Draw a 10-pixel wide rectangle centered around x
+                    g.fillRect (juce::Rectangle<float>((int)x - 5, (float)waveformBounds.getY(), 10, (float)waveformBounds.getHeight()));
+                }
+
+                // Draw playhead
                 g.setColour (juce::Colours::lime);
                 g.drawVerticalLine ((int)x, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
             }
@@ -376,13 +408,19 @@ public:
             // Draw mouse cursor line if active
             if (mouseCursorX != -1)
             {
-                // Wider, translucent shadow line
-                g.setColour (juce::Colours::darkgrey.withAlpha(0.2f)); // Wider shadow effect
-                g.fillRect (mouseCursorX - 2, waveformBounds.getY(), 5, waveformBounds.getHeight()); // 5 pixels wide
+                // Wider, translucent shadow for vertical line
+                g.setColour (juce::Colours::darkorange.withAlpha(0.4f));
+                g.fillRect (mouseCursorX - 2, waveformBounds.getY(), 5, waveformBounds.getHeight());
 
-                // Thin mouse cursor line
-                g.setColour (juce::Colours::yellow); // Distinct color and transparency
+                // Wider, translucent shadow for horizontal line
+                g.fillRect (waveformBounds.getX(), mouseCursorY - 2, waveformBounds.getWidth(), 5);
+
+                // Thin vertical mouse cursor line
+                g.setColour (juce::Colours::yellow);
                 g.drawVerticalLine (mouseCursorX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+
+                // Thin horizontal mouse cursor line
+                g.drawHorizontalLine (mouseCursorY, (float)waveformBounds.getX(), (float)waveformBounds.getRight());
             }
         }
     }
@@ -450,7 +488,7 @@ private:
     double loopInPosition = -1.0;
     double loopOutPosition = -1.0;
     PlacementMode currentPlacementMode = PlacementMode::None;
-    int mouseCursorX = -1; // -1 indicates no active hover
+    int mouseCursorX = -1, mouseCursorY = -1; // -1 indicates no active hover
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
