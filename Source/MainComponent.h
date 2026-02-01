@@ -240,8 +240,8 @@ public:
         if (keyCode == 'v' || keyCode == 'V') { modeButton.triggerClick(); return true; }
         if (keyCode == 'c' || keyCode == 'C') { channelViewButton.triggerClick(); return true; }
         if (keyCode == 'l' || keyCode == 'L') { loopButton.triggerClick(); return true; }
-        if (keyCode == 'i' || keyCode == 'I') { loopInButton.triggerClick(); return true; }
-        if (keyCode == 'o' || keyCode == 'O') { loopOutButton.triggerClick(); return true; } // 'O' for loopOut
+        if (keyCode == 'i' || keyCode == 'I') { loopInPosition = transportSource.getCurrentPosition(); repaint(); return true; }
+        if (keyCode == 'o' || keyCode == 'O') { loopOutPosition = transportSource.getCurrentPosition(); repaint(); return true; }
 
 
         return false;
@@ -342,7 +342,10 @@ public:
             debugInfo << "Position: " << juce::String(transportSource.getCurrentPosition(), 2) << "s";
             statsDisplay.setText (debugInfo, false);
         }
-        repaint();
+        
+        // Only repaint when necessary: if playing (to update playhead) or if stats are visible or if audio is loaded (to update time display)
+        if (transportSource.isPlaying() || showStats || thumbnail.getTotalLength() > 0.0)
+            repaint();
     }
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override { repaint(); }
@@ -352,7 +355,6 @@ public:
     void paint (juce::Graphics& g) override
     {
         g.fillAll (juce::Colours::black);
-        DBG("Paint: thumbnail.getNumChannels() = " << thumbnail.getNumChannels());
 
         if (thumbnail.getNumChannels() > 0)
         {
@@ -360,15 +362,13 @@ public:
             if (currentChannelViewMode == ChannelViewMode::Mono || thumbnail.getNumChannels() == 1)
             {
                 // Draw only the first channel (mono view)
-                g.setColour (juce::Colours::deeppink); // Set color here, as drawChannel doesn't do it
-                DBG("Paint: Drawing Mono channel (0)");
+                g.setColour (juce::Colours::deeppink);
                 thumbnail.drawChannel (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 0, 1.0f);
             }
             else // Stereo view
             {
                 // Draw all available channels
-                g.setColour (juce::Colours::deeppink); // Set color here, as drawChannels doesn't do it
-                DBG("Paint: Drawing Stereo channels");
+                g.setColour (juce::Colours::deeppink);
                 thumbnail.drawChannels (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 1.0f);
             }
 
@@ -459,6 +459,44 @@ public:
                 // Thin horizontal mouse cursor line
                 g.drawHorizontalLine (mouseCursorY, (float)waveformBounds.getX(), (float)waveformBounds.getRight());
             }
+            
+            // Draw time displays at the bottom (no background, painted over waveform)
+            if (audioLength > 0.0)
+            {
+                double currentTime = transportSource.getCurrentPosition();
+                double totalTime = thumbnail.getTotalLength();
+                double remainingTime = totalTime - currentTime;
+                
+                // Format time strings
+                juce::String currentTimeStr = formatTime(currentTime);
+                juce::String totalTimeStr = formatTime(totalTime);
+                juce::String remainingTimeStr = formatTime(remainingTime);
+                
+                // Left side: current / total
+                juce::String leftText = currentTimeStr + " / " + totalTimeStr;
+                
+                // Right side: remaining
+                juce::String rightText = remainingTimeStr;
+                
+                int padding = 10;
+                int textY = waveformBounds.getBottom() - 25; // 25 pixels from bottom
+                
+                // Draw left text (current / total)
+                g.setColour(juce::Colours::white);
+                g.setFont(14.0f);
+                g.drawText(leftText, 
+                          waveformBounds.getX() + padding, 
+                          textY, 
+                          300, 20, 
+                          juce::Justification::left);
+                
+                // Draw right text (remaining)
+                g.drawText(rightText, 
+                          waveformBounds.getRight() - 200 - padding, 
+                          textY, 
+                          200, 20, 
+                          juce::Justification::right);
+            }
         }
     }
 
@@ -511,7 +549,7 @@ public:
             waveformBounds = totalBounds; 
         }
 
-        // --- Position Stats Display (always floating over waveform) ---
+        // --- Position Stats Display (always floating over waveform, at the top) ---
         if (showStats)
         {
             statsDisplay.setVisible (true);
@@ -520,7 +558,7 @@ public:
 
             statsBounds = juce::Rectangle<int> (
                 waveformBounds.getX() + padding, // X position: left aligned with waveformBounds, plus padding
-                bottomButtonsTopEdge - statsHeight - padding, // Y position: above bottom buttons
+                topButtonsBottomEdge + padding, // Y position: below top buttons
                 waveformBounds.getWidth() - (2 * padding), // Width: full width of waveformBounds, minus padding on both sides
                 statsHeight
             );
@@ -562,6 +600,17 @@ private:
     PlacementMode currentPlacementMode = PlacementMode::None;
     int mouseCursorX = -1, mouseCursorY = -1; // -1 indicates no active hover
     ChannelViewMode currentChannelViewMode = ChannelViewMode::Mono; // Default to mono view
+
+    // Helper function to format time as hh:mm:ss:ms
+    juce::String formatTime(double seconds)
+    {
+        int hours = (int)(seconds / 3600.0);
+        int minutes = ((int)(seconds / 60.0)) % 60;
+        int secs = ((int)seconds) % 60;
+        int milliseconds = (int)((seconds - (int)seconds) * 1000.0);
+        
+        return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, secs, milliseconds);
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
