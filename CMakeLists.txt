@@ -51,7 +51,7 @@ target_compile_definitions(Sorta PRIVATE
 target_sources(Sorta PRIVATE
         Source/Main.cpp
         Source/MainComponent.h
-
+		Source/MainComponent.cpp
 )
 
 target_link_libraries(Sorta PRIVATE
