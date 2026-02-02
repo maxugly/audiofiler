@@ -1,4 +1,5 @@
 ## Sorta++ Progress Checklist
+"okay, we work on it like it is elephant meat, small bites at once, then test and digest"      
 
 This document tracks the implementation status of features for Sorta++, based on the original project overview.
 
