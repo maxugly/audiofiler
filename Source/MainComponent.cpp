@@ -30,7 +30,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   modeButton.setClickingTogglesState (true);
   modeButton.onClick = [this] {
     currentMode = modeButton.getToggleState() ? ViewMode::Overlay : ViewMode::Classic;
-    modeButton.setButtonText (currentMode == ViewMode::Classic ? "[V]iew 1" : "[V]iew 2");
+    modeButton.setButtonText (currentMode == ViewMode::Classic ? "[V]iew01" : "[V]iew02");
     resized();
     repaint(); };
 
