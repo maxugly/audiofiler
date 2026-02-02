@@ -406,7 +406,7 @@ void MainComponent::updateLoopLabels() {
     {
       auto bounds = getLocalBounds();
 
-      // Top row (50px)
+      // Top row
       auto topRow = bounds.removeFromTop(50).reduced(5);
       openButton.setBounds(topRow.removeFromLeft(80)); topRow.removeFromLeft(5);
       playStopButton.setBounds(topRow.removeFromLeft(80)); topRow.removeFromLeft(5);
@@ -415,7 +415,7 @@ void MainComponent::updateLoopLabels() {
       exitButton.setBounds(topRow.removeFromRight(80)); topRow.removeFromRight(5);
       fullscreenButton.setBounds(topRow.removeFromRight(80)); topRow.removeFromRight(5);
 
-      // Loop row (50px) — middle
+      // Loop row
       auto loopRow = bounds.removeFromTop(50).reduced(5);
       loopButton.setBounds(loopRow.removeFromLeft(80)); loopRow.removeFromLeft(5);
       loopInButton.setBounds(loopRow.removeFromLeft(80)); loopRow.removeFromLeft(5);
@@ -423,28 +423,40 @@ void MainComponent::updateLoopLabels() {
       loopOutButton.setBounds(loopRow.removeFromLeft(80)); loopRow.removeFromLeft(5);
       loopOutLabel.setBounds(loopRow.removeFromLeft(150));
 
-      // Bottom row (50px) — anchored to bottom
+      // Bottom row (anchored)
       auto bottomRow = bounds.removeFromBottom(50).reduced(5);
       qualityButton.setBounds(bottomRow.removeFromRight(80)); bottomRow.removeFromRight(5);
       channelViewButton.setBounds(bottomRow.removeFromRight(80)); bottomRow.removeFromRight(5);
       statsButton.setBounds(bottomRow.removeFromRight(80)); bottomRow.removeFromRight(5);
       modeButton.setBounds(bottomRow.removeFromRight(80));
 
-      // Waveform fills the middle
+      // Waveform fills middle
       waveformBounds = bounds.reduced(10);
 
-      // Stats overlay
+      // Stats overlay (float on top of waveform)
       if (showStats)
       {
-        statsBounds = waveformBounds.removeFromTop(120).reduced(10);
+        statsBounds = waveformBounds.withHeight(100).reduced(10);  // fixed height, not removeFromTop
         statsDisplay.setBounds(statsBounds);
         statsDisplay.setVisible(true);
-        statsDisplay.toFront(true);
+        statsDisplay.toFront(true);  // bring to front
       }
       else
       {
         statsDisplay.setVisible(false);
       }
+
+      // Safety: make sure all buttons visible
+      openButton.setVisible(true);
+      playStopButton.setVisible(true);
+      modeButton.setVisible(true);
+      statsButton.setVisible(true);
+      loopButton.setVisible(true);
+      loopInButton.setVisible(true);
+      loopOutButton.setVisible(true);
+      channelViewButton.setVisible(true);
+      qualityButton.setVisible(true);
+      exitButton.setVisible(true);
     }
 
 juce::FlexBox MainComponent::getTopRowFlexBox()
