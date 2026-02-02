@@ -16,6 +16,13 @@ jobs:
           sudo apt-get update && sudo apt-get install -y build-essential
       - name: Configure CMake
         run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=g++-12 .
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: build/
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
       - name: Build with Ninja
         run: ninja -C build
       - name: List build directory 
