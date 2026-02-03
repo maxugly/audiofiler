@@ -22,7 +22,8 @@ private:
 
 class MainComponent  : public juce::AudioAppComponent,
                        public juce::ChangeListener,
-                       public juce::Timer {
+                       public juce::Timer,
+                       public juce::TextEditor::Listener { // Added TextEditor::Listener
 
 public:
   enum class ViewMode { Classic, Overlay };
@@ -64,9 +65,8 @@ private:
   ModernLookAndFeel modernLF;
 
   juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton;
-  juce::TextEditor statsDisplay;
-  juce::Label loopInLabel, loopOutLabel;
-  juce::Rectangle<int> waveformBounds, statsBounds, contentAreaBounds; // Added contentAreaBounds
+  juce::TextEditor statsDisplay, loopInEditor, loopOutEditor; // Changed from Label to TextEditor
+  juce::Rectangle<int> waveformBounds, statsBounds, contentAreaBounds;
   juce::FlexBox getTopRowFlexBox();
   juce::FlexBox getLoopRowFlexBox();
 
@@ -100,5 +100,14 @@ private:
   void updateLoopButtonColors();
 
   juce::String formatTime(double seconds);
+
+  // juce::TextEditor::Listener callbacks
+  void textEditorTextChanged (juce::TextEditor& editor) override;
+  void textEditorReturnKeyPressed (juce::TextEditor& editor) override;
+  void textEditorEscapeKeyPressed (juce::TextEditor& editor) override;
+  void textEditorFocusLost (juce::TextEditor& editor) override;
+
+  // Helper function
+  double parseTime(const juce::String& timeString); // Declared as a member function
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent) };

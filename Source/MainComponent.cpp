@@ -102,8 +102,30 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   statsDisplay.setColour (juce::TextEditor::textColourId, juce::Colours::white);
   statsDisplay.setVisible (false);
 
+  // Setup loopInEditor
+  addAndMakeVisible (loopInEditor);
+  loopInEditor.setReadOnly (false); // Allow editing
+  loopInEditor.setJustification(juce::Justification::centred); // Centred to match text boxes
+  loopInEditor.setColour (juce::TextEditor::backgroundColourId, juce::Colours::grey.withAlpha(Config::playbackTextBackgroundAlpha));
+  loopInEditor.setColour (juce::TextEditor::textColourId, Config::playbackTextColor);
+  loopInEditor.setFont (juce::Font (juce::FontOptions (Config::playbackTextSize)));
+  loopInEditor.setMultiLine (false);
+  loopInEditor.setReturnKeyStartsNewLine (false);
+  loopInEditor.addListener (this); // MainComponent is now a listener
+
+  // Setup loopOutEditor
+  addAndMakeVisible (loopOutEditor);
+  loopOutEditor.setReadOnly (false); // Allow editing
+  loopOutEditor.setJustification(juce::Justification::centred); // Centred to match text boxes
+  loopOutEditor.setColour (juce::TextEditor::backgroundColourId, juce::Colours::grey.withAlpha(Config::playbackTextBackgroundAlpha));
+  loopOutEditor.setColour (juce::TextEditor::textColourId, Config::playbackTextColor);
+  loopOutEditor.setFont (juce::Font (juce::FontOptions (Config::playbackTextSize)));
+  loopOutEditor.setMultiLine (false);
+  loopOutEditor.setReturnKeyStartsNewLine (false);
+  loopOutEditor.addListener (this); // MainComponent is now a listener
 
 
+  updateLoopLabels(); // Initialize loop editor text
   setSize(Config::initialWindowWidth, Config::initialWindowHeight);
 
   setAudioChannels (0, 2);
@@ -136,6 +158,25 @@ juce::String MainComponent::formatTime(double seconds) {
   int secs = ((int)seconds) % 60;
   int milliseconds = (int)((seconds - (int)seconds) * 1000.0);
   return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, secs, milliseconds); }
+
+double MainComponent::parseTime(const juce::String& timeString) {
+    // Expected format: HH:MM:SS:mmm
+    auto parts = juce::StringArray::fromTokens(timeString, ":", "");
+
+    if (parts.size() != 4)
+        return -1.0; // Invalid format
+
+    int hours = parts[0].getIntValue();
+    int minutes = parts[1].getIntValue();
+    int seconds = parts[2].getIntValue();
+    int milliseconds = parts[3].getIntValue();
+
+    // Basic validation
+    if (hours < 0 || minutes < 0 || minutes >= 60 || seconds < 0 || seconds >= 60 || milliseconds < 0 || milliseconds >= 1000)
+        return -1.0;
+
+    return (double)hours * 3600.0 + (double)minutes * 60.0 + (double)seconds + (double)milliseconds / 1000.0;
+}
 
 void MainComponent::drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample) {
   auto audioLength = thumbnail.getTotalLength();
@@ -359,15 +400,7 @@ void MainComponent::paint (juce::Graphics& g) {
     g.drawVerticalLine (mouseCursorX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
     g.drawHorizontalLine (mouseCursorY, (float)waveformBounds.getX(), (float)waveformBounds.getRight()); }
   if (audioLength > 0.0) {
-    // --- Draw Loop In/Out Times ---
-    g.setColour(Config::playbackTextColor);
-    g.setFont(Config::playbackTextSize);
-
-    // Draw Loop In Time (Left justified within its Config::loopTextWidth space)
-    g.drawText(loopInDisplayString, loopInTextX, loopTextY, Config::loopTextWidth, 20, juce::Justification::left, false);
-
-    // Draw Loop Out Time (Left justified within its Config::loopTextWidth space)
-    g.drawText(loopOutDisplayString, loopOutTextX, loopTextY, Config::loopTextWidth, 20, juce::Justification::left, false);
+    // Loop times are now handled by TextEditors, no direct drawing here.
 
     double currentTime = transportSource.getCurrentPosition();
     double totalTime = thumbnail.getTotalLength(); // totalTime is calculated but totalTimeStaticStr is used for display
@@ -390,15 +423,88 @@ void MainComponent::paint (juce::Graphics& g) {
     // Draw Remaining Time (Right)
     g.drawText(remainingTimeStr, playbackRightTextX, textY, Config::playbackTextWidth, 20, juce::Justification::right, false); }}}
 
+// juce::TextEditor::Listener callbacks
+void MainComponent::textEditorTextChanged (juce::TextEditor& editor) {
+    // Optional: could add live validation feedback here, e.g., change color to orange if partially valid
+}
+
+void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
+    if (&editor == &loopInEditor) {
+        double newPosition = parseTime(editor.getText());
+        if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
+            loopInPosition = newPosition;
+            updateLoopButtonColors();
+            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
+        } else {
+            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
+            //editor.setText(formatTime(loopInPosition), juce::dontSendNotification); // Revert? Or let user correct
+        }
+    } else if (&editor == &loopOutEditor) {
+        double newPosition = parseTime(editor.getText());
+        if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
+            loopOutPosition = newPosition;
+            updateLoopButtonColors();
+            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
+        } else {
+            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
+            //editor.setText(formatTime(loopOutPosition), juce::dontSendNotification); // Revert? Or let user correct
+        }
+    }
+    editor.giveAwayKeyboardFocus(); // Lose focus after pressing enter
+}
+
+void MainComponent::textEditorEscapeKeyPressed (juce::TextEditor& editor) {
+    // Revert text to current value on escape
+    if (&editor == &loopInEditor) {
+        editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
+    } else if (&editor == &loopOutEditor) {
+        editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
+    }
+    editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+    editor.giveAwayKeyboardFocus(); // Lose focus
+}
+
+void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
+    // Similar logic to return key pressed, but always revert if invalid on focus lost
+    if (&editor == &loopInEditor) {
+        double newPosition = parseTime(editor.getText());
+        if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
+            loopInPosition = newPosition;
+            updateLoopButtonColors();
+            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
+        } else {
+            // Revert to last valid position if input is invalid on focus lost
+            editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
+            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+        }
+    } else if (&editor == &loopOutEditor) {
+        double newPosition = parseTime(editor.getText());
+        if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
+            loopOutPosition = newPosition;
+            updateLoopButtonColors();
+            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
+        } else {
+            // Revert to last valid position if input is invalid on focus lost
+            editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
+            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+        }
+    }
+}
+
 void MainComponent::updateLoopLabels() {
   if (loopInPosition >= 0.0)
-    loopInDisplayString = formatTime(loopInPosition);
+    loopInEditor.setText(formatTime(loopInPosition), juce::dontSendNotification);
   else
-    loopInDisplayString = "--:--:--:---"; // No "In:" prefix
+    loopInEditor.setText("--:--:--:---", juce::dontSendNotification);
+  
   if (loopOutPosition >= 0.0)
-    loopOutDisplayString = formatTime(loopOutPosition);
+    loopOutEditor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
   else
-    loopOutDisplayString = "--:--:--:---"; // No "Out:" prefix
+    loopOutEditor.setText("--:--:--:---", juce::dontSendNotification);
 }
 
 void MainComponent::resized() {
@@ -416,20 +522,22 @@ void MainComponent::resized() {
   auto loopRow = bounds.removeFromTop(rowHeight).reduced(Config::windowBorderMargins);
   loopInButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
   
-  // Calculate position for loopInDisplayString
+  // Position loopInEditor
   loopInTextX = loopRow.getX(); // Left edge of the space for loopIn
   loopTextY = loopRow.getY() + (loopRow.getHeight() / 2) - 10; // Vertically center 20px high text
-  loopRow.removeFromLeft(Config::loopTextWidth); // Space for loopInDisplayString (Use Config::loopTextWidth)
+  loopInEditor.setBounds(loopInTextX, loopTextY, Config::loopTextWidth, 20); // Set bounds for loopInEditor
+  loopRow.removeFromLeft(Config::loopTextWidth); // Space for loopInEditor
   loopRow.removeFromLeft(Config::windowBorderMargins); // Original margin after loopInText
   loopRow.removeFromLeft(Config::windowBorderMargins); // Doubled distance
-  loopRow.removeFromLeft(Config::windowBorderMargins); // ADDED: Even more distance (for loopOutButton)
+  loopRow.removeFromLeft(Config::windowBorderMargins); // Even more distance
 
   loopOutButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
 
-  // Calculate position for loopOutDisplayString
+  // Position loopOutEditor
   loopOutTextX = loopRow.getX(); // Left edge of the space for loopOut
   // loopTextY is already set once, assuming numbers are on the same line
-  loopRow.removeFromLeft(Config::loopTextWidth); // Preserve space (Use Config::loopTextWidth)
+  loopOutEditor.setBounds(loopOutTextX, loopTextY, Config::loopTextWidth, 20); // Set bounds for loopOutEditor
+  loopRow.removeFromLeft(Config::loopTextWidth); // Space for loopOutEditor
 
   auto bottomRow = bounds.removeFromBottom(rowHeight).reduced(Config::windowBorderMargins);
   bottomRowTopY = bottomRow.getY();
@@ -499,11 +607,11 @@ juce::FlexBox MainComponent::getLoopRowFlexBox() {
     item.margin = juce::FlexItem::Margin(0, 5, 0, 0);
     row.items.add(item); };
 
-  addItem(loopButton, 80.0f);
-  addItem(loopInButton, 80.0f);
-  addItem(loopInLabel, 150.0f);
-  addItem(loopOutButton, 80.0f);
-  addItem(loopOutLabel, 150.0f);
+  addItem(loopButton, Config::buttonWidth); // Use Config::buttonWidth
+  addItem(loopInButton, Config::buttonWidth); // Use Config::buttonWidth
+  addItem(loopInEditor, Config::loopTextWidth); // Use loopInEditor and Config::loopTextWidth
+  addItem(loopOutButton, Config::buttonWidth); // Use Config::buttonWidth
+  addItem(loopOutEditor, Config::loopTextWidth); // Use loopOutEditor and Config::loopTextWidth
   return row; }
 
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate) {
