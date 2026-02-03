@@ -182,6 +182,7 @@ void MainComponent::openButtonClicked() {
         transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
         thumbnail.setSource (new juce::FileInputSource (file));
         DBG("AudioThumbnail: Num Channels = " << thumbnail.getNumChannels() << ", Total Length = " << thumbnail.getTotalLength());
+        totalTimeStaticStr = formatTime(thumbnail.getTotalLength()); // Set total time static string
         playStopButton.setEnabled (true);
         readerSource.reset (newSource.release());
         updateButtonText(); }}});}
@@ -372,28 +373,25 @@ void MainComponent::paint (juce::Graphics& g) {
     g.drawHorizontalLine (mouseCursorY, (float)waveformBounds.getX(), (float)waveformBounds.getRight()); }
   if (audioLength > 0.0) {
     double currentTime = transportSource.getCurrentPosition();
-    double totalTime = thumbnail.getTotalLength();
+    double totalTime = thumbnail.getTotalLength(); // totalTime is calculated but totalTimeStaticStr is used for display
     double remainingTime = totalTime - currentTime;
+
     juce::String currentTimeStr = formatTime(currentTime);
-    juce::String totalTimeStr = formatTime(totalTime);
     juce::String remainingTimeStr = formatTime(remainingTime);
-    juce::String leftText = currentTimeStr + " / " + totalTimeStr;
-    juce::String rightText = remainingTimeStr;
-    int padding = 10; int textY; int textXLeft; int textXRight;
-    auto contentBounds = getLocalBounds(); // Use the full component bounds for text positioning
 
-  textY = bottomRowTopY - 25;
-  textXLeft = playbackLeftTextX;
-  textXRight = playbackRightTextX; // This is the X-coordinate for the left edge of a 200-wide rect for right text.
+    int textY = bottomRowTopY - 25;
 
-  g.setColour(Config::playbackTextColor);
-  g.setFont(Config::playbackTextSize);
+    g.setColour(Config::playbackTextColor);
+    g.setFont(Config::playbackTextSize);
 
-  // Draw left text
-  g.drawText(leftText, textXLeft, textY, 300, 20, juce::Justification::left, false);
+    // Draw Current Time (Left)
+    g.drawText(currentTimeStr, playbackLeftTextX, textY, 200, 20, juce::Justification::left, false);
 
-  // Draw right text
-  g.drawText(rightText, textXRight, textY, 200, 20, juce::Justification::right, false); }}}
+    // Draw Total Time (Center)
+    g.drawText(totalTimeStaticStr, playbackCenterTextX, textY, 200, 20, juce::Justification::centred, false);
+
+    // Draw Remaining Time (Right)
+    g.drawText(remainingTimeStr, playbackRightTextX, textY, 200, 20, juce::Justification::right, false); }}}
 
 void MainComponent::updateLoopLabels() {
   if (loopInPosition >= 0.0)
@@ -430,6 +428,7 @@ void MainComponent::resized() {
   modeButton.setBounds(bottomRow.removeFromRight(80));
 
   playbackLeftTextX = getLocalBounds().getX() + Config::windowBorderMargins;
+  playbackCenterTextX = (getLocalBounds().getWidth() / 2) - (200 / 2); // 200 is the width of the center box
   playbackRightTextX = getLocalBounds().getRight() - Config::windowBorderMargins - 200;
 
   if (currentMode == ViewMode::Overlay) {waveformBounds = getLocalBounds(); }

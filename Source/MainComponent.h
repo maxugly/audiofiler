@@ -84,6 +84,8 @@ private:
   int bottomRowTopY = 0; // Initialize to 0
   int playbackLeftTextX = 0;
   int playbackRightTextX = 0;
+  int playbackCenterTextX = 0;
+  juce::String totalTimeStaticStr;
 
   LoopButton loopInButton, loopOutButton;
 
