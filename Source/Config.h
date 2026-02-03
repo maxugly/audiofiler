@@ -40,4 +40,36 @@ namespace Config{
 
     constexpr float buttonTextHeightScale = 0.45f;         // Default scale for button text
     constexpr float buttonPlayPauseTextHeightScale = 0.7f; // Scale for Play/Pause symbols
+
+    // --- General Colors ---
+    const juce::Colour mainBackgroundColor = juce::Colours::black;
+
+    // --- Exit Button Colors ---
+    const juce::Colour exitButtonColor = juce::Colours::darkred;
+
+    // --- Stats Display Colors ---
+    const juce::Colour statsDisplayBackgroundColour = juce::Colours::black.withAlpha(0.5f);
+    const juce::Colour statsDisplayTextColour = juce::Colours::white;
+    const juce::Colour errorTextColour = juce::Colours::red;
+
+    // --- Loop Button Specific Colors ---
+    const juce::Colour loopButtonPlacementModeColor = juce::Colour(0xffff1493); // Deep Pink
+    const juce::Colour loopButtonActiveColor = juce::Colour(0xff0066cc);   // Moderate Blue
+
+    // --- Waveform Colors ---
+    const juce::Colour waveformColor = juce::Colours::deeppink;
+
+    // --- Loop Region Colors ---
+    const juce::Colour loopRegionColor = juce::Colour(0xff0066cc).withAlpha(0.3f);
+    const juce::Colour loopLineColor = juce::Colours::blue;
+
+    // --- Playback Cursor Colors ---
+    const juce::Colour playbackCursorColor = juce::Colours::lime;
+    // Playback cursor glow colors (start and end alpha for gradient)
+    const juce::Colour playbackCursorGlowColorStart = juce::Colours::lime.withAlpha(0.0f);
+    const juce::Colour playbackCursorGlowColorEnd = juce::Colours::lime.withAlpha(0.5f);
+
+    // --- Mouse Cursor Colors ---
+    const juce::Colour mouseCursorHighlightColor = juce::Colours::darkorange.withAlpha(0.4f);
+    const juce::Colour mouseCursorLineColor = juce::Colours::yellow;
 } // namespace Config

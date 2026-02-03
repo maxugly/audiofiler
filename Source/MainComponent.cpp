@@ -57,7 +57,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
 
   addAndMakeVisible (exitButton);
   exitButton.setButtonText ("[E]xit");
-  exitButton.setColour (juce::TextButton::buttonColourId, juce::Colours::darkred);
+  exitButton.setColour (juce::TextButton::buttonColourId, Config::exitButtonColor);
   exitButton.onClick = [] { juce::JUCEApplication::getInstance()->systemRequestedQuit(); };
 
   addAndMakeVisible (statsButton);
@@ -98,8 +98,8 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   statsDisplay.setReadOnly (true);
   statsDisplay.setMultiLine (true);
   statsDisplay.setWantsKeyboardFocus (false);
-  statsDisplay.setColour (juce::TextEditor::backgroundColourId, juce::Colours::black.withAlpha(0.5f));
-  statsDisplay.setColour (juce::TextEditor::textColourId, juce::Colours::white);
+  statsDisplay.setColour (juce::TextEditor::backgroundColourId, Config::statsDisplayBackgroundColour);
+  statsDisplay.setColour (juce::TextEditor::textColourId, Config::statsDisplayTextColour);
   statsDisplay.setVisible (false);
 
   // Setup loopInEditor
@@ -138,12 +138,12 @@ void MainComponent::updateQualityButtonText() {
   else qualityButton.setButtonText("[Q]ual L"); }
 
 void MainComponent::updateLoopButtonColors() {
-  if (currentPlacementMode == PlacementMode::LoopIn) {loopInButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xffff1493)); }
-  else if (loopInPosition > -1.0) {loopInButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff0066cc)); }
-  else {loopInButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff3a3a3a)); }
-  if (currentPlacementMode == PlacementMode::LoopOut) {loopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xffff1493));}
-  else if (loopOutPosition > -1.0) {loopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff0066cc)); }
-  else {loopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff3a3a3a)); }
+  if (currentPlacementMode == PlacementMode::LoopIn) {loopInButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonPlacementModeColor); }
+  else if (loopInPosition > -1.0) {loopInButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonActiveColor); }
+  else {loopInButton.setColour(juce::TextButton::buttonColourId, Config::buttonBaseColour); }
+  if (currentPlacementMode == PlacementMode::LoopOut) {loopOutButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonPlacementModeColor);}
+  else if (loopOutPosition > -1.0) {loopOutButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonActiveColor); }
+  else {loopOutButton.setColour(juce::TextButton::buttonColourId, Config::buttonBaseColour); }
   updateLoopLabels();}
 
 MainComponent::~MainComponent() {
@@ -331,7 +331,7 @@ void MainComponent::timerCallback() {
     repaint(); }
 
 void MainComponent::paint (juce::Graphics& g) {
-  g.fillAll (juce::Colours::black);
+  g.fillAll (Config::mainBackgroundColor);
   if (thumbnail.getNumChannels() > 0) {
       int pixelsPerSample = 1;
       if (currentQuality == ThumbnailQuality::Low)
@@ -339,14 +339,14 @@ void MainComponent::paint (juce::Graphics& g) {
       else if (currentQuality == ThumbnailQuality::Medium)
         pixelsPerSample = 2;
       if (currentChannelViewMode == ChannelViewMode::Mono || thumbnail.getNumChannels() == 1) {
-        g.setColour (juce::Colours::deeppink);
+        g.setColour (Config::waveformColor);
 
         if (pixelsPerSample > 1) {
           drawReducedQualityWaveform(g, 0, pixelsPerSample); }
         else {
           thumbnail.drawChannel (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 0, 1.0f); }}
   else {
-    g.setColour (juce::Colours::deeppink);
+    g.setColour (Config::waveformColor);
     if (pixelsPerSample > 1) {
     for (int ch = 0; ch < thumbnail.getNumChannels(); ++ch)
       drawReducedQualityWaveform(g, ch, pixelsPerSample); }
@@ -361,9 +361,9 @@ void MainComponent::paint (juce::Graphics& g) {
         auto actualOut = juce::jmax(loopInPosition, loopOutPosition);
         auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
         auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
-        g.setColour(juce::Colour(0xff0066cc).withAlpha(0.3f));
+        g.setColour(Config::loopRegionColor);
         g.fillRect(juce::Rectangle<float>(inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight())); }
-      g.setColour(juce::Colours::blue);
+      g.setColour(Config::loopLineColor);
       if (inIsSet) {
         auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopInPosition / audioLength);
         g.drawVerticalLine((int)inX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom()); }
