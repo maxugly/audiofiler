@@ -379,31 +379,16 @@ void MainComponent::paint (juce::Graphics& g) {
     juce::String remainingTimeStr = formatTime(remainingTime);
     juce::String leftText = currentTimeStr + " / " + totalTimeStr;
     juce::String rightText = remainingTimeStr;
-    int padding = 10;
-    int textY;
-    int textXLeft;
-    int textXRight;
+    int padding = 10; int textY; int textXLeft; int textXRight;
     auto contentBounds = getLocalBounds(); // Use the full component bounds for text positioning
 
-  if (currentMode == ViewMode::Overlay) {
-    textY = bottomRowTopY - 25; // Use bottomRowTopY
-    textXLeft = contentBounds.getX() + padding;
-    textXRight = contentBounds.getRight() - 200 - padding; }
-  else {
-    textY = waveformBounds.getBottom() - 25;
-    textXLeft = waveformBounds.getX() + padding;
-    textXRight = waveformBounds.getRight() - 200 - padding; }
-
+  textY = bottomRowTopY - 25;
+  textXLeft = playbackLeftTextX;
+  textXRight = playbackRightTextX;
   g.setColour(juce::Colours::white);
   g.setFont(14.0f);
-  g.drawText(leftText,
-  textXLeft,
-  textY,    300, 20,    juce::Justification::left);
-  g.drawText(rightText,
-  textXRight,
-  textY,
-  200, 20,
-  juce::Justification::right); }}}
+  g.drawText(leftText, textXLeft, textY, 300, 20, juce::Justification::left);
+  g.drawText(rightText, textXRight, textY, juce::Justification::right); }}}
 
 void MainComponent::updateLoopLabels() {
   if (loopInPosition >= 0.0)
@@ -433,11 +418,14 @@ void MainComponent::resized() {
   loopOutLabel.setBounds(loopRow.removeFromLeft(150));
 
   auto bottomRow = bounds.removeFromBottom(50).reduced(Config::windowBorderMargins);
-  bottomRowTopY = bottomRow.getY(); // Store the top Y-coordinate
+  bottomRowTopY = bottomRow.getY();
   qualityButton.setBounds(bottomRow.removeFromRight(80)); bottomRow.removeFromRight(Config::windowBorderMargins);
   channelViewButton.setBounds(bottomRow.removeFromRight(80)); bottomRow.removeFromRight(Config::windowBorderMargins);
   statsButton.setBounds(bottomRow.removeFromRight(80)); bottomRow.removeFromRight(Config::windowBorderMargins);
   modeButton.setBounds(bottomRow.removeFromRight(80));
+
+  playbackLeftTextX = getLocalBounds().getX() + Config::windowBorderMargins;
+  playbackRightTextX = getLocalBounds().getRight() - Config::windowBorderMargins - 200;
 
   if (currentMode == ViewMode::Overlay) {waveformBounds = getLocalBounds(); }
   else {waveformBounds = bounds.reduced(Config::windowBorderMargins);}
@@ -505,11 +493,9 @@ juce::FlexBox MainComponent::getLoopRowFlexBox() {
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate) {
   transportSource.prepareToPlay (samplesPerBlockExpected, sampleRate); }
 
-void MainComponent::changeListenerCallback (juce::ChangeBroadcaster*) {
-  repaint(); }
+void MainComponent::changeListenerCallback (juce::ChangeBroadcaster*) { repaint(); }
 
-void MainComponent::releaseResources() {
-  transportSource.releaseResources(); }
+void MainComponent::releaseResources() { transportSource.releaseResources(); }
 
 juce::FlexBox MainComponent::getBottomRowFlexBox() {
   juce::FlexBox row;

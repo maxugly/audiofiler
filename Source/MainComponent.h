@@ -82,6 +82,8 @@ private:
   double loopOutPosition = -1.0;
   int mouseCursorX = -1, mouseCursorY = -1;
   int bottomRowTopY = 0; // Initialize to 0
+  int playbackLeftTextX = 0;
+  int playbackRightTextX = 0;
 
   LoopButton loopInButton, loopOutButton;
 
