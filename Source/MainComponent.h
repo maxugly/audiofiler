@@ -87,6 +87,12 @@ private:
   int playbackCenterTextX = 0;
   juce::String totalTimeStaticStr;
 
+  juce::String loopInDisplayString;
+  juce::String loopOutDisplayString;
+  int loopInTextX = 0;
+  int loopOutTextX = 0;
+  int loopTextY = 0;
+
   LoopButton loopInButton, loopOutButton;
 
   void updateQualityButtonText();

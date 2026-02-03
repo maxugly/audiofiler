@@ -102,20 +102,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   statsDisplay.setColour (juce::TextEditor::textColourId, juce::Colours::white);
   statsDisplay.setVisible (false);
 
-  addAndMakeVisible(loopInLabel);
-  loopInLabel.setJustificationType(juce::Justification::centred);
-  loopInLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-  loopInLabel.setColour(juce::Label::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
-  loopInLabel.setFont(juce::FontOptions(14.0f));
 
-  addAndMakeVisible(loopOutLabel);
-  loopOutLabel.setJustificationType(juce::Justification::centred);
-  loopOutLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-  loopOutLabel.setColour(juce::Label::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
-  loopOutLabel.setFont(juce::FontOptions(14.0f));
-
-  loopInLabel.setText("In: --:--:--:---", juce::dontSendNotification);
-  loopOutLabel.setText("Out: --:--:--:---", juce::dontSendNotification);
 
   setSize(Config::initialWindowWidth, Config::initialWindowHeight);
 
@@ -372,6 +359,16 @@ void MainComponent::paint (juce::Graphics& g) {
     g.drawVerticalLine (mouseCursorX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
     g.drawHorizontalLine (mouseCursorY, (float)waveformBounds.getX(), (float)waveformBounds.getRight()); }
   if (audioLength > 0.0) {
+    // --- Draw Loop In/Out Times ---
+    g.setColour(Config::playbackTextColor);
+    g.setFont(Config::playbackTextSize);
+
+    // Draw Loop In Time (Left justified within its Config::loopTextWidth space)
+    g.drawText(loopInDisplayString, loopInTextX, loopTextY, Config::loopTextWidth, 20, juce::Justification::left, false);
+
+    // Draw Loop Out Time (Left justified within its Config::loopTextWidth space)
+    g.drawText(loopOutDisplayString, loopOutTextX, loopTextY, Config::loopTextWidth, 20, juce::Justification::left, false);
+
     double currentTime = transportSource.getCurrentPosition();
     double totalTime = thumbnail.getTotalLength(); // totalTime is calculated but totalTimeStaticStr is used for display
     double remainingTime = totalTime - currentTime;
@@ -385,23 +382,24 @@ void MainComponent::paint (juce::Graphics& g) {
     g.setFont(Config::playbackTextSize);
 
     // Draw Current Time (Left)
-    g.drawText(currentTimeStr, playbackLeftTextX, textY, 200, 20, juce::Justification::left, false);
+    g.drawText(currentTimeStr, playbackLeftTextX, textY, Config::playbackTextWidth, 20, juce::Justification::left, false);
 
     // Draw Total Time (Center)
-    g.drawText(totalTimeStaticStr, playbackCenterTextX, textY, 200, 20, juce::Justification::centred, false);
+    g.drawText(totalTimeStaticStr, playbackCenterTextX, textY, Config::playbackTextWidth, 20, juce::Justification::centred, false);
 
     // Draw Remaining Time (Right)
-    g.drawText(remainingTimeStr, playbackRightTextX, textY, 200, 20, juce::Justification::right, false); }}}
+    g.drawText(remainingTimeStr, playbackRightTextX, textY, Config::playbackTextWidth, 20, juce::Justification::right, false); }}}
 
 void MainComponent::updateLoopLabels() {
   if (loopInPosition >= 0.0)
-    loopInLabel.setText("In: " + formatTime(loopInPosition), juce::dontSendNotification);
+    loopInDisplayString = formatTime(loopInPosition);
   else
-    loopInLabel.setText("In: --:--:--:---", juce::dontSendNotification);
+    loopInDisplayString = "--:--:--:---"; // No "In:" prefix
   if (loopOutPosition >= 0.0)
-    loopOutLabel.setText("Out: " + formatTime(loopOutPosition), juce::dontSendNotification);
+    loopOutDisplayString = formatTime(loopOutPosition);
   else
-    loopOutLabel.setText("Out: --:--:--:---", juce::dontSendNotification); }
+    loopOutDisplayString = "--:--:--:---"; // No "Out:" prefix
+}
 
 void MainComponent::resized() {
   auto bounds = getLocalBounds();
@@ -411,14 +409,26 @@ void MainComponent::resized() {
   playStopButton.setBounds(topRow.removeFromLeft(80)); topRow.removeFromLeft(Config::windowBorderMargins);
   modeButton.setBounds(topRow.removeFromLeft(80)); topRow.removeFromLeft(Config::windowBorderMargins);
   statsButton.setBounds(topRow.removeFromLeft(80)); topRow.removeFromLeft(Config::windowBorderMargins);
+  loopButton.setBounds(topRow.removeFromLeft(80)); topRow.removeFromLeft(Config::windowBorderMargins); // Moved here
   exitButton.setBounds(topRow.removeFromRight(80)); topRow.removeFromRight(Config::windowBorderMargins);
 
   auto loopRow = bounds.removeFromTop(50).reduced(Config::windowBorderMargins);
-  loopButton.setBounds(loopRow.removeFromLeft(80)); loopRow.removeFromLeft(Config::windowBorderMargins);
   loopInButton.setBounds(loopRow.removeFromLeft(80)); loopRow.removeFromLeft(Config::windowBorderMargins);
-  loopInLabel.setBounds(loopRow.removeFromLeft(150)); loopRow.removeFromLeft(Config::windowBorderMargins);
+  
+  // Calculate position for loopInDisplayString
+  loopInTextX = loopRow.getX(); // Left edge of the space for loopIn
+  loopTextY = loopRow.getY() + (loopRow.getHeight() / 2) - 10; // Vertically center 20px high text
+  loopRow.removeFromLeft(Config::loopTextWidth); // Space for loopInDisplayString (Use Config::loopTextWidth)
+  loopRow.removeFromLeft(Config::windowBorderMargins); // Original margin after loopInText
+  loopRow.removeFromLeft(Config::windowBorderMargins); // Doubled distance
+  loopRow.removeFromLeft(Config::windowBorderMargins); // ADDED: Even more distance (for loopOutButton)
+
   loopOutButton.setBounds(loopRow.removeFromLeft(80)); loopRow.removeFromLeft(Config::windowBorderMargins);
-  loopOutLabel.setBounds(loopRow.removeFromLeft(150));
+
+  // Calculate position for loopOutDisplayString
+  loopOutTextX = loopRow.getX(); // Left edge of the space for loopOut
+  // loopTextY is already set once, assuming numbers are on the same line
+  loopRow.removeFromLeft(Config::loopTextWidth); // Preserve space (Use Config::loopTextWidth)
 
   auto bottomRow = bounds.removeFromBottom(50).reduced(Config::windowBorderMargins);
   bottomRowTopY = bottomRow.getY();
@@ -428,8 +438,8 @@ void MainComponent::resized() {
   modeButton.setBounds(bottomRow.removeFromRight(80));
 
   playbackLeftTextX = getLocalBounds().getX() + Config::windowBorderMargins;
-  playbackCenterTextX = (getLocalBounds().getWidth() / 2) - (200 / 2); // 200 is the width of the center box
-  playbackRightTextX = getLocalBounds().getRight() - Config::windowBorderMargins - 200;
+  playbackCenterTextX = (getLocalBounds().getWidth() / 2) - (Config::playbackTextWidth / 2); // Use Config::playbackTextWidth
+  playbackRightTextX = getLocalBounds().getRight() - Config::windowBorderMargins - Config::playbackTextWidth; // Use Config::playbackTextWidth
 
   if (currentMode == ViewMode::Overlay) {waveformBounds = getLocalBounds(); }
   else {waveformBounds = bounds.reduced(Config::windowBorderMargins);}
