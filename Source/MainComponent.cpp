@@ -499,12 +499,8 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
             repaint();
         } else {
-            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
-            if (loopInPosition >= 0.0)
-                editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
-            else
-                editor.setText("--:--:--:---", juce::dontSendNotification);
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
         }
     } else if (&editor == &loopOutEditor) {
         double newPosition = parseTime(editor.getText());
@@ -514,12 +510,8 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
             repaint();
         } else {
-            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
-            if (loopOutPosition >= 0.0)
-                editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
-            else
-                editor.setText("--:--:--:---", juce::dontSendNotification);
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
         } // Closing brace for the 'else' part of loopOutEditor validation
     } // Closing brace for the 'else if (&editor == &loopOutEditor)' block
     editor.giveAwayKeyboardFocus(); // Lose focus after pressing enter
@@ -558,6 +550,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
             else
                 editor.setText("--:--:--:---", juce::dontSendNotification);
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
         }
     } else if (&editor == &loopOutEditor) {
         double newPosition = parseTime(editor.getText());
@@ -573,6 +566,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
             else
                 editor.setText("--:--:--:---", juce::dontSendNotification);
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            repaint();
         }
     }
 }
