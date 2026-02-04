@@ -76,6 +76,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   loopInButton.setButtonText ("[I]n");
   loopInButton.onLeftClick = [this] { 
     loopInPosition = transportSource.getCurrentPosition();
+    ensureLoopOrder(); // Call helper
     updateLoopButtonColors();
     repaint(); };
   loopInButton.onRightClick = [this] {
@@ -87,6 +88,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   loopOutButton.setButtonText ("[O]ut");
   loopOutButton.onLeftClick = [this] {
     loopOutPosition = transportSource.getCurrentPosition();
+    ensureLoopOrder(); // Call helper
     updateLoopButtonColors();
     repaint(); };
   loopOutButton.onRightClick = [this] {
@@ -111,7 +113,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   loopInEditor.setMultiLine (false);
   loopInEditor.setReturnKeyStartsNewLine (false);
   loopInEditor.addListener (this);
-  loopInEditor.setWantsKeyboardFocus (false); // Explicitly prevent from taking focus initially
+  loopInEditor.setWantsKeyboardFocus (true); // Allow to take focus for editing
 
   addAndMakeVisible (loopOutEditor);
   loopOutEditor.setReadOnly (false);
@@ -122,7 +124,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   loopOutEditor.setMultiLine (false);
   loopOutEditor.setReturnKeyStartsNewLine (false);
   loopOutEditor.addListener (this);
-  loopOutEditor.setWantsKeyboardFocus (false); // Explicitly prevent from taking focus initially
+  loopOutEditor.setWantsKeyboardFocus (true); // Allow to take focus for editing
 
   addAndMakeVisible (clearLoopInButton);
   clearLoopInButton.setButtonText ("X");
@@ -150,6 +152,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   detectSilenceButton.setToggleState (isDetectModeActive, juce::dontSendNotification); // Set initial state
   detectSilenceButton.onClick = [this] {
     isDetectModeActive = detectSilenceButton.getToggleState();
+    updateComponentStates(); // Update component states when toggle changes
     if (isDetectModeActive) {
       detectSilence(); // Perform detection immediately if toggled on
     }
@@ -321,17 +324,35 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
         if (keyCode == 'q' || keyCode == 'Q') { qualityButton.triggerClick(); return true; }
         if (keyCode == 'l' || keyCode == 'L') { loopButton.triggerClick(); return true; }
         if (keyCode == 'i' || keyCode == 'I') {
+            if (isDetectModeActive) return true; // Ignore if detection mode is active
             loopInPosition = transportSource.getCurrentPosition();
+            ensureLoopOrder(); // Call helper
             updateLoopButtonColors();
             updateLoopLabels();
             repaint();
             return true;
         }
         if (keyCode == 'o' || keyCode == 'O') {
+            if (isDetectModeActive) return true; // Ignore if detection mode is active
             loopOutPosition = transportSource.getCurrentPosition();
+            ensureLoopOrder(); // Call helper
             updateLoopButtonColors();
             updateLoopLabels();
             repaint();
+            return true;
+        }
+        if (keyCode == 't' || keyCode == 'T') {
+            detectSilenceButton.triggerClick();
+            return true;
+        }
+        if (keyCode == 'u' || keyCode == 'U') {
+            if (isDetectModeActive) return true; // Ignore if detection mode is active
+            clearLoopInButton.triggerClick();
+            return true;
+        }
+        if (keyCode == 'p' || keyCode == 'P') {
+            if (isDetectModeActive) return true; // Ignore if detection mode is active
+            clearLoopOutButton.triggerClick();
             return true;
         }
     }
@@ -348,19 +369,27 @@ void MainComponent::seekToPosition (int x) {
     transportSource.setPosition (newPosition); }}
 
 void MainComponent::mouseUp (const juce::MouseEvent& e) {
+  // Ignore mouse clicks for setting loop points if detection mode is active
+  if (isDetectModeActive && waveformBounds.contains(e.getPosition())) {
+      return;
+  }
+
   if (currentPlacementMode != PlacementMode::None && waveformBounds.contains (e.getPosition())) {
     auto relativeX = (double)(e.x - waveformBounds.getX());
     auto proportion = relativeX / (double)waveformBounds.getWidth();
     auto newPosition = juce::jlimit (0.0, 1.0, proportion) * thumbnail.getTotalLength();
     if (currentPlacementMode == PlacementMode::LoopIn) {
       loopInPosition = newPosition;
-      DBG("Loop In set by mouse click on waveform"); }
-        else if (currentPlacementMode == PlacementMode::LoopOut) {
-        loopOutPosition = newPosition;
-        DBG("Loop Out set by mouse click on waveform"); }
-          currentPlacementMode = PlacementMode::None;
-          updateLoopButtonColors();
-          repaint(); }}
+      DBG("Loop In set by mouse click on waveform");
+      ensureLoopOrder(); // Call helper
+    } else if (currentPlacementMode == PlacementMode::LoopOut) {
+      loopOutPosition = newPosition;
+      DBG("Loop Out set by mouse click on waveform");
+      ensureLoopOrder(); // Call helper
+    }
+    currentPlacementMode = PlacementMode::None;
+    updateLoopButtonColors();
+    repaint(); }}
 
 void MainComponent::mouseDown (const juce::MouseEvent& e) {
   if (e.mods.isRightButtonDown()) return;
@@ -537,25 +566,41 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
     if (&editor == &loopInEditor) {
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
-            loopInPosition = newPosition;
-            updateLoopButtonColors();
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
-            repaint();
+            // Validate against loopOutPosition if it's set
+            if (loopOutPosition > -1.0 && newPosition > loopOutPosition) {
+                // Invalid: new loopIn is after loopOut, revert to current loopIn
+                editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
+                editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
+            } else {
+                loopInPosition = newPosition;
+                updateLoopButtonColors();
+                editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+                repaint();
+            }
         } else {
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
-            repaint();
+            // Revert to last valid position if input is invalid (out of bounds)
+            editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
+            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
         }
     } else if (&editor == &loopOutEditor) {
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
-            loopOutPosition = newPosition;
-            updateLoopButtonColors();
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
-            repaint();
+            // Validate against loopInPosition if it's set
+            if (loopInPosition > -1.0 && newPosition < loopInPosition) {
+                // Invalid: new loopOut is before loopIn, revert to current loopOut
+                editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
+                editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
+            } else {
+                loopOutPosition = newPosition;
+                updateLoopButtonColors();
+                editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+                repaint();
+            }
         } else {
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
-            repaint();
-        } // Closing brace for the 'else' part of loopOutEditor validation
+            // Revert to last valid position if input is invalid (out of bounds)
+            editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
+            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
+        }
     } else if (&editor == &silenceThresholdEditor)
     {
         int newPercentage = editor.getText().getIntValue();
@@ -600,33 +645,53 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
     if (&editor == &loopInEditor) {
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
-            loopInPosition = newPosition;
-            updateLoopButtonColors();
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
-            repaint();
+            // Validate against loopOutPosition if it's set
+            if (loopOutPosition > -1.0 && newPosition > loopOutPosition) {
+                // Invalid: new loopIn is after loopOut, revert to current loopIn
+                if (loopInPosition >= 0.0)
+                    editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
+                else
+                    editor.setText("--:--:--:---", juce::dontSendNotification);
+                editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
+            } else {
+                loopInPosition = newPosition;
+                updateLoopButtonColors();
+                editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+                repaint();
+            }
         } else {
-            // Revert to last valid position if input is invalid on focus lost
+            // Revert to last valid position if input is invalid (out of bounds)
             if (loopInPosition >= 0.0)
                 editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
             else
                 editor.setText("--:--:--:---", juce::dontSendNotification);
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
             repaint();
         }
     } else if (&editor == &loopOutEditor) {
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
-            loopOutPosition = newPosition;
-            updateLoopButtonColors();
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
-            repaint();
+            // Validate against loopInPosition if it's set
+            if (loopInPosition > -1.0 && newPosition < loopInPosition) {
+                // Invalid: new loopOut is before loopIn, revert to current loopOut
+                if (loopOutPosition >= 0.0)
+                    editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
+                else
+                    editor.setText("--:--:--:---", juce::dontSendNotification);
+                editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
+            } else {
+                loopOutPosition = newPosition;
+                updateLoopButtonColors();
+                editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+                repaint();
+            }
         } else {
-            // Revert to last valid position if input is invalid on focus lost
+            // Revert to last valid position if input is invalid (out of bounds)
             if (loopOutPosition >= 0.0)
                 editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
             else
                 editor.setText("--:--:--:---", juce::dontSendNotification);
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
+            editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
             repaint();
         }
     } else if (&editor == &silenceThresholdEditor) {
@@ -727,9 +792,24 @@ void MainComponent::detectSilence()
         loopInPosition = (double)loopInSample / reader->sampleRate;
         loopOutPosition = (double)loopOutSample / reader->sampleRate;
 
+        // Jump playhead to loopInPosition
+        transportSource.setPosition(loopInPosition);
+
         updateLoopButtonColors();
         updateLoopLabels();
         repaint();
+    }
+}
+
+void MainComponent::ensureLoopOrder()
+{
+    // Only swap if both are valid (not -1.0) and out of order
+    if (loopInPosition > -1.0 && loopOutPosition > -1.0)
+    {
+        if (loopInPosition > loopOutPosition)
+        {
+            std::swap(loopInPosition, loopOutPosition);
+        }
     }
 }
 
@@ -884,14 +964,16 @@ void MainComponent::updateComponentStates() {
   loopButton.setEnabled(enabled);
   channelViewButton.setEnabled(enabled);
   qualityButton.setEnabled(enabled);
-  clearLoopInButton.setEnabled(enabled);
-  clearLoopOutButton.setEnabled(enabled);
-  loopInButton.setEnabled(enabled);
-  loopOutButton.setEnabled(enabled);
+  const bool manualEditEnabled = enabled && !isDetectModeActive;
 
-  loopInEditor.setEnabled(enabled);
-  loopOutEditor.setEnabled(enabled);
-  statsDisplay.setEnabled(enabled);
+  clearLoopInButton.setEnabled(manualEditEnabled);
+  clearLoopOutButton.setEnabled(manualEditEnabled);
+  loopInButton.setEnabled(manualEditEnabled);
+  loopOutButton.setEnabled(manualEditEnabled);
+
+  loopInEditor.setEnabled(manualEditEnabled);
+  loopOutEditor.setEnabled(manualEditEnabled);
+  statsDisplay.setEnabled(enabled); // Stats display is always enabled if file loaded
   detectSilenceButton.setEnabled(enabled);
   silenceThresholdEditor.setEnabled(enabled);
   silenceThresholdLabel.setEnabled(enabled);

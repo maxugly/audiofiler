@@ -104,6 +104,7 @@ private:
   void drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample);
   void updateLoopButtonColors();
   void detectSilence();
+  void ensureLoopOrder(); // New method declaration
 
   juce::String formatTime(double seconds);
 
