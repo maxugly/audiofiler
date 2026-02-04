@@ -122,6 +122,26 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   loopOutEditor.setReturnKeyStartsNewLine (false);
   loopOutEditor.addListener (this);
 
+  addAndMakeVisible (clearLoopInButton);
+  clearLoopInButton.setButtonText ("X");
+  clearLoopInButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+  clearLoopInButton.onClick = [this] {
+      loopInPosition = -1.0;
+      updateLoopButtonColors();
+      updateLoopLabels();
+      repaint();
+  };
+
+  addAndMakeVisible (clearLoopOutButton);
+  clearLoopOutButton.setButtonText ("X");
+  clearLoopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+  clearLoopOutButton.onClick = [this] {
+      loopOutPosition = -1.0;
+      updateLoopButtonColors();
+      updateLoopLabels();
+      repaint();
+  };
+
 
   updateLoopLabels();
   setSize(Config::initialWindowWidth, Config::initialWindowHeight);
@@ -224,29 +244,59 @@ void MainComponent::playStopButtonClicked() {
   updateButtonText(); }
 
 bool MainComponent::keyPressed (const juce::KeyPress& key) {
-if (thumbnail.getTotalLength() > 0.0) {
-  constexpr double skipAmountSeconds = 5.0;
-  if (key == juce::KeyPress::leftKey) {
-    auto newPos = juce::jmax (0.0, transportSource.getCurrentPosition() - skipAmountSeconds);
-    transportSource.setPosition (newPos);
-    return true; }
-  if (key == juce::KeyPress::rightKey) {
-    auto newPos = juce::jmin (thumbnail.getTotalLength(), transportSource.getCurrentPosition() + skipAmountSeconds);
-    transportSource.setPosition (newPos);
-    return true; }}
+    auto keyCode = key.getTextCharacter();
 
-  auto keyCode = key.getTextCharacter();
-    if (key == juce::KeyPress::spaceKey) { playStopButtonClicked(); return true; }
-    if (keyCode == 'e' || keyCode == 'E') { juce::JUCEApplication::getInstance()->systemRequestedQuit(); return true; }
-    if (keyCode == 'd' || keyCode == 'D') { openButtonClicked(); return true; }
-    if (keyCode == 's' || keyCode == 'S') { statsButton.triggerClick(); return true; }
-    if (keyCode == 'v' || keyCode == 'V') { modeButton.triggerClick(); return true; }
-    if (keyCode == 'c' || keyCode == 'C') { channelViewButton.triggerClick(); return true; }
-    if (keyCode == 'q' || keyCode == 'Q') { qualityButton.triggerClick(); return true; }
-    if (keyCode == 'l' || keyCode == 'L') { loopButton.triggerClick(); return true; }
-    if (keyCode == 'i' || keyCode == 'I') { loopInPosition = transportSource.getCurrentPosition(); updateLoopButtonColors(); updateLoopLabels(); repaint(); return true; }
-    if (keyCode == 'o' || keyCode == 'O') { loopOutPosition = transportSource.getCurrentPosition(); updateLoopButtonColors(); updateLoopLabels(); repaint(); return true; }
-    return false; }
+    // Handle 'e' and 'd' keys regardless of file loaded status
+    if (keyCode == 'e' || keyCode == 'E') {
+        juce::JUCEApplication::getInstance()->systemRequestedQuit();
+        return true;
+    }
+    if (keyCode == 'd' || keyCode == 'D') {
+        openButtonClicked();
+        return true;
+    }
+
+    // All other actions require a file to be loaded
+    if (isFileLoaded) {
+        if (thumbnail.getTotalLength() > 0.0) {
+            constexpr double skipAmountSeconds = 5.0;
+            if (key == juce::KeyPress::leftKey) {
+                auto newPos = juce::jmax (0.0, transportSource.getCurrentPosition() - skipAmountSeconds);
+                transportSource.setPosition (newPos);
+                return true;
+            }
+            if (key == juce::KeyPress::rightKey) {
+                auto newPos = juce::jmin (thumbnail.getTotalLength(), transportSource.getCurrentPosition() + skipAmountSeconds);
+                transportSource.setPosition (newPos);
+                return true;
+            }
+        }
+
+        if (key == juce::KeyPress::spaceKey) { playStopButtonClicked(); return true; }
+        if (keyCode == 's' || keyCode == 'S') { statsButton.triggerClick(); return true; }
+        if (keyCode == 'v' || keyCode == 'V') { modeButton.triggerClick(); return true; }
+        if (keyCode == 'c' || keyCode == 'C') { channelViewButton.triggerClick(); return true; }
+        if (keyCode == 'q' || keyCode == 'Q') { qualityButton.triggerClick(); return true; }
+        if (keyCode == 'l' || keyCode == 'L') { loopButton.triggerClick(); return true; }
+        if (keyCode == 'i' || keyCode == 'I') {
+            loopInPosition = transportSource.getCurrentPosition();
+            updateLoopButtonColors();
+            updateLoopLabels();
+            repaint();
+            return true;
+        }
+        if (keyCode == 'o' || keyCode == 'O') {
+            loopOutPosition = transportSource.getCurrentPosition();
+            updateLoopButtonColors();
+            updateLoopLabels();
+            repaint();
+            return true;
+        }
+    }
+
+    // If none of the above conditions were met, return false
+    return false;
+}
 
 void MainComponent::seekToPosition (int x) {
   if (thumbnail.getTotalLength() > 0.0) {
@@ -545,15 +595,18 @@ void MainComponent::resized() {
 
   auto loopRow = bounds.removeFromTop(rowHeight).reduced(Config::windowBorderMargins);
   loopInButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
-  
+
   // Position loopInEditor
   loopInTextX = loopRow.getX(); // Left edge of the space for loopIn
   loopTextY = loopRow.getY() + (loopRow.getHeight() / 2) - 10; // Vertically center 20px high text
   loopInEditor.setBounds(loopInTextX, loopTextY, Config::loopTextWidth, 20); // Set bounds for loopInEditor
   loopRow.removeFromLeft(Config::loopTextWidth); // Space for loopInEditor
-  loopRow.removeFromLeft(Config::windowBorderMargins); // Original margin after loopInText
-  loopRow.removeFromLeft(Config::windowBorderMargins); // Doubled distance
-  loopRow.removeFromLeft(Config::windowBorderMargins); // Even more distance
+  loopRow.removeFromLeft(Config::windowBorderMargins / 2);
+
+  clearLoopInButton.setBounds(loopRow.getX(), loopTextY, 25, 20);
+  loopRow.removeFromLeft(25);
+
+  loopRow.removeFromLeft(Config::windowBorderMargins * 2); // Doubled distance
 
   loopOutButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
 
@@ -562,6 +615,10 @@ void MainComponent::resized() {
   // loopTextY is already set once, assuming numbers are on the same line
   loopOutEditor.setBounds(loopOutTextX, loopTextY, Config::loopTextWidth, 20); // Set bounds for loopOutEditor
   loopRow.removeFromLeft(Config::loopTextWidth); // Space for loopOutEditor
+  loopRow.removeFromLeft(Config::windowBorderMargins / 2);
+
+  clearLoopOutButton.setBounds(loopRow.getX(), loopTextY, 25, 20);
+  loopRow.removeFromLeft(25);
 
   auto bottomRow = bounds.removeFromBottom(rowHeight).reduced(Config::windowBorderMargins);
   bottomRowTopY = bottomRow.getY();
@@ -592,6 +649,8 @@ void MainComponent::resized() {
   loopButton.setVisible(true);
   loopInButton.setVisible(true);
   loopOutButton.setVisible(true);
+  clearLoopInButton.setVisible(true);
+  clearLoopOutButton.setVisible(true);
   channelViewButton.setVisible(true);
   qualityButton.setVisible(true);
   exitButton.setVisible(true);}

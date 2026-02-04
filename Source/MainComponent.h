@@ -65,6 +65,7 @@ private:
   ModernLookAndFeel modernLF;
 
   juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton;
+  juce::TextButton clearLoopInButton, clearLoopOutButton;
   juce::TextEditor statsDisplay, loopInEditor, loopOutEditor; // Changed from Label to TextEditor
   juce::Rectangle<int> waveformBounds, statsBounds, contentAreaBounds;
   juce::FlexBox getTopRowFlexBox();
@@ -109,5 +110,8 @@ private:
 
   // Helper function
   double parseTime(const juce::String& timeString); // Declared as a member function
+
+  bool isFileLoaded = false; // New member variable
+  void updateComponentStates(); // New method declaration
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent) };

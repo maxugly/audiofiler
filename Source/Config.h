@@ -35,6 +35,9 @@ namespace Config{
     const juce::Colour buttonBaseColour = juce::Colour(0xff3a3a3a); // Dark Grey
     const juce::Colour buttonOnColour = juce::Colour(0xff00bfff);   // Deep Sky Blue (for toggled/highlighted state)
     const juce::Colour buttonTextColour = juce::Colour(0xFFFFFFFF); // White
+    // New colors for disabled state
+    const juce::Colour disabledButtonBackgroundColour = juce::Colour(0xff2a2a2a); // A slightly darker grey for disabled background
+    const juce::Colour disabledButtonTextColour = juce::Colour(0xff4a4a4a);     // Darker grey for disabled text, closer to background
     constexpr float buttonHighlightedBrightnessFactor = 0.1f; // How much brighter on hover
     constexpr float buttonPressedDarknessFactor = 0.1f;   // How much darker on press
 

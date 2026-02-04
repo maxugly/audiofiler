@@ -19,15 +19,20 @@ public:
                             bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override {
     auto cornerSize = Config::buttonCornerRadius;
     auto outlineThickness = Config::buttonOutlineThickness;
-    auto bounds = button.getLocalBounds().toFloat().reduced (outlineThickness / 2.0f); // Reduce by half thickness for outline
+    auto bounds = button.getLocalBounds().toFloat().reduced (outlineThickness / 2.0f);
 
-    auto baseColour = backgroundColour;
-    if (shouldDrawButtonAsHighlighted)
-      baseColour = baseColour.brighter (Config::buttonHighlightedBrightnessFactor);
-    if (shouldDrawButtonAsDown)
-      baseColour = baseColour.darker (Config::buttonPressedDarknessFactor);
+    juce::Colour currentBackgroundColour;
+    if (!button.isEnabled()) {
+        currentBackgroundColour = Config::disabledButtonBackgroundColour;
+    } else {
+        currentBackgroundColour = backgroundColour;
+        if (shouldDrawButtonAsHighlighted)
+            currentBackgroundColour = currentBackgroundColour.brighter (Config::buttonHighlightedBrightnessFactor);
+        if (shouldDrawButtonAsDown)
+            currentBackgroundColour = currentBackgroundColour.darker (Config::buttonPressedDarknessFactor);
+    }
 
-    g.setColour (baseColour);
+    g.setColour (currentBackgroundColour);
     g.fillRoundedRectangle (bounds, cornerSize);
 
     g.setColour (Config::buttonOutlineColour);
@@ -35,8 +40,8 @@ public:
 
   juce::Font getTextButtonFont (juce::TextButton& button, int buttonHeight) override {
     juce::Font font = LookAndFeel_V4::getTextButtonFont (button, buttonHeight);
-    if (button.getButtonText() == juce::CharPointer_UTF8 ("\xe2\x96\xb6") ||        // Play symbol
-      button.getButtonText() == juce::CharPointer_UTF8 ("\xe2\x8f\xb8")) {          // Pause symbol
+    if (button.getButtonText() == juce::CharPointer_UTF8 ("\xe2\x96\xb6") ||
+      button.getButtonText() == juce::CharPointer_UTF8 ("\xe2\x8f\xb8")) {
       font.setHeight (buttonHeight * Config::buttonPlayPauseTextHeightScale); }
     else {
       font.setHeight (buttonHeight * Config::buttonTextHeightScale); }
@@ -46,9 +51,34 @@ public:
                       bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override {
     auto font = getTextButtonFont (button, button.getHeight());
     g.setFont (font);
-    g.setColour (button.findColour (button.getToggleState() ? juce::TextButton::textColourOnId
-                                                          : juce::TextButton::textColourOffId));
+    
+    juce::Colour textColourToUse;
+    if (!button.isEnabled()) {
+        textColourToUse = Config::disabledButtonTextColour;
+    } else {
+        textColourToUse = button.findColour (button.getToggleState() ? juce::TextButton::textColourOnId
+                                                                  : juce::TextButton::textColourOffId);
+    }
+    g.setColour (textColourToUse);
     g.drawText (button.getButtonText(), button.getLocalBounds(), juce::Justification::centred, true); }
+
+  void fillTextEditorBackground (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override {
+      if (!textEditor.isEnabled()) {
+          g.setColour(Config::disabledButtonBackgroundColour);
+      } else {
+          g.setColour(textEditor.findColour(juce::TextEditor::backgroundColourId));
+      }
+      g.fillRect(0, 0, width, height);
+  }
+
+  void drawTextEditorOutline (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override {
+      if (!textEditor.isEnabled()) {
+          g.setColour(Config::disabledButtonTextColour.withAlpha(0.5f)); // Faint outline for disabled
+      } else {
+          g.setColour(textEditor.findColour(juce::TextEditor::outlineColourId));
+      }
+      g.drawRect(0, 0, width, height, 1); // 1-pixel thick border
+  }
 
 private:
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModernLookAndFeel) };
