@@ -105,6 +105,10 @@ private:
   LoopButton loopInButton, loopOutButton;
   juce::TextButton autoplayButton; // New autoplay button
   bool shouldAutoplay = false;      // Autoplay state
+  juce::TextButton autoCutInButton;     // New auto cut in button
+  juce::TextButton autoCutOutButton;    // New auto cut out button
+  bool shouldAutoCutIn = false;         // Auto cut in state
+  bool shouldAutoCutOut = false;        // Auto cut out state
 
 
   void updateQualityButtonText();

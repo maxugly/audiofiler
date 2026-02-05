@@ -80,6 +80,8 @@ namespace Config{
     const juce::String detectInButtonText = "Detect In";
     const juce::String detectOutButtonText = "Detect Out";
     const juce::String autoplayButtonText = "[A]utoPlay";
+    const juce::String autoCutInButtonText = "[AC In]";
+    const juce::String autoCutOutButtonText = "[AC Out]";
 
     // --- Playback Cursor Colors ---
     const juce::Colour playbackCursorColor = juce::Colours::lime;

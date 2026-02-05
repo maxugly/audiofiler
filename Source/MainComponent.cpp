@@ -92,6 +92,24 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
     }
   };
 
+  addAndMakeVisible (autoCutInButton);
+  autoCutInButton.setButtonText (Config::autoCutInButtonText);
+  autoCutInButton.setClickingTogglesState (true);
+  autoCutInButton.setToggleState (shouldAutoCutIn, juce::dontSendNotification);
+  autoCutInButton.onClick = [this] {
+    DBG("Button Clicked: Auto Cut In, new state: " << (autoCutInButton.getToggleState() ? "On" : "Off"));
+    shouldAutoCutIn = autoCutInButton.getToggleState();
+  };
+
+  addAndMakeVisible (autoCutOutButton);
+  autoCutOutButton.setButtonText (Config::autoCutOutButtonText);
+  autoCutOutButton.setClickingTogglesState (true);
+  autoCutOutButton.setToggleState (shouldAutoCutOut, juce::dontSendNotification);
+  autoCutOutButton.onClick = [this] {
+    DBG("Button Clicked: Auto Cut Out, new state: " << (autoCutOutButton.getToggleState() ? "On" : "Off"));
+    shouldAutoCutOut = autoCutOutButton.getToggleState();
+  };
+
   addAndMakeVisible (loopInButton);
   loopInButton.setButtonText ("[I]n");
     loopInButton.onLeftClick = [this] {
@@ -332,6 +350,12 @@ void MainComponent::openButtonClicked() {
                 updateComponentStates(); // Update component states after loading file
                 grabKeyboardFocus(); // Re-grab focus after file chooser closes
                 if (shouldAutoplay && isFileLoaded) {
+                    if (shouldAutoCutIn) {
+                        detectInSilence();
+                    }
+                    if (shouldAutoCutOut) {
+                        detectOutSilence();
+                    }
                     playStopButtonClicked(); // Simulate click to start playback
                 }
 
@@ -576,27 +600,53 @@ void MainComponent::paint (juce::Graphics& g) {
   auto audioLength = (float)thumbnail.getTotalLength();
   if (audioLength > 0.0) {
       // --- NEW CODE: Silence Threshold Visualization ---
-      float normalisedThreshold = currentInSilenceThreshold; // currentInSilenceThreshold is 0.0-1.0
-      float centerY = (float)waveformBounds.getCentreY();
-      float halfHeight = (float)waveformBounds.getHeight() / 2.0f;
+      // Helper lambda to draw threshold lines at a given position
+      auto drawThresholdVisualisation = [&](juce::Graphics& g_ref, double loopPos, float threshold, bool isActive) {
+          if (audioLength <= 0.0) return; // Only draw if audio is loaded
 
-      // Calculate Y positions for the threshold lines
-      // +ve threshold is above center, -ve threshold is below center
-      float topThresholdY = centerY - (normalisedThreshold * halfHeight);
-      float bottomThresholdY = centerY + (normalisedThreshold * halfHeight);
+          float normalisedThreshold = threshold; // threshold is 0.0-1.0
+          float centerY = (float)waveformBounds.getCentreY();
+          float halfHeight = (float)waveformBounds.getHeight() / 2.0f;
 
-      // Ensure lines are within bounds
-      topThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), topThresholdY);
-      bottomThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), bottomThresholdY);
+          // Calculate Y positions for the threshold lines
+          float topThresholdY = centerY - (normalisedThreshold * halfHeight);
+          float bottomThresholdY = centerY + (normalisedThreshold * halfHeight);
 
-      // Draw the filled region
-      g.setColour(Config::thresholdRegionColor);
-      g.fillRect((float)waveformBounds.getX(), topThresholdY, (float)waveformBounds.getWidth(), bottomThresholdY - topThresholdY);
+          // Ensure lines are within bounds
+          topThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), topThresholdY);
+          bottomThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), bottomThresholdY);
 
-      // Draw the threshold lines
-      g.setColour(Config::thresholdLineColor);
-      g.drawHorizontalLine((int)topThresholdY, waveformBounds.getX(), waveformBounds.getRight());
-      g.drawHorizontalLine((int)bottomThresholdY, waveformBounds.getX(), waveformBounds.getRight());
+          // Calculate X position for the loop point
+          float xPos = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopPos / audioLength);
+
+          // Calculate start and end X for the 100-pixel wide line
+          float lineStartX = xPos - 50.0f; // 50 pixels to the left
+          float lineEndX = xPos + 50.0f;  // 50 pixels to the right
+
+          // Ensure lines are within waveformBounds horizontally
+          lineStartX = juce::jmax(lineStartX, (float)waveformBounds.getX());
+          lineEndX = juce::jmin(lineEndX, (float)waveformBounds.getRight());
+          float lineWidth = lineEndX - lineStartX;
+
+
+          juce::Colour lineColor = isActive ? Config::thresholdLineColor : Config::thresholdLineColor.withMultipliedAlpha(Config::thresholdLineInactiveDimFactor);
+          juce::Colour regionColor = isActive ? Config::thresholdRegionColor : Config::thresholdRegionColor.withMultipliedAlpha(Config::thresholdRegionInactiveDimFactor);
+
+          // Draw the filled region (100 pixels wide)
+          g_ref.setColour(regionColor);
+          g_ref.fillRect(lineStartX, topThresholdY, lineWidth, bottomThresholdY - topThresholdY);
+
+          // Draw the threshold lines (100 pixels wide)
+          g_ref.setColour(lineColor);
+          g_ref.drawHorizontalLine((int)topThresholdY, lineStartX, lineEndX);
+          g_ref.drawHorizontalLine((int)bottomThresholdY, lineStartX, lineEndX);
+      };
+
+      // Draw In-Threshold Visualization
+      drawThresholdVisualisation(g, loopInPosition, currentInSilenceThreshold, shouldAutoCutIn);
+
+      // Draw Out-Threshold Visualization
+      drawThresholdVisualisation(g, loopOutPosition, currentOutSilenceThreshold, shouldAutoCutOut);
       // --- END NEW CODE ---
 
       // Loop points are initialized on file load or updated by user interaction, not reset on every paint.
@@ -1124,6 +1174,8 @@ void MainComponent::resized() {
   statsButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   loopButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins); 
   autoplayButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
+  autoCutInButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
+  autoCutOutButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   exitButton.setBounds(topRow.removeFromRight(Config::buttonWidth)); topRow.removeFromRight(Config::windowBorderMargins);
 
   auto loopRow = bounds.removeFromTop(rowHeight).reduced(Config::windowBorderMargins);
@@ -1275,6 +1327,8 @@ void MainComponent::updateComponentStates() {
   exitButton.setEnabled(true);
   loopButton.setEnabled(true); // Always enabled
   autoplayButton.setEnabled(true); // Always enabled
+  autoCutInButton.setEnabled(true); // Always enabled
+  autoCutOutButton.setEnabled(true); // Always enabled
   detectInSilenceButton.setEnabled(true); // Always enabled
   inSilenceThresholdEditor.setEnabled(true); // Always enabled
   inSilenceThresholdLabel.setEnabled(true); // Always enabled
