@@ -105,10 +105,7 @@ namespace Config{
     const juce::Colour thresholdRegionColor = juce::Colours::red.withAlpha(0.15f); // A shade of red, translucent
 
     // --- Inactive Visual Element Dimming Factors ---
-    constexpr float loopLineInactiveDimFactor = 0.5f;     // Factor to dim loop lines when looping is off
-    constexpr float loopRegionInactiveDimFactor = 0.5f;   // Factor to dim loop region when looping is off
-    constexpr float thresholdLineInactiveDimFactor = 0.5f; // Factor to dim threshold lines when detection is off
-    constexpr float thresholdRegionInactiveDimFactor = 0.5f; // Factor to dim threshold region when detection is off
+
 
     // --- Animation & Glow Settings ---
     constexpr float pulseSpeedFactor = 0.002f;           // Speed of the glowing pulse animation

@@ -352,15 +352,22 @@ void MainComponent::openButtonClicked() {
                 loopOutPosition = thumbnail.getTotalLength();
                 readerSource.reset (newSource.release());
                 updateButtonText();
-                updateComponentStates(); // Update component states after loading file
+                
+                // --- NEW LOGIC FOR AUTO-CUT ON LOAD ---
+                // If auto-cut-in is active, perform silence detection for the in point
+                if (shouldAutoCutIn) {
+                    detectInSilence();
+                }
+                // If auto-cut-out is active, perform silence detection for the out point
+                if (shouldAutoCutOut) {
+                    detectOutSilence();
+                }
+                // --- END NEW LOGIC ---
+
+                updateComponentStates(); // Update component states after loading file and potentially auto-cutting
                 grabKeyboardFocus(); // Re-grab focus after file chooser closes
-                if (shouldAutoplay && isFileLoaded) {
-                    if (shouldAutoCutIn) {
-                        detectInSilence();
-                    }
-                    if (shouldAutoCutOut) {
-                        detectOutSilence();
-                    }
+                
+                if (shouldAutoplay && isFileLoaded) { // Autoplay only if explicitly enabled
                     playStopButtonClicked(); // Simulate click to start playback
                 }
 
@@ -662,8 +669,8 @@ void MainComponent::paint (juce::Graphics& g) {
           float currentLineWidth = lineEndX - lineStartX;
 
 
-          juce::Colour lineColor = isActive ? Config::thresholdLineColor : Config::thresholdLineColor.withMultipliedAlpha(Config::thresholdLineInactiveDimFactor);
-          juce::Colour regionColor = isActive ? Config::thresholdRegionColor : Config::thresholdRegionColor.withMultipliedAlpha(Config::thresholdRegionInactiveDimFactor);
+          juce::Colour lineColor = Config::thresholdLineColor;
+          juce::Colour regionColor = Config::thresholdRegionColor;
 
           // Draw the filled region (Config::thresholdLineWidth wide)
           g_ref.setColour(regionColor);
@@ -699,26 +706,21 @@ void MainComponent::paint (juce::Graphics& g) {
         auto actualOut = juce::jmax(loopInPosition, loopOutPosition);
         auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
         auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
-        g.setColour(shouldLoop ? Config::loopRegionColor : Config::loopRegionColor.withMultipliedAlpha(Config::loopRegionInactiveDimFactor));
-        g.fillRect(juce::Rectangle<float>(inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight())); }
-      if (audioLength > 0.0) {
+        if (isCutModeActive) { // Only draw loop region if Cut mode is active
+            g.setColour(Config::loopRegionColor);
+            g.fillRect(juce::Rectangle<float>(inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight()));
+        }
+      // Vertical loop lines
+      if (isCutModeActive) { // Only draw if Cut mode is active
         auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopInPosition / audioLength);
         auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopOutPosition / audioLength);
 
-        // Draw base color for vertical lines (always visible)
-        juce::Colour baseLineColor = Config::loopLineColor.withMultipliedAlpha(Config::loopLineInactiveDimFactor);
-        g.setColour(baseLineColor);
-        g.drawVerticalLine((int)inX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
-        g.drawVerticalLine((int)outX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
-
-        // Draw pulsing glow for vertical lines (if looping is active)
-        if (shouldLoop) {
-            juce::Colour glowColor = Config::loopLineColor.withAlpha(Config::loopLineColor.getFloatAlpha() * (1.0f - glowAlpha));
-            g.setColour(glowColor);
-            // Draw a thicker rectangle for the glow, centered on the line
-            g.fillRect(inX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
-            g.fillRect(outX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
-        }
+        // Draw pulsing glow for vertical lines
+        juce::Colour glowColor = Config::loopLineColor.withAlpha(Config::loopLineColor.getFloatAlpha() * (1.0f - glowAlpha));
+        g.setColour(glowColor);
+        // Draw a thicker rectangle for the glow, centered on the line
+        g.fillRect(inX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
+        g.fillRect(outX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
       }
       auto drawPosition = (float)transportSource.getCurrentPosition();
       auto x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
