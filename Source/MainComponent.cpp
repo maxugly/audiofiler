@@ -1464,18 +1464,21 @@ void MainComponent::updateComponentStates() {
   statsDisplay.setEnabled(enabled);
 
   // Controls related to "Cut" mode: their enabled and visible state depends on isCutModeActive
-  loopInButton.setEnabled(cutControlsActive && !shouldAutoCutIn);
-  loopOutButton.setEnabled(cutControlsActive && !shouldAutoCutOut);
-  loopInEditor.setEnabled(cutControlsActive && !shouldAutoCutIn);
-  loopOutEditor.setEnabled(cutControlsActive && !shouldAutoCutOut);
-  clearLoopInButton.setEnabled(cutControlsActive && !shouldAutoCutIn);
-  clearLoopOutButton.setEnabled(cutControlsActive && !shouldAutoCutOut);
+  // Manual loop point controls are enabled only if Cut mode is active AND their auto-cut is NOT active
+  loopInButton.setEnabled(isCutModeActive && !shouldAutoCutIn);
+  loopOutButton.setEnabled(isCutModeActive && !shouldAutoCutOut);
+  loopInEditor.setEnabled(isCutModeActive && !shouldAutoCutIn);
+  loopOutEditor.setEnabled(isCutModeActive && !shouldAutoCutOut);
+  clearLoopInButton.setEnabled(isCutModeActive && !shouldAutoCutIn);
+  clearLoopOutButton.setEnabled(isCutModeActive && !shouldAutoCutOut);
 
+  // Threshold editors are enabled only if Cut mode is active AND their corresponding auto-cut is active
+  inSilenceThresholdEditor.setEnabled(isCutModeActive && shouldAutoCutIn);
+  outSilenceThresholdEditor.setEnabled(isCutModeActive && shouldAutoCutOut);
 
-  inSilenceThresholdEditor.setEnabled(cutControlsActive);
-
-  autoCutInButton.setEnabled(cutControlsActive);
-  autoCutOutButton.setEnabled(cutControlsActive);
+  // Auto-cut buttons are enabled only if Cut mode is active
+  autoCutInButton.setEnabled(isCutModeActive);
+  autoCutOutButton.setEnabled(isCutModeActive);
 
   // Set visibility for "Cut" mode related controls
   loopInButton.setVisible(isCutModeActive);
