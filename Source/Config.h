@@ -76,6 +76,9 @@ namespace Config{
 
     // --- Silence Detection ---
     constexpr float silenceThreshold = 0.01f;
+    constexpr float outSilenceThreshold = 0.01f; // Default for outbound silence detection
+    const juce::String detectInButtonText = "Detect In";
+    const juce::String detectOutButtonText = "Detect Out";
 
     // --- Playback Cursor Colors ---
     const juce::Colour playbackCursorColor = juce::Colours::lime;

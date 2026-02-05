@@ -65,12 +65,16 @@ private:
 
   ModernLookAndFeel modernLF;
 
-  juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton, detectSilenceButton;
+  juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton, detectInSilenceButton;
   juce::TextButton clearLoopInButton, clearLoopOutButton;
-  juce::TextEditor statsDisplay, loopInEditor, loopOutEditor, silenceThresholdEditor;
-  juce::Label silenceThresholdLabel;
-  float currentSilenceThreshold = Config::silenceThreshold;
-  bool isDetectModeActive = false;
+  juce::TextEditor statsDisplay, loopInEditor, loopOutEditor, inSilenceThresholdEditor;
+  juce::Label inSilenceThresholdLabel;
+  float currentInSilenceThreshold = Config::silenceThreshold;
+
+  juce::TextButton detectOutSilenceButton;
+  juce::Label outSilenceThresholdLabel;
+  juce::TextEditor outSilenceThresholdEditor;
+  float currentOutSilenceThreshold = Config::outSilenceThreshold;
   juce::Rectangle<int> waveformBounds, statsBounds, contentAreaBounds;
   juce::FlexBox getTopRowFlexBox();
   juce::FlexBox getLoopRowFlexBox();
@@ -103,7 +107,8 @@ private:
   void updateQualityButtonText();
   void drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample);
   void updateLoopButtonColors();
-  void detectSilence();
+  void detectInSilence();
+  void detectOutSilence();
   void ensureLoopOrder(); // New method declaration
 
   juce::String formatTime(double seconds);
