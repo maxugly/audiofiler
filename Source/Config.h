@@ -82,6 +82,7 @@ namespace Config{
     const juce::String autoplayButtonText = "[A]utoPlay";
     const juce::String autoCutInButtonText = "[AC In]";
     const juce::String autoCutOutButtonText = "[AC Out]";
+    const juce::String cutButtonText = "[Cut]";
 
     // --- Playback Cursor Colors ---
     const juce::Colour playbackCursorColor = juce::Colours::lime;
@@ -102,4 +103,12 @@ namespace Config{
     constexpr float loopRegionInactiveDimFactor = 0.5f;   // Factor to dim loop region when looping is off
     constexpr float thresholdLineInactiveDimFactor = 0.5f; // Factor to dim threshold lines when detection is off
     constexpr float thresholdRegionInactiveDimFactor = 0.5f; // Factor to dim threshold region when detection is off
+
+    // --- Animation & Glow Settings ---
+    constexpr float pulseSpeedFactor = 0.002f;           // Speed of the glowing pulse animation
+    constexpr float thresholdGlowThickness = 3.0f;       // Thickness of the glowing horizontal threshold lines
+    constexpr float thresholdLineWidth = 100.0f;         // Width of the threshold visualization lines in pixels
+    constexpr float loopLineGlowThickness = 3.0f;        // Thickness of the glowing vertical loop lines
+    constexpr float loopPulseAlphaMinFactor = 0.1f;      // Minimum alpha multiplier for pulsing vertical loop lines
+    constexpr float loopPulseAlphaModulationFactor = 0.8f; // Factor controlling the range of alpha modulation for vertical loop lines
 } // namespace Config

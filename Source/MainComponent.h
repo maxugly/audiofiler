@@ -110,6 +110,8 @@ private:
   bool shouldAutoCutIn = false;         // Auto cut in state
   bool shouldAutoCutOut = false;        // Auto cut out state
   float glowAlpha = 0.0f;                 // Glow animation alpha
+  juce::TextButton cutButton;             // New cut button
+  bool isCutModeActive = false;           // Cut mode state
 
 
   void updateQualityButtonText();

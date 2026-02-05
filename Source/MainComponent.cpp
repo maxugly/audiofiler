@@ -110,6 +110,16 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
     shouldAutoCutOut = autoCutOutButton.getToggleState();
   };
 
+  addAndMakeVisible (cutButton);
+  cutButton.setButtonText (Config::cutButtonText);
+  cutButton.setClickingTogglesState (true);
+  cutButton.setToggleState (isCutModeActive, juce::dontSendNotification);
+  cutButton.onClick = [this] {
+    DBG("Button Clicked: Cut Mode, new state: " << (cutButton.getToggleState() ? "Active" : "Inactive"));
+    isCutModeActive = cutButton.getToggleState();
+    updateComponentStates(); // Update visibility/enabled state of cut-related controls
+  };
+
   addAndMakeVisible (loopInButton);
   loopInButton.setButtonText ("[I]n");
     loopInButton.onLeftClick = [this] {
@@ -557,7 +567,7 @@ void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& buffe
   else transportSource.getNextAudioBlock (bufferToFill); }
 
 void MainComponent::timerCallback() {
-  glowAlpha = 0.5f + 0.5f * std::sin(juce::Time::getMillisecondCounter() * 0.002);
+  glowAlpha = 0.5f + 0.5f * std::sin(juce::Time::getMillisecondCounter() * Config::pulseSpeedFactor);
 
   if (!transportSource.isPlaying() && transportSource.hasStreamFinished() && shouldLoop) {
     transportSource.setPosition (0.0);
@@ -601,6 +611,7 @@ void MainComponent::paint (juce::Graphics& g) {
       thumbnail.drawChannels (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 1.0f); }}
   auto audioLength = (float)thumbnail.getTotalLength();
   if (audioLength > 0.0) {
+    if (isCutModeActive) { // Only draw threshold visualization if Cut mode is active
       // --- NEW CODE: Silence Threshold Visualization ---
       // Helper lambda to draw threshold lines at a given position
       auto drawThresholdVisualisation = [&](juce::Graphics& g_ref, double loopPos, float threshold, bool isActive) {
@@ -621,34 +632,35 @@ void MainComponent::paint (juce::Graphics& g) {
           // Calculate X position for the loop point
           float xPos = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopPos / audioLength);
 
-          // Calculate start and end X for the 100-pixel wide line
-          float lineStartX = xPos - 50.0f; // 50 pixels to the left
-          float lineEndX = xPos + 50.0f;  // 50 pixels to the right
+          // Calculate start and end X for the Config::thresholdLineWidth wide line
+          float halfThresholdLineWidth = Config::thresholdLineWidth / 2.0f;
+          float lineStartX = xPos - halfThresholdLineWidth;
+          float lineEndX = xPos + halfThresholdLineWidth;
 
           // Ensure lines are within waveformBounds horizontally
           lineStartX = juce::jmax(lineStartX, (float)waveformBounds.getX());
           lineEndX = juce::jmin(lineEndX, (float)waveformBounds.getRight());
-          float lineWidth = lineEndX - lineStartX;
+          float currentLineWidth = lineEndX - lineStartX;
 
 
           juce::Colour lineColor = isActive ? Config::thresholdLineColor : Config::thresholdLineColor.withMultipliedAlpha(Config::thresholdLineInactiveDimFactor);
           juce::Colour regionColor = isActive ? Config::thresholdRegionColor : Config::thresholdRegionColor.withMultipliedAlpha(Config::thresholdRegionInactiveDimFactor);
 
-          // Draw the filled region (100 pixels wide)
+          // Draw the filled region (Config::thresholdLineWidth wide)
           g_ref.setColour(regionColor);
-          g_ref.fillRect(lineStartX, topThresholdY, lineWidth, bottomThresholdY - topThresholdY);
+          g_ref.fillRect(lineStartX, topThresholdY, currentLineWidth, bottomThresholdY - topThresholdY);
 
-          // --- NEW GLOW EFFECT ---
+          // --- GLOW EFFECT FOR THRESHOLD ---
           if (isActive) {
               juce::Colour glowColor = lineColor.withAlpha(lineColor.getFloatAlpha() * glowAlpha);
               g_ref.setColour(glowColor);
               // Draw a thicker line underneath the main line to create a glow
-              g_ref.fillRect(lineStartX, topThresholdY - 1.0f, lineWidth, 3.0f); 
-              g_ref.fillRect(lineStartX, bottomThresholdY - 1.0f, lineWidth, 3.0f);
+              g_ref.fillRect(lineStartX, topThresholdY - (Config::thresholdGlowThickness / 2.0f - 0.5f), currentLineWidth, Config::thresholdGlowThickness); 
+              g_ref.fillRect(lineStartX, bottomThresholdY - (Config::thresholdGlowThickness / 2.0f - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
           }
-          // --- END NEW GLOW EFFECT ---
+          // --- END GLOW EFFECT FOR THRESHOLD ---
 
-          // Draw the main threshold lines (100 pixels wide) on top of the glow
+          // Draw the main threshold lines (Config::thresholdLineWidth wide) on top of the glow
           g_ref.setColour(lineColor);
           g_ref.drawHorizontalLine((int)topThresholdY, lineStartX, lineEndX);
           g_ref.drawHorizontalLine((int)bottomThresholdY, lineStartX, lineEndX);
@@ -660,6 +672,7 @@ void MainComponent::paint (juce::Graphics& g) {
       // Draw Out-Threshold Visualization
       drawThresholdVisualisation(g, loopOutPosition, currentOutSilenceThreshold, shouldAutoCutOut);
       // --- END NEW CODE ---
+    }
 
       // Loop points are initialized on file load or updated by user interaction, not reset on every paint.
       if (audioLength > 0.0) {
@@ -669,13 +682,25 @@ void MainComponent::paint (juce::Graphics& g) {
         auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
         g.setColour(shouldLoop ? Config::loopRegionColor : Config::loopRegionColor.withMultipliedAlpha(Config::loopRegionInactiveDimFactor));
         g.fillRect(juce::Rectangle<float>(inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight())); }
-      g.setColour(shouldLoop ? Config::loopLineColor : Config::loopLineColor.withMultipliedAlpha(Config::loopLineInactiveDimFactor));
       if (audioLength > 0.0) {
         auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopInPosition / audioLength);
-        g.drawVerticalLine((int)inX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom()); }
-      if (audioLength > 0.0) {
         auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopOutPosition / audioLength);
-        g.drawVerticalLine((int)outX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom()); }
+
+        // Draw base color for vertical lines (always visible)
+        juce::Colour baseLineColor = Config::loopLineColor.withMultipliedAlpha(Config::loopLineInactiveDimFactor);
+        g.setColour(baseLineColor);
+        g.drawVerticalLine((int)inX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+        g.drawVerticalLine((int)outX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+
+        // Draw pulsing glow for vertical lines (if looping is active)
+        if (shouldLoop) {
+            juce::Colour glowColor = Config::loopLineColor.withAlpha(Config::loopLineColor.getFloatAlpha() * (1.0f - glowAlpha));
+            g.setColour(glowColor);
+            // Draw a thicker rectangle for the glow, centered on the line
+            g.fillRect(inX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
+            g.fillRect(outX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
+        }
+      }
       auto drawPosition = (float)transportSource.getCurrentPosition();
       auto x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
       if (transportSource.isPlaying()) {
@@ -1182,10 +1207,11 @@ void MainComponent::resized() {
   auto topRow = bounds.removeFromTop(rowHeight).reduced(Config::windowBorderMargins);
   openButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   playStopButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
+  autoplayButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
+  loopButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins); 
+  cutButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   modeButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   statsButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
-  loopButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins); 
-  autoplayButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   autoCutInButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   autoCutOutButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
   exitButton.setBounds(topRow.removeFromRight(Config::buttonWidth)); topRow.removeFromRight(Config::windowBorderMargins);
@@ -1332,38 +1358,61 @@ void MainComponent::changeListenerCallback (juce::ChangeBroadcaster*) { repaint(
 void MainComponent::releaseResources() { transportSource.releaseResources(); }
 
 void MainComponent::updateComponentStates() {
-  const bool enabled = isFileLoaded;
+  const bool enabled = isFileLoaded; // Base enable state depends on file loaded
+  const bool cutControlsActive = isCutModeActive && enabled; // Cut controls enabled only if Cut mode is active AND file is loaded
 
-  // Buttons that should always be enabled
+  // Buttons that should always be enabled (and visible)
   openButton.setEnabled(true);
   exitButton.setEnabled(true);
-  loopButton.setEnabled(true); // Always enabled
-  autoplayButton.setEnabled(true); // Always enabled
-  autoCutInButton.setEnabled(true); // Always enabled
-  autoCutOutButton.setEnabled(true); // Always enabled
-  detectInSilenceButton.setEnabled(true); // Always enabled
-  inSilenceThresholdEditor.setEnabled(true); // Always enabled
-  inSilenceThresholdLabel.setEnabled(true); // Always enabled
-  detectOutSilenceButton.setEnabled(true); // Always enabled
-  outSilenceThresholdEditor.setEnabled(true); // Always enabled
-  outSilenceThresholdLabel.setEnabled(true); // Always enabled
+  loopButton.setEnabled(true);
+  autoplayButton.setEnabled(true);
+  cutButton.setEnabled(true);
 
-  // Buttons that depend on a file being loaded
+  // Buttons that depend on a file being loaded (but not necessarily isCutModeActive)
   playStopButton.setEnabled(enabled);
   modeButton.setEnabled(enabled);
   statsButton.setEnabled(enabled);
   channelViewButton.setEnabled(enabled);
   qualityButton.setEnabled(enabled);
-  const bool manualEditEnabled = enabled; // isDetectModeActive removed
+  statsDisplay.setEnabled(enabled);
 
-  clearLoopInButton.setEnabled(manualEditEnabled);
-  clearLoopOutButton.setEnabled(manualEditEnabled);
-  loopInButton.setEnabled(manualEditEnabled);
-  loopOutButton.setEnabled(manualEditEnabled);
+  // Controls related to "Cut" mode: their enabled and visible state depends on isCutModeActive
+  loopInButton.setEnabled(cutControlsActive);
+  loopOutButton.setEnabled(cutControlsActive);
+  loopInEditor.setEnabled(cutControlsActive);
+  loopOutEditor.setEnabled(cutControlsActive);
+  clearLoopInButton.setEnabled(cutControlsActive);
+  clearLoopOutButton.setEnabled(cutControlsActive);
 
-  loopInEditor.setEnabled(manualEditEnabled);
-  loopOutEditor.setEnabled(manualEditEnabled);
-  statsDisplay.setEnabled(enabled); // Stats display is always enabled if file loaded
+  detectInSilenceButton.setEnabled(cutControlsActive);
+  inSilenceThresholdEditor.setEnabled(cutControlsActive);
+  inSilenceThresholdLabel.setEnabled(cutControlsActive);
+
+  detectOutSilenceButton.setEnabled(cutControlsActive);
+  outSilenceThresholdEditor.setEnabled(cutControlsActive);
+  outSilenceThresholdLabel.setEnabled(cutControlsActive);
+
+  autoCutInButton.setEnabled(cutControlsActive);
+  autoCutOutButton.setEnabled(cutControlsActive);
+
+  // Set visibility for "Cut" mode related controls
+  loopInButton.setVisible(isCutModeActive);
+  loopOutButton.setVisible(isCutModeActive);
+  loopInEditor.setVisible(isCutModeActive);
+  loopOutEditor.setVisible(isCutModeActive);
+  clearLoopInButton.setVisible(isCutModeActive);
+  clearLoopOutButton.setVisible(isCutModeActive);
+
+  detectInSilenceButton.setVisible(isCutModeActive);
+  inSilenceThresholdEditor.setVisible(isCutModeActive);
+  inSilenceThresholdLabel.setVisible(isCutModeActive);
+
+  detectOutSilenceButton.setVisible(isCutModeActive);
+  outSilenceThresholdEditor.setVisible(isCutModeActive);
+  outSilenceThresholdLabel.setVisible(isCutModeActive);
+
+  autoCutInButton.setVisible(isCutModeActive);
+  autoCutOutButton.setVisible(isCutModeActive);
 }
 
 juce::FlexBox MainComponent::getBottomRowFlexBox() {
