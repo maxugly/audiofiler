@@ -29,6 +29,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   modeButton.setButtonText ("[V]iew");
   modeButton.setClickingTogglesState (true);
   modeButton.onClick = [this] {
+    DBG("Button Clicked: Mode, new state: " << (modeButton.getToggleState() ? "Overlay" : "Classic"));
     currentMode = modeButton.getToggleState() ? ViewMode::Overlay : ViewMode::Classic;
     modeButton.setButtonText (currentMode == ViewMode::Classic ? "[V]iew01" : "[V]iew02");
     resized();
@@ -38,6 +39,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   channelViewButton.setButtonText ("[C]han");
   channelViewButton.setClickingTogglesState (true);
   channelViewButton.onClick = [this] {
+    DBG("Button Clicked: Channel View, new state: " << (channelViewButton.getToggleState() ? "Stereo" : "Mono"));
     currentChannelViewMode = channelViewButton.getToggleState() ? ChannelViewMode::Stereo : ChannelViewMode::Mono;
     channelViewButton.setButtonText (currentChannelViewMode == ChannelViewMode::Mono ? "[C]han 1" : "[C]han 2");
     repaint(); };
@@ -45,6 +47,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   addAndMakeVisible (qualityButton);
   qualityButton.setButtonText ("[Q]ual");
   qualityButton.onClick = [this] {
+    DBG("Button Clicked: Quality");
     if (currentQuality == ThumbnailQuality::High)
       currentQuality = ThumbnailQuality::Medium;
     else if (currentQuality == ThumbnailQuality::Medium)
@@ -58,28 +61,34 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   addAndMakeVisible (exitButton);
   exitButton.setButtonText ("[E]xit");
   exitButton.setColour (juce::TextButton::buttonColourId, Config::exitButtonColor);
-  exitButton.onClick = [] { juce::JUCEApplication::getInstance()->systemRequestedQuit(); };
+  exitButton.onClick = [] {
+    DBG("Button Clicked: Exit - System Quit Requested");
+    juce::JUCEApplication::getInstance()->systemRequestedQuit(); };
 
   addAndMakeVisible (statsButton);
   statsButton.setButtonText ("[S]tats");
   statsButton.setClickingTogglesState (true);
   statsButton.onClick = [this] {
+    DBG("Button Clicked: Stats, new state: " << (statsButton.getToggleState() ? "Visible" : "Hidden"));
     showStats = statsButton.getToggleState();
     resized(); };
 
   addAndMakeVisible (loopButton);
   loopButton.setButtonText ("[L]oop");
   loopButton.setClickingTogglesState (true);
-  loopButton.onClick = [this] { shouldLoop = loopButton.getToggleState(); };
+  loopButton.onClick = [this] {
+    DBG("Button Clicked: Loop, new state: " << (loopButton.getToggleState() ? "On" : "Off"));
+    shouldLoop = loopButton.getToggleState(); };
 
   addAndMakeVisible (loopInButton);
   loopInButton.setButtonText ("[I]n");
-  loopInButton.onLeftClick = [this] { 
-    loopInPosition = transportSource.getCurrentPosition();
-    ensureLoopOrder(); // Call helper
+    loopInButton.onLeftClick = [this] {
+      loopInPosition = transportSource.getCurrentPosition();
+      DBG("Loop In Button Left Clicked. Position: " << loopInPosition);    ensureLoopOrder(); // Call helper
     updateLoopButtonColors();
     repaint(); };
   loopInButton.onRightClick = [this] {
+    DBG("Loop In Button Right Clicked. Setting placement mode to LoopIn.");
     currentPlacementMode = PlacementMode::LoopIn;
     updateLoopButtonColors();
     repaint(); };
@@ -88,10 +97,12 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   loopOutButton.setButtonText ("[O]ut");
   loopOutButton.onLeftClick = [this] {
     loopOutPosition = transportSource.getCurrentPosition();
+    DBG("Loop Out Button Left Clicked. Position: " << loopOutPosition);
     ensureLoopOrder(); // Call helper
     updateLoopButtonColors();
     repaint(); };
   loopOutButton.onRightClick = [this] {
+    DBG("Loop Out Button Right Clicked. Setting placement mode to LoopOut.");
     currentPlacementMode = PlacementMode::LoopOut;
     updateLoopButtonColors();
     repaint(); };
@@ -130,6 +141,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   clearLoopInButton.setButtonText ("X");
   clearLoopInButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
   clearLoopInButton.onClick = [this] {
+      DBG("Button Clicked: Clear Loop In");
       loopInPosition = -1.0;
       updateLoopButtonColors();
       updateLoopLabels();
@@ -140,6 +152,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   clearLoopOutButton.setButtonText ("X");
   clearLoopOutButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
   clearLoopOutButton.onClick = [this] {
+      DBG("Button Clicked: Clear Loop Out");
       loopOutPosition = -1.0;
       updateLoopButtonColors();
       updateLoopLabels();
@@ -152,6 +165,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   detectSilenceButton.setToggleState (isDetectModeActive, juce::dontSendNotification); // Set initial state
   detectSilenceButton.onClick = [this] {
     isDetectModeActive = detectSilenceButton.getToggleState();
+    DBG("Button Clicked: Detect Silence, new state: " << (isDetectModeActive ? "Active" : "Inactive"));
     updateComponentStates(); // Update component states when toggle changes
     if (isDetectModeActive) {
       detectSilence(); // Perform detection immediately if toggled on
@@ -246,6 +260,7 @@ void MainComponent::drawReducedQualityWaveform(juce::Graphics& g, int channel, i
     g.drawVerticalLine(waveformBounds.getX() + x, topY, bottomY); }}
 
 void MainComponent::openButtonClicked() {
+  DBG("Button Clicked: Open");
   isFileLoaded = false; // Assume no file loaded initially
   updateComponentStates(); // Disable buttons until a file is successfully loaded
 
@@ -276,6 +291,7 @@ void MainComponent::openButtonClicked() {
               }}});}
 
 void MainComponent::playStopButtonClicked() {
+  DBG("Button Clicked: Play/Stop");
   if (transportSource.isPlaying()) {
     transportSource.stop(); }
   else {
@@ -290,13 +306,16 @@ void MainComponent::playStopButtonClicked() {
 
 bool MainComponent::keyPressed (const juce::KeyPress& key) {
     auto keyCode = key.getTextCharacter();
+    DBG("Key Pressed: " << key.getTextDescription());
 
     // Handle 'e' and 'd' keys regardless of file loaded status
     if (keyCode == 'e' || keyCode == 'E') {
+        DBG("  'e' key pressed. Quitting application.");
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
         return true;
     }
     if (keyCode == 'd' || keyCode == 'D') {
+        DBG("  'd' key pressed. Opening file chooser.");
         openButtonClicked();
         return true;
     }
@@ -308,24 +327,51 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
             if (key == juce::KeyPress::leftKey) {
                 auto newPos = juce::jmax (0.0, transportSource.getCurrentPosition() - skipAmountSeconds);
                 transportSource.setPosition (newPos);
+                DBG("  Left arrow key pressed. Seeking to " << newPos);
                 return true;
             }
             if (key == juce::KeyPress::rightKey) {
                 auto newPos = juce::jmin (thumbnail.getTotalLength(), transportSource.getCurrentPosition() + skipAmountSeconds);
                 transportSource.setPosition (newPos);
+                DBG("  Right arrow key pressed. Seeking to " << newPos);
                 return true;
             }
         }
 
-        if (key == juce::KeyPress::spaceKey) { playStopButtonClicked(); return true; }
-        if (keyCode == 's' || keyCode == 'S') { statsButton.triggerClick(); return true; }
-        if (keyCode == 'v' || keyCode == 'V') { modeButton.triggerClick(); return true; }
-        if (keyCode == 'c' || keyCode == 'C') { channelViewButton.triggerClick(); return true; }
-        if (keyCode == 'q' || keyCode == 'Q') { qualityButton.triggerClick(); return true; }
-        if (keyCode == 'l' || keyCode == 'L') { loopButton.triggerClick(); return true; }
+        if (key == juce::KeyPress::spaceKey) {
+            DBG("  Space key pressed. Toggling play/stop.");
+            playStopButtonClicked();
+            return true;
+        }
+        if (keyCode == 's' || keyCode == 'S') {
+            DBG("  's' key pressed. Toggling stats.");
+            statsButton.triggerClick();
+            return true;
+        }
+        if (keyCode == 'v' || keyCode == 'V') {
+            DBG("  'v' key pressed. Toggling view mode.");
+            modeButton.triggerClick();
+            return true;
+        }
+        if (keyCode == 'c' || keyCode == 'C') {
+            DBG("  'c' key pressed. Toggling channel view mode.");
+            channelViewButton.triggerClick();
+            return true;
+        }
+        if (keyCode == 'q' || keyCode == 'Q') {
+            DBG("  'q' key pressed. Toggling quality.");
+            qualityButton.triggerClick();
+            return true;
+        }
+        if (keyCode == 'l' || keyCode == 'L') {
+            DBG("  'l' key pressed. Toggling loop.");
+            loopButton.triggerClick();
+            return true;
+        }
         if (keyCode == 'i' || keyCode == 'I') {
             if (isDetectModeActive) return true; // Ignore if detection mode is active
             loopInPosition = transportSource.getCurrentPosition();
+            DBG("  'i' key pressed. Setting loop in position to " << loopInPosition);
             ensureLoopOrder(); // Call helper
             updateLoopButtonColors();
             updateLoopLabels();
@@ -335,6 +381,7 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
         if (keyCode == 'o' || keyCode == 'O') {
             if (isDetectModeActive) return true; // Ignore if detection mode is active
             loopOutPosition = transportSource.getCurrentPosition();
+            DBG("  'o' key pressed. Setting loop out position to " << loopOutPosition);
             ensureLoopOrder(); // Call helper
             updateLoopButtonColors();
             updateLoopLabels();
@@ -342,16 +389,19 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
             return true;
         }
         if (keyCode == 't' || keyCode == 'T') {
+            DBG("  't' key pressed. Toggling detect silence mode.");
             detectSilenceButton.triggerClick();
             return true;
         }
         if (keyCode == 'u' || keyCode == 'U') {
             if (isDetectModeActive) return true; // Ignore if detection mode is active
+            DBG("  'u' key pressed. Clearing loop in.");
             clearLoopInButton.triggerClick();
             return true;
         }
         if (keyCode == 'p' || keyCode == 'P') {
             if (isDetectModeActive) return true; // Ignore if detection mode is active
+            DBG("  'p' key pressed. Clearing loop out.");
             clearLoopOutButton.triggerClick();
             return true;
         }
@@ -366,11 +416,16 @@ void MainComponent::seekToPosition (int x) {
     auto relativeX = (double)(x - waveformBounds.getX());
     auto proportion = relativeX / (double)waveformBounds.getWidth();
     auto newPosition = juce::jlimit (0.0, 1.0, proportion) * thumbnail.getTotalLength();
-    transportSource.setPosition (newPosition); }}
+    DBG("Seeking to position " << newPosition << " (x: " << x << ")");
+    transportSource.setPosition (newPosition);
+  }
+}
 
 void MainComponent::mouseUp (const juce::MouseEvent& e) {
+  DBG("Mouse Up event at (" << e.x << ", " << e.y << ")");
   // Ignore mouse clicks for setting loop points if detection mode is active
   if (isDetectModeActive && waveformBounds.contains(e.getPosition())) {
+      DBG("  (in detection mode, ignoring mouse up)");
       return;
   }
 
@@ -380,26 +435,42 @@ void MainComponent::mouseUp (const juce::MouseEvent& e) {
     auto newPosition = juce::jlimit (0.0, 1.0, proportion) * thumbnail.getTotalLength();
     if (currentPlacementMode == PlacementMode::LoopIn) {
       loopInPosition = newPosition;
-      DBG("Loop In set by mouse click on waveform");
+      DBG("  Setting Loop In position via mouse: " << loopInPosition);
       ensureLoopOrder(); // Call helper
     } else if (currentPlacementMode == PlacementMode::LoopOut) {
       loopOutPosition = newPosition;
-      DBG("Loop Out set by mouse click on waveform");
+      DBG("  Setting Loop Out position via mouse: " << loopOutPosition);
       ensureLoopOrder(); // Call helper
     }
     currentPlacementMode = PlacementMode::None;
     updateLoopButtonColors();
-    repaint(); }}
+    repaint();
+  }
+}
 
 void MainComponent::mouseDown (const juce::MouseEvent& e) {
-  if (e.mods.isRightButtonDown()) return;
-  if (currentPlacementMode == PlacementMode::None && waveformBounds.contains (e.getMouseDownPosition()))
-        seekToPosition (e.x); }
+  DBG("Mouse Down event at (" << e.x << ", " << e.y << ")");
+  if (e.mods.isRightButtonDown()) {
+    DBG("  (right-click, ignoring)");
+    return;
+  }
+  if (currentPlacementMode == PlacementMode::None && waveformBounds.contains (e.getMouseDownPosition())) {
+    DBG("  Seeking to position " << e.x);
+    seekToPosition (e.x);
+  }
+}
 
 void MainComponent::mouseDrag (const juce::MouseEvent& e) {
-  if (e.mods.isRightButtonDown()) return;
-  if (currentPlacementMode == PlacementMode::None && waveformBounds.contains (e.getPosition()))
-    seekToPosition (e.x); }
+  DBG("Mouse Drag event at (" << e.x << ", " << e.y << ")");
+  if (e.mods.isRightButtonDown()) {
+    DBG("  (right-click drag, ignoring)");
+    return;
+  }
+  if (currentPlacementMode == PlacementMode::None && waveformBounds.contains (e.getPosition())) {
+    DBG("  Seeking to position " << e.x);
+    seekToPosition (e.x);
+  }
+}
 
 void MainComponent::mouseMove (const juce::MouseEvent& e) {
   if (currentPlacementMode != PlacementMode::None && waveformBounds.contains (e.getPosition())) {
@@ -567,7 +638,9 @@ void MainComponent::paint (juce::Graphics& g) {
 
 // juce::TextEditor::Listener callbacks
 void MainComponent::textEditorTextChanged (juce::TextEditor& editor) {
+    DBG("Text Editor Text Changed.");
     if (&editor == &silenceThresholdEditor) {
+        DBG("  Silence Threshold Editor: " << editor.getText());
         int newPercentage = editor.getText().getIntValue();
         if (newPercentage >= 1 && newPercentage <= 99) {
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid
@@ -575,6 +648,7 @@ void MainComponent::textEditorTextChanged (juce::TextEditor& editor) {
             editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Out of range
         }
     } else {
+        DBG("  Loop Editor Text Changed: " << editor.getText());
         double totalLength = thumbnail.getTotalLength();
         double newPosition = parseTime(editor.getText());
 
@@ -589,7 +663,9 @@ void MainComponent::textEditorTextChanged (juce::TextEditor& editor) {
 }
 
 void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
+    DBG("Text Editor Return Key Pressed.");
     if (&editor == &loopInEditor) {
+        DBG("  Loop In Editor: Return Key Pressed");
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
             // Validate against loopOutPosition if it's set
@@ -599,6 +675,7 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
                 editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
             } else {
                 loopInPosition = newPosition;
+                DBG("    Loop In position set to: " << loopInPosition);
                 updateLoopButtonColors();
                 editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
                 repaint();
@@ -609,6 +686,7 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
             editor.setColour(juce::TextEditor::textColourId, juce::Colours::red); // Indicate error
         }
     } else if (&editor == &loopOutEditor) {
+        DBG("  Loop Out Editor: Return Key Pressed");
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
             // Validate against loopInPosition if it's set
@@ -618,6 +696,7 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
                 editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
             } else {
                 loopOutPosition = newPosition;
+                DBG("    Loop Out position set to: " << loopOutPosition);
                 updateLoopButtonColors();
                 editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
                 repaint();
@@ -629,10 +708,12 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
         }
     } else if (&editor == &silenceThresholdEditor)
     {
+        DBG("  Silence Threshold Editor: Return Key Pressed");
         int newPercentage = editor.getText().getIntValue();
         if (newPercentage >= 1 && newPercentage <= 99)
         {
             currentSilenceThreshold = static_cast<float>(newPercentage) / 100.0f;
+            DBG("    Silence threshold set to: " << currentSilenceThreshold);
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
             if (isDetectModeActive) { // Trigger detection if mode is active
                 detectSilence();
@@ -648,18 +729,22 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
 }
 
 void MainComponent::textEditorEscapeKeyPressed (juce::TextEditor& editor) {
+    DBG("Text Editor Escape Key Pressed.");
     // Revert text to current value on escape
     if (&editor == &loopInEditor) {
+        DBG("  Loop In Editor: Escape Key Pressed");
         if (loopInPosition >= 0.0)
             editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
         else
             editor.setText("--:--:--:---", juce::dontSendNotification);
     } else if (&editor == &loopOutEditor) {
+        DBG("  Loop Out Editor: Escape Key Pressed");
         if (loopOutPosition >= 0.0)
             editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
         else
             editor.setText("--:--:--:---", juce::dontSendNotification);
     } else if (&editor == &silenceThresholdEditor) {
+        DBG("  Silence Threshold Editor: Escape Key Pressed");
         editor.setText(juce::String(static_cast<int>(currentSilenceThreshold * 100.0f)), juce::dontSendNotification);
     }
     editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
@@ -667,8 +752,10 @@ void MainComponent::textEditorEscapeKeyPressed (juce::TextEditor& editor) {
 }
 
 void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
+    DBG("Text Editor Focus Lost.");
     // Similar logic to return key pressed, but always revert if invalid on focus lost
     if (&editor == &loopInEditor) {
+        DBG("  Loop In Editor: Focus Lost");
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
             // Validate against loopOutPosition if it's set
@@ -681,6 +768,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
                 editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
             } else {
                 loopInPosition = newPosition;
+                DBG("    Loop In position set to: " << loopInPosition);
                 updateLoopButtonColors();
                 editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
                 repaint();
@@ -695,6 +783,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
             repaint();
         }
     } else if (&editor == &loopOutEditor) {
+        DBG("  Loop Out Editor: Focus Lost");
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
             // Validate against loopInPosition if it's set
@@ -707,6 +796,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
                 editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Indicate warning
             } else {
                 loopOutPosition = newPosition;
+                DBG("    Loop Out position set to: " << loopOutPosition);
                 updateLoopButtonColors();
                 editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
                 repaint();
@@ -721,10 +811,12 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
             repaint();
         }
     } else if (&editor == &silenceThresholdEditor) {
+        DBG("  Silence Threshold Editor: Focus Lost");
         int newPercentage = editor.getText().getIntValue();
         if (newPercentage >= 1 && newPercentage <= 99)
         {
             currentSilenceThreshold = static_cast<float>(newPercentage) / 100.0f;
+            DBG("    Silence threshold set to: " << currentSilenceThreshold);
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
             if (isDetectModeActive) { // Trigger detection if mode is active
                 detectSilence();
@@ -752,30 +844,65 @@ void MainComponent::updateLoopLabels() {
 
 void MainComponent::detectSilence()
 {
-    if (!readerSource)
+    DBG("detectSilence() called.");
+    if (!readerSource) {
+        DBG("  readerSource is null. Returning.");
         return;
+    }
+
+    bool wasPlaying = transportSource.isPlaying();
+    if (wasPlaying) {
+        transportSource.stop();
+        DBG("  Playback stopped for silence detection.");
+    }
 
     auto* reader = readerSource->getAudioFormatReader();
-    if (!reader)
+    if (!reader) {
+        DBG("  AudioFormatReader is null. Returning.");
+        if (wasPlaying) { // If we stopped playback, start it again before returning
+            transportSource.start();
+        }
         return;
+    }
+    
+    int numChannels = reader->numChannels;
+    juce::int64 lengthInSamples = reader->lengthInSamples;
+    DBG("  Reader: numChannels = " << numChannels << ", lengthInSamples = " << lengthInSamples);
 
-    juce::AudioBuffer<float> buffer(reader->numChannels, (int)reader->lengthInSamples);
-    reader->read(&buffer, 0, (int)reader->lengthInSamples, 0, true, true);
+    if (lengthInSamples <= 0) {
+        DBG("  Audio length in samples is non-positive. Returning.");
+        if (wasPlaying) { // If we stopped playback, start it again before returning
+            transportSource.start();
+        }
+        return;
+    }
+
+    auto buffer = std::make_unique<juce::AudioBuffer<float>>(numChannels, (int)lengthInSamples);
+    DBG("  AudioBuffer allocated with numChannels = " << buffer->getNumChannels() << ", numSamples = " << buffer->getNumSamples());
+    reader->read(buffer.get(), 0, (int)lengthInSamples, 0, true, true);
+    DBG("  Audio data read into buffer.");
 
     float threshold = currentSilenceThreshold; // Use the member variable
+    DBG("  Silence detection threshold: " << threshold);
 
     int firstSample = -1;
     int lastSample = -1;
 
-    for (int i = 0; i < buffer.getNumSamples(); ++i)
+    for (int i = 0; i < buffer->getNumSamples(); ++i)
     {
         bool isSilent = true;
-        for (int j = 0; j < buffer.getNumChannels(); ++j)
+        for (int j = 0; j < buffer->getNumChannels(); ++j)
         {
-            if (std::abs(buffer.getSample(j, i)) > threshold)
-            {
-                isSilent = false;
-                break;
+            // Check for valid sample index before calling getSample
+            if (i >= 0 && i < buffer->getNumSamples() && j >= 0 && j < buffer->getNumChannels()) {
+                if (std::abs(buffer->getSample(j, i)) > threshold)
+                {
+                    isSilent = false;
+                    break;
+                }
+            } else {
+                DBG("  ERROR: Invalid sample access at i=" << i << ", j=" << j);
+                // This indicates a serious problem if it ever happens
             }
         }
 
@@ -786,6 +913,8 @@ void MainComponent::detectSilence()
             lastSample = i;
         }
     }
+    DBG("  First non-silent sample: " << firstSample << ", Last non-silent sample: " << lastSample);
+
 
     if (firstSample != -1)
     {
@@ -793,38 +922,62 @@ void MainComponent::detectSilence()
         int loopInSample = 0;
         for (int i = firstSample; i > 0; --i)
         {
-            bool sign1 = buffer.getSample(0, i) >= 0;
-            bool sign2 = buffer.getSample(0, i - 1) >= 0;
-            if (sign1 != sign2)
-            {
-                loopInSample = i;
-                break;
+            // Ensure valid index before access
+            if (i >= 1 && i < buffer->getNumSamples()) {
+                bool sign1 = buffer->getSample(0, i) >= 0;
+                bool sign2 = buffer->getSample(0, i - 1) >= 0;
+                if (sign1 != sign2)
+                {
+                    loopInSample = i;
+                    break;
+                }
+            } else {
+                DBG("  ERROR: Invalid index for zero crossing (loop in) at i=" << i);
             }
         }
+        DBG("  Calculated loopInSample (zero crossing): " << loopInSample);
+
 
         // Find next zero crossing for loop out
-        int loopOutSample = buffer.getNumSamples() - 1;
-        for (int i = lastSample; i < buffer.getNumSamples() - 1; ++i)
+        int loopOutSample = buffer->getNumSamples() - 1;
+        for (int i = lastSample; i < buffer->getNumSamples() - 1; ++i)
         {
-            bool sign1 = buffer.getSample(0, i) >= 0;
-            bool sign2 = buffer.getSample(0, i + 1) >= 0;
-            if (sign1 != sign2)
-            {
-                loopOutSample = i;
-                break;
+            // Ensure valid index before access
+            if (i >= 0 && i < buffer->getNumSamples() - 1) {
+                bool sign1 = buffer->getSample(0, i) >= 0;
+                bool sign2 = buffer->getSample(0, i + 1) >= 0;
+                if (sign1 != sign2)
+                {
+                    loopOutSample = i;
+                    break;
+                }
+            } else {
+                DBG("  ERROR: Invalid index for zero crossing (loop out) at i=" << i);
             }
         }
+        DBG("  Calculated loopOutSample (zero crossing): " << loopOutSample);
+
 
         loopInPosition = (double)loopInSample / reader->sampleRate;
         loopOutPosition = (double)loopOutSample / reader->sampleRate;
+        DBG("  Setting loopInPosition: " << loopInPosition << ", loopOutPosition: " << loopOutPosition);
 
         // Jump playhead to loopInPosition
         transportSource.setPosition(loopInPosition);
+        DBG("  Transport source position set to: " << loopInPosition);
 
         updateLoopButtonColors();
         updateLoopLabels();
         repaint();
+    } else {
+        DBG("  No non-silent samples found. No loops set.");
     }
+
+    if (wasPlaying) {
+        transportSource.start();
+        DBG("  Playback restarted.");
+    }
+    DBG("detectSilence() finished.");
 }
 
 void MainComponent::ensureLoopOrder()
