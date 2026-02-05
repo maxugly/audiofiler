@@ -183,6 +183,7 @@ MainComponent::MainComponent() : thumbnailCache (5), thumbnail (512, formatManag
   silenceThresholdEditor.setColour (juce::TextEditor::backgroundColourId, juce::Colours::grey.withAlpha(Config::playbackTextBackgroundAlpha));
   silenceThresholdEditor.setColour (juce::TextEditor::textColourId, Config::playbackTextColor);
   silenceThresholdEditor.setFont (juce::Font (juce::FontOptions (Config::playbackTextSize)));
+  silenceThresholdEditor.applyFontToAllText(silenceThresholdEditor.getFont());
   silenceThresholdEditor.setMultiLine (false);
   silenceThresholdEditor.setReturnKeyStartsNewLine (false);
   silenceThresholdEditor.addListener (this);
