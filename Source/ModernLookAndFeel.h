@@ -40,8 +40,8 @@ public:
 
   juce::Font getTextButtonFont (juce::TextButton& button, int buttonHeight) override {
     juce::Font font = LookAndFeel_V4::getTextButtonFont (button, buttonHeight);
-    if (button.getButtonText() == juce::CharPointer_UTF8 ("\xe2\x96\xb6") ||
-      button.getButtonText() == juce::CharPointer_UTF8 ("\xe2\x8f\xb8")) {
+    if (button.getButtonText() == Config::playButtonText ||
+      button.getButtonText() == Config::stopButtonText) {
       font.setHeight (buttonHeight * Config::buttonPlayPauseTextHeightScale); }
     else {
       font.setHeight (buttonHeight * Config::buttonTextHeightScale); }
@@ -77,7 +77,7 @@ public:
       } else {
           g.setColour(textEditor.findColour(juce::TextEditor::outlineColourId));
       }
-      g.drawRect(0, 0, width, height, 1); // 1-pixel thick border
+      g.drawRect(0, 0, width, height, Config::textEditorOutlineThickness); // Use Config for thickness
   }
 
 private:

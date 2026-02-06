@@ -139,6 +139,20 @@ private:
   void initialiseAudioFormatsAndThumbnail(); // New method declaration
   void initialiseLookAndFeel();  // New method declaration
   void initialiseLoopButtons();  // New method declaration
+
+  // New private methods for individual button initialisation
+  void initialiseOpenButton();
+  void initialisePlayStopButton();
+  void initialiseModeButton();
+  void initialiseChannelViewButton();
+  void initialiseQualityButton();
+  void initialiseExitButton();
+  void initialiseStatsButton();
+  void initialiseLoopButton();
+  void initialiseAutoplayButton();
+  void initialiseAutoCutInButton();
+  void initialiseAutoCutOutButton();
+  void initialiseCutButton();
   void layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHeight); // New method declaration
   void layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int rowHeight); // New method declaration
   /**
@@ -197,5 +211,8 @@ private:
    * @return `true` if the key press was handled, `false` otherwise.
    */
   bool handleGlobalKeybinds(const juce::KeyPress& key); // New method declaration
+  bool handlePlaybackKeybinds(const juce::KeyPress& key);
+  bool handleUIToggleKeybinds(const juce::KeyPress& key);
+  bool handleLoopKeybinds(const juce::KeyPress& key);
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent) };

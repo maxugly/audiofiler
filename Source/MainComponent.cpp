@@ -13,12 +13,60 @@ MainComponent::MainComponent() : thumbnailCache (Config::thumbnailCacheSize), th
   initialiseLoopEditors();
 
   finaliseSetup();
+
+#if TESTING_MODE
+  // Auto-load t.mp3
+  auto file = juce::File::getCurrentWorkingDirectory().getChildFile("t.mp3");
+  if (file.exists()) {
+      auto* reader = formatManager.createReaderFor (file);
+      if (reader != nullptr) {
+          transportSource.stop();
+          transportSource.setSource (nullptr);
+          auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
+          transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
+          thumbnail.setSource (new juce::FileInputSource (file));
+          DBG("TESTING_MODE: Auto-loaded t.mp3");
+          totalTimeStaticStr = formatTime(thumbnail.getTotalLength());
+          isFileLoaded = true;
+          loopInPosition  = 0.0;
+          loopOutPosition = thumbnail.getTotalLength();
+          readerSource.reset (newSource.release());
+          updateButtonText();
+
+          // Set flags as requested
+          shouldAutoplay = true;
+          shouldLoop = true;
+          isCutModeActive = true;
+          shouldAutoCutIn = true;
+          shouldAutoCutOut = true;
+
+          // Update button states
+          autoplayButton.setToggleState (shouldAutoplay, juce::dontSendNotification);
+          loopButton.setToggleState (shouldLoop, juce::dontSendNotification);
+          cutButton.setToggleState (isCutModeActive, juce::dontSendNotification);
+          autoCutInButton.setToggleState (shouldAutoCutIn, juce::dontSendNotification);
+          autoCutOutButton.setToggleState (shouldAutoCutOut, juce::dontSendNotification);
+
+          // Trigger auto-cut and autoplay
+          detectInSilence();
+          detectOutSilence();
+          playStopButtonClicked();
+          updateComponentStates(); // Ensure UI reflects the new state
+
+          DBG("TESTING_MODE: Autoplay, Loop, Cut, AutoCutIn/Out enabled.");
+      } else {
+          DBG("TESTING_MODE: Failed to create reader for t.mp3");
+      }
+  } else {
+      DBG("TESTING_MODE: t.mp3 not found at " << file.getFullPathName());
+  }
+#endif
 }
 
 void MainComponent::initialiseLoopButtons()
 {
   addAndMakeVisible (loopInButton);
-  loopInButton.setButtonText ("[I]n");
+  loopInButton.setButtonText (Config::loopInButtonText);
   loopInButton.onLeftClick = [this] {
     loopInPosition = transportSource.getCurrentPosition();
     DBG("Loop In Button Left Clicked. Position: " << loopInPosition);
@@ -34,7 +82,7 @@ void MainComponent::initialiseLoopButtons()
   };
 
   addAndMakeVisible (loopOutButton);
-  loopOutButton.setButtonText ("[O]ut");
+  loopOutButton.setButtonText (Config::loopOutButtonText);
   loopOutButton.onLeftClick = [this] {
     loopOutPosition = transportSource.getCurrentPosition();
     DBG("Loop Out Button Left Clicked. Position: " << loopOutPosition);
@@ -71,36 +119,102 @@ void MainComponent::initialiseAudioFormatsAndThumbnail()
 
 void MainComponent::initialiseButtons()
 {
-  addAndMakeVisible (openButton);
-  openButton.setButtonText ("[D]ir");
-  openButton.onClick = [this] { openButtonClicked(); };
+  initialiseOpenButton();
+  initialisePlayStopButton();
+  initialiseModeButton();
+  initialiseChannelViewButton();
+  initialiseQualityButton();
+  initialiseExitButton();
+  initialiseStatsButton();
+  initialiseLoopButton();
+  initialiseAutoplayButton();
+  initialiseAutoCutInButton();
+  initialiseAutoCutOutButton();
+  initialiseCutButton();
 
+  addAndMakeVisible (statsDisplay);
+  statsDisplay.setReadOnly (true);
+  statsDisplay.setMultiLine (true);
+  statsDisplay.setWantsKeyboardFocus (false);
+  statsDisplay.setColour (juce::TextEditor::backgroundColourId, Config::statsDisplayBackgroundColour);
+  statsDisplay.setColour (juce::TextEditor::textColourId, Config::statsDisplayTextColour);
+  statsDisplay.setVisible (false);
+}
+
+/**
+ * @brief Initializes the open file button.
+ *
+ * Sets up the visual properties and attaches the click listener for the
+ * button that triggers the file chooser dialog.
+ */
+void MainComponent::initialiseOpenButton()
+{
+  addAndMakeVisible (openButton);
+  openButton.setButtonText (Config::openButtonText);
+  openButton.onClick = [this] { openButtonClicked(); };
+}
+
+/**
+ * @brief Initializes the play/stop button.
+ *
+ * Sets up the visual properties and attaches the click listener for the
+ * button that controls audio playback (play/pause).
+ */
+void MainComponent::initialisePlayStopButton()
+{
   addAndMakeVisible (playStopButton);
   updateButtonText();
   playStopButton.onClick = [this] { playStopButtonClicked(); };
   playStopButton.setEnabled (false);
+}
 
+/**
+ * @brief Initializes the view mode button.
+ *
+ * Configures the button that toggles between different waveform view modes
+ * (e.g., Classic, Overlay) and updates the UI accordingly.
+ */
+void MainComponent::initialiseModeButton()
+{
   addAndMakeVisible (modeButton);
-  modeButton.setButtonText ("[V]iew");
+  modeButton.setButtonText (Config::viewModeClassicText); // Set initial text from config
   modeButton.setClickingTogglesState (true);
   modeButton.onClick = [this] {
     DBG("Button Clicked: Mode, new state: " << (modeButton.getToggleState() ? "Overlay" : "Classic"));
     currentMode = modeButton.getToggleState() ? ViewMode::Overlay : ViewMode::Classic;
-    modeButton.setButtonText (currentMode == ViewMode::Classic ? "[V]iew01" : "[V]iew02");
+    modeButton.setButtonText (currentMode == ViewMode::Classic ? Config::viewModeClassicText : Config::viewModeOverlayText);
     resized();
     repaint(); };
+}
 
+/**
+ * @brief Initializes the channel view button.
+ *
+ * Configures the button that toggles between mono and stereo channel views
+ * for the waveform display.
+ */
+void MainComponent::initialiseChannelViewButton()
+{
   addAndMakeVisible (channelViewButton);
-  channelViewButton.setButtonText ("[C]han");
+  channelViewButton.setButtonText (Config::channelViewMonoText); // Set initial text from config
   channelViewButton.setClickingTogglesState (true);
   channelViewButton.onClick = [this] {
     DBG("Button Clicked: Channel View, new state: " << (channelViewButton.getToggleState() ? "Stereo" : "Mono"));
     currentChannelViewMode = channelViewButton.getToggleState() ? ChannelViewMode::Stereo : ChannelViewMode::Mono;
-    channelViewButton.setButtonText (currentChannelViewMode == ChannelViewMode::Mono ? "[C]han 1" : "[C]han 2");
+    channelViewButton.setButtonText (currentChannelViewMode == ChannelViewMode::Mono ? Config::channelViewMonoText : Config::channelViewStereoText);
     repaint(); };
+}
 
+/**
+ * @brief Initializes the quality button.
+ *
+ * Sets up the button that cycles through different waveform rendering quality
+ * settings (High, Medium, Low).
+ */
+void MainComponent::initialiseQualityButton()
+{
   addAndMakeVisible (qualityButton);
-  qualityButton.setButtonText ("[Q]ual");
+  qualityButton.setButtonText (Config::qualityButtonText);
   qualityButton.onClick = [this] {
     DBG("Button Clicked: Quality");
     if (currentQuality == ThumbnailQuality::High)
@@ -112,30 +226,63 @@ void MainComponent::initialiseButtons()
    updateQualityButtonText();
    repaint(); };
   updateQualityButtonText();
+}
 
+/**
+ * @brief Initializes the exit button.
+ *
+ * Configures the button that allows the user to quit the application.
+ */
+void MainComponent::initialiseExitButton()
+{
   addAndMakeVisible (exitButton);
-  exitButton.setButtonText ("[E]xit");
+  exitButton.setButtonText (Config::exitButtonText);
   exitButton.setColour (juce::TextButton::buttonColourId, Config::exitButtonColor);
   exitButton.onClick = [] {
     DBG("Button Clicked: Exit - System Quit Requested");
     juce::JUCEApplication::getInstance()->systemRequestedQuit(); };
+}
 
+/**
+ * @brief Initializes the stats button.
+ *
+ * Sets up the button that toggles the visibility of the statistics display.
+ */
+void MainComponent::initialiseStatsButton()
+{
   addAndMakeVisible (statsButton);
-  statsButton.setButtonText ("[S]tats");
+  statsButton.setButtonText (Config::statsButtonText);
   statsButton.setClickingTogglesState (true);
   statsButton.onClick = [this] {
     DBG("Button Clicked: Stats, new state: " << (statsButton.getToggleState() ? "Visible" : "Hidden"));
     showStats = statsButton.getToggleState();
     resized();
     updateComponentStates(); };
+}
 
+/**
+ * @brief Initializes the loop button.
+ *
+ * Configures the button that toggles whether audio playback should loop.
+ */
+void MainComponent::initialiseLoopButton()
+{
   addAndMakeVisible (loopButton);
-  loopButton.setButtonText ("[L]oop");
+  loopButton.setButtonText (Config::loopButtonText);
   loopButton.setClickingTogglesState (true);
   loopButton.onClick = [this] {
     DBG("Button Clicked: Loop, new state: " << (loopButton.getToggleState() ? "On" : "Off"));
     shouldLoop = loopButton.getToggleState(); };
+}
 
+/**
+ * @brief Initializes the autoplay button.
+ *
+ * Sets up the button that toggles the autoplay feature, which starts
+ * playback automatically after a file is loaded.
+ */
+void MainComponent::initialiseAutoplayButton()
+{
   addAndMakeVisible (autoplayButton);
   autoplayButton.setButtonText (Config::autoplayButtonText);
   autoplayButton.setClickingTogglesState (true);
@@ -147,7 +294,16 @@ void MainComponent::initialiseButtons()
         playStopButtonClicked();
     }
   };
+}
 
+/**
+ * @brief Initializes the auto-cut in button.
+ *
+ * Configures the button that toggles the automatic detection of the
+ * "in" loop point based on silence.
+ */
+void MainComponent::initialiseAutoCutInButton()
+{
   addAndMakeVisible (autoCutInButton);
   autoCutInButton.setButtonText (Config::autoCutInButtonText);
   autoCutInButton.setClickingTogglesState (true);
@@ -160,7 +316,16 @@ void MainComponent::initialiseButtons()
     }
     updateComponentStates(); // Update component states to reflect changes in shouldAutoCutIn/Out
   };
+}
 
+/**
+ * @brief Initializes the auto-cut out button.
+ *
+ * Configures the button that toggles the automatic detection of the
+ * "out" loop point based on silence.
+ */
+void MainComponent::initialiseAutoCutOutButton()
+{
   addAndMakeVisible (autoCutOutButton);
   autoCutOutButton.setButtonText (Config::autoCutOutButtonText);
   autoCutOutButton.setClickingTogglesState (true);
@@ -173,7 +338,16 @@ void MainComponent::initialiseButtons()
     }
     updateComponentStates(); // Update component states to reflect changes in shouldAutoCutIn/Out
   };
+}
 
+/**
+ * @brief Initializes the cut mode button.
+ *
+ * Sets up the button that toggles the overall "Cut" mode, enabling or
+ * disabling related UI controls and visualizations.
+ */
+void MainComponent::initialiseCutButton()
+{
   addAndMakeVisible (cutButton);
   cutButton.setButtonText (Config::cutButtonText);
   cutButton.setClickingTogglesState (true);
@@ -183,14 +357,6 @@ void MainComponent::initialiseButtons()
     isCutModeActive = cutButton.getToggleState();
     updateComponentStates(); // Update visibility/enabled state of cut-related controls
   };
-
-  addAndMakeVisible (statsDisplay);
-  statsDisplay.setReadOnly (true);
-  statsDisplay.setMultiLine (true);
-  statsDisplay.setWantsKeyboardFocus (false);
-  statsDisplay.setColour (juce::TextEditor::backgroundColourId, Config::statsDisplayBackgroundColour);
-  statsDisplay.setColour (juce::TextEditor::textColourId, Config::statsDisplayTextColour);
-  statsDisplay.setVisible (false);
 }
 
 void MainComponent::initialiseClearButtons()
@@ -293,13 +459,13 @@ void MainComponent::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int r
 
   // Position loopInEditor
   loopInTextX = loopRow.getX(); // Left edge of the space for loopIn
-  loopTextY = loopRow.getY() + (loopRow.getHeight() / 2) - 10; // Vertically center 20px high text
+  loopTextY = loopRow.getY() + (loopRow.getHeight() / 2) - Config::loopTextOffsetY; // Vertically center 20px high text
   loopInEditor.setBounds(loopInTextX, loopTextY, Config::loopTextWidth, Config::playbackTextHeight); // Set bounds for loopInEditor
   loopRow.removeFromLeft(Config::loopTextWidth); // Space for loopInEditor
   loopRow.removeFromLeft(Config::windowBorderMargins / 2);
 
   clearLoopInButton.setBounds(loopRow.getX(), loopTextY, Config::clearButtonWidth, Config::playbackTextHeight);
-  loopRow.removeFromLeft(25);
+  loopRow.removeFromLeft(Config::clearButtonMargin);
 
   loopRow.removeFromLeft(Config::windowBorderMargins * 2); // Doubled distance
 
@@ -313,17 +479,17 @@ void MainComponent::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int r
   loopRow.removeFromLeft(Config::windowBorderMargins / 2);
 
   clearLoopOutButton.setBounds(loopRow.getX(), loopTextY, Config::clearButtonWidth, Config::playbackTextHeight);
-  loopRow.removeFromLeft(25);
+  loopRow.removeFromLeft(Config::clearButtonMargin);
 
   loopRow.removeFromLeft(Config::windowBorderMargins * 2);
 
-  inSilenceThresholdEditor.setBounds(loopRow.getX(), loopTextY, 80, Config::playbackTextHeight);
-  loopRow.removeFromLeft(80);
+  inSilenceThresholdEditor.setBounds(loopRow.getX(), loopTextY, Config::thresholdEditorWidth, Config::playbackTextHeight);
+  loopRow.removeFromLeft(Config::thresholdEditorWidth);
   autoCutInButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth));
   loopRow.removeFromLeft(Config::windowBorderMargins * 2);
 
-  outSilenceThresholdEditor.setBounds(loopRow.getX(), loopTextY, 80, Config::playbackTextHeight);
-  loopRow.removeFromLeft(80);
+  outSilenceThresholdEditor.setBounds(loopRow.getX(), loopTextY, Config::thresholdEditorWidth, Config::playbackTextHeight);
+  loopRow.removeFromLeft(Config::thresholdEditorWidth);
   autoCutOutButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth));
   loopRow.removeFromLeft(Config::windowBorderMargins * 2);
 }
@@ -393,9 +559,9 @@ void MainComponent::layoutWaveformAndStats(juce::Rectangle<int>& bounds)
 }
 
 void MainComponent::updateQualityButtonText() {
-  if (currentQuality == MainComponent::ThumbnailQuality::High) qualityButton.setButtonText("[Q]ual H");
-  else if (currentQuality == MainComponent::ThumbnailQuality::Medium) qualityButton.setButtonText("[Q]ual M");
-  else qualityButton.setButtonText("[Q]ual L"); }
+  if (currentQuality == MainComponent::ThumbnailQuality::High) qualityButton.setButtonText(Config::qualityHighText);
+  else if (currentQuality == MainComponent::ThumbnailQuality::Medium) qualityButton.setButtonText(Config::qualityMediumText);
+  else qualityButton.setButtonText(Config::qualityLowText); }
 
 void MainComponent::updateLoopButtonColors() {
   if (currentPlacementMode == PlacementMode::LoopIn) {
@@ -523,7 +689,169 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
     auto keyCode = key.getTextCharacter();
     DBG("Key Pressed: " << key.getTextDescription());
 
-    // Handle 'e' and 'd' keys regardless of file loaded status
+    if (handleGlobalKeybinds(key))
+        return true;
+
+    // All other actions require a file to be loaded
+    if (isFileLoaded) {
+        if (handlePlaybackKeybinds(key))
+            return true;
+        if (handleUIToggleKeybinds(key))
+            return true;
+        if (handleLoopKeybinds(key))
+            return true;
+    }
+
+    // If none of the above conditions were met, return false
+    return false;
+}
+
+/**
+ * @brief Handles key presses related to audio playback and seeking.
+ *
+ * This function processes key presses for actions like skipping forward/backward
+ * and toggling play/stop, but only if an audio file is loaded.
+ *
+ * @param key The `juce::KeyPress` object representing the key that was pressed.
+ * @return `true` if the key press was handled, `false` otherwise.
+ */
+bool MainComponent::handlePlaybackKeybinds(const juce::KeyPress& key)
+{
+    if (thumbnail.getTotalLength() > 0.0) {
+        constexpr double skipAmountSeconds = Config::keyboardSkipAmountSeconds;
+        if (key == juce::KeyPress::leftKey) {
+            auto newPos = juce::jmax (0.0, transportSource.getCurrentPosition() - skipAmountSeconds);
+            transportSource.setPosition (newPos);
+            DBG("  Left arrow key pressed. Seeking to " << newPos);
+            return true;
+        }
+        if (key == juce::KeyPress::rightKey) {
+            auto newPos = juce::jmin (thumbnail.getTotalLength(), transportSource.getCurrentPosition() + skipAmountSeconds);
+            transportSource.setPosition (newPos);
+            DBG("  Right arrow key pressed. Seeking to " << newPos);
+            return true;
+        }
+    }
+
+    if (key == juce::KeyPress::spaceKey) {
+        DBG("  Space key pressed. Toggling play/stop.");
+        playStopButtonClicked();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @brief Handles key presses related to toggling UI elements and views.
+ *
+ * This function processes key presses for actions like toggling stats display,
+ * view modes, channel views, quality settings, and loop mode.
+ *
+ * @param key The `juce::KeyPress` object representing the key that was pressed.
+ * @return `true` if the key press was handled, `false` otherwise.
+ */
+bool MainComponent::handleUIToggleKeybinds(const juce::KeyPress& key)
+{
+    auto keyCode = key.getTextCharacter();
+    if (keyCode == 's' || keyCode == 'S') {
+        DBG("  's' key pressed. Toggling stats.");
+        statsButton.triggerClick();
+        return true;
+    }
+    if (keyCode == 'v' || keyCode == 'V') {
+        DBG("  'v' key pressed. Toggling view mode.");
+        modeButton.triggerClick();
+        return true;
+    }
+    if (keyCode == 'c' || keyCode == 'C') {
+        DBG("  'c' key pressed. Toggling channel view mode.");
+        channelViewButton.triggerClick();
+        return true;
+    }
+    if (keyCode == 'q' || keyCode == 'Q') {
+        DBG("  'q' key pressed. Toggling quality.");
+        qualityButton.triggerClick();
+        return true;
+    }
+    if (keyCode == 'l' || keyCode == 'L') {
+        DBG("  'l' key pressed. Toggling loop.");
+        loopButton.triggerClick();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @brief Handles key presses related to setting and clearing loop points.
+ *
+ * This function processes key presses for manually setting 'in' and 'out'
+ * loop points, and for clearing them. It considers whether auto-cut modes
+ * are active to prevent manual override.
+ *
+ * @param key The `juce::KeyPress` object representing the key that was pressed.
+ * @return `true` if the key press was handled, `false` otherwise.
+ */
+bool MainComponent::handleLoopKeybinds(const juce::KeyPress& key)
+{
+    auto keyCode = key.getTextCharacter();
+    if (keyCode == 'i' || keyCode == 'I') {
+        if (shouldAutoCutIn) {
+            DBG("  'i' key pressed ignored: Auto Cut In is active.");
+            return true;
+        }
+        loopInPosition = transportSource.getCurrentPosition();
+        DBG("  'i' key pressed. Setting loop in position to " << loopInPosition);
+        ensureLoopOrder(); // Call helper
+        updateLoopButtonColors();
+        updateLoopLabels();
+        repaint();
+        return true;
+    }
+    if (keyCode == 'o' || keyCode == 'O') {
+        if (shouldAutoCutOut) {
+            DBG("  'o' key pressed ignored: Auto Cut Out is active.");
+            return true;
+        }
+        loopOutPosition = transportSource.getCurrentPosition();
+        DBG("  'o' key pressed. Setting loop out position to " << loopOutPosition);
+        ensureLoopOrder(); // Call helper
+        updateLoopButtonColors();
+        updateLoopLabels();
+        repaint();
+        return true;
+    }
+    if (keyCode == 'u' || keyCode == 'U') {
+        if (shouldAutoCutIn) {
+            DBG("  'u' key pressed ignored: Auto Cut In is active.");
+            return true;
+        }
+        DBG("  'u' key pressed. Clearing loop in.");
+        clearLoopInButton.triggerClick();
+        return true;
+    }
+    if (keyCode == 'p' || keyCode == 'P') {
+        if (shouldAutoCutOut) {
+            DBG("  'p' key pressed ignored: Auto Cut Out is active.");
+            return true;
+        }
+        DBG("  'p' key pressed. Clearing loop out.");
+        clearLoopOutButton.triggerClick();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @brief Handles global keybinds for application-wide actions.
+ *
+ * This function processes key presses for actions that should be available
+ * regardless of the current application state, such as quitting or opening a file.
+ *
+ * @param key The `juce::KeyPress` object representing the key that was pressed.
+ * @return `true` if the key press was handled, `false` otherwise.
+ */
+bool MainComponent::handleGlobalKeybinds(const juce::KeyPress& key) {
+    auto keyCode = key.getTextCharacter();
     if (keyCode == 'e' || keyCode == 'E') {
         DBG("  'e' key pressed. Quitting application.");
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
@@ -534,105 +862,17 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
         openButtonClicked();
         return true;
     }
-
-    // All other actions require a file to be loaded
-    if (isFileLoaded) {
-        if (thumbnail.getTotalLength() > 0.0) {
-            constexpr double skipAmountSeconds = 5.0;
-            if (key == juce::KeyPress::leftKey) {
-                auto newPos = juce::jmax (0.0, transportSource.getCurrentPosition() - skipAmountSeconds);
-                transportSource.setPosition (newPos);
-                DBG("  Left arrow key pressed. Seeking to " << newPos);
-                return true;
-            }
-            if (key == juce::KeyPress::rightKey) {
-                auto newPos = juce::jmin (thumbnail.getTotalLength(), transportSource.getCurrentPosition() + skipAmountSeconds);
-                transportSource.setPosition (newPos);
-                DBG("  Right arrow key pressed. Seeking to " << newPos);
-                return true;
-            }
-        }
-
-        if (key == juce::KeyPress::spaceKey) {
-            DBG("  Space key pressed. Toggling play/stop.");
-            playStopButtonClicked();
-            return true;
-        }
-        if (keyCode == 's' || keyCode == 'S') {
-            DBG("  's' key pressed. Toggling stats.");
-            statsButton.triggerClick();
-            return true;
-        }
-        if (keyCode == 'v' || keyCode == 'V') {
-            DBG("  'v' key pressed. Toggling view mode.");
-            modeButton.triggerClick();
-            return true;
-        }
-        if (keyCode == 'c' || keyCode == 'C') {
-            DBG("  'c' key pressed. Toggling channel view mode.");
-            channelViewButton.triggerClick();
-            return true;
-        }
-        if (keyCode == 'q' || keyCode == 'Q') {
-            DBG("  'q' key pressed. Toggling quality.");
-            qualityButton.triggerClick();
-            return true;
-        }
-        if (keyCode == 'l' || keyCode == 'L') {
-            DBG("  'l' key pressed. Toggling loop.");
-            loopButton.triggerClick();
-            return true;
-        }
-        if (keyCode == 'i' || keyCode == 'I') {
-            if (shouldAutoCutIn) {
-                DBG("  'i' key pressed ignored: Auto Cut In is active.");
-                return true;
-            }
-            loopInPosition = transportSource.getCurrentPosition();
-            DBG("  'i' key pressed. Setting loop in position to " << loopInPosition);
-            ensureLoopOrder(); // Call helper
-            updateLoopButtonColors();
-            updateLoopLabels();
-            repaint();
-            return true;
-        }
-        if (keyCode == 'o' || keyCode == 'O') {
-            if (shouldAutoCutOut) {
-                DBG("  'o' key pressed ignored: Auto Cut Out is active.");
-                return true;
-            }
-            loopOutPosition = transportSource.getCurrentPosition();
-            DBG("  'o' key pressed. Setting loop out position to " << loopOutPosition);
-            ensureLoopOrder(); // Call helper
-            updateLoopButtonColors();
-            updateLoopLabels();
-            repaint();
-            return true;
-        }
-        if (keyCode == 'u' || keyCode == 'U') {
-            if (shouldAutoCutIn) {
-                DBG("  'u' key pressed ignored: Auto Cut In is active.");
-                return true;
-            }
-            DBG("  'u' key pressed. Clearing loop in.");
-            clearLoopInButton.triggerClick();
-            return true;
-        }
-        if (keyCode == 'p' || keyCode == 'P') {
-            if (shouldAutoCutOut) {
-                DBG("  'p' key pressed ignored: Auto Cut Out is active.");
-                return true;
-            }
-            DBG("  'p' key pressed. Clearing loop out.");
-            clearLoopOutButton.triggerClick();
-            return true;
-        }
-    }
-
-    // If none of the above conditions were met, return false
     return false;
 }
 
+/**
+ * @brief Seeks the audio playback to a specific position based on an X-coordinate.
+ *
+ * This function calculates the target playback position within the audio file
+ * based on the provided X-coordinate relative to the waveform display.
+ *
+ * @param x The X-coordinate in pixels within the waveform display.
+ */
 void MainComponent::seekToPosition (int x) {
   if (thumbnail.getTotalLength() > 0.0) {
     auto relativeX = (double)(x - waveformBounds.getX());
@@ -645,33 +885,6 @@ void MainComponent::seekToPosition (int x) {
 
 void MainComponent::mouseUp (const juce::MouseEvent& e) {
   DBG("Mouse Up event at (" << e.x << ", " << e.y << ")");
-
-
-  if (currentPlacementMode != PlacementMode::None && waveformBounds.contains (e.getPosition())) {
-    auto relativeX = (double)(e.x - waveformBounds.getX());
-    auto proportion = relativeX / (double)waveformBounds.getWidth();
-    auto newPosition = juce::jlimit (0.0, 1.0, proportion) * thumbnail.getTotalLength();
-    if (currentPlacementMode == PlacementMode::LoopIn) {
-      if (shouldAutoCutIn) {
-        DBG("  Loop In position mouse set ignored: Auto Cut In is active.");
-      } else {
-        loopInPosition = newPosition;
-        DBG("  Setting Loop In position via mouse: " << loopInPosition);
-        ensureLoopOrder(); // Call helper
-      }
-    } else if (currentPlacementMode == PlacementMode::LoopOut) {
-      if (shouldAutoCutOut) {
-        DBG("  Loop Out position mouse set ignored: Auto Cut Out is active.");
-      } else {
-        loopOutPosition = newPosition;
-        DBG("  Setting Loop Out position via mouse: " << loopOutPosition);
-        ensureLoopOrder(); // Call helper
-      }
-    }
-    currentPlacementMode = PlacementMode::None;
-    updateLoopButtonColors();
-    repaint();
-  }
 }
 
 void MainComponent::mouseDown (const juce::MouseEvent& e) {
@@ -680,9 +893,32 @@ void MainComponent::mouseDown (const juce::MouseEvent& e) {
     DBG("  (right-click, ignoring)");
     return;
   }
-  if (currentPlacementMode == PlacementMode::None && waveformBounds.contains (e.getMouseDownPosition())) {
-    DBG("  Seeking to position " << e.x);
-    seekToPosition (e.x);
+
+  if (waveformBounds.contains (e.getMouseDownPosition())) {
+    auto newPosition = (double)(e.x - waveformBounds.getX()) / (double)waveformBounds.getWidth() * thumbnail.getTotalLength();
+    if (newPosition < 0.0) newPosition = 0.0;
+    if (newPosition > thumbnail.getTotalLength()) newPosition = thumbnail.getTotalLength();
+
+    if (currentPlacementMode == PlacementMode::LoopIn) {
+      loopInPosition = newPosition;
+      DBG("  Setting Loop In to: " << loopInPosition);
+      currentPlacementMode = PlacementMode::None; // Reset mode
+      ensureLoopOrder();
+      updateLoopButtonColors();
+      updateLoopLabels();
+      repaint();
+    } else if (currentPlacementMode == PlacementMode::LoopOut) {
+      loopOutPosition = newPosition;
+      DBG("  Setting Loop Out to: " << loopOutPosition);
+      currentPlacementMode = PlacementMode::None; // Reset mode
+      ensureLoopOrder();
+      updateLoopButtonColors();
+      updateLoopLabels();
+      repaint();
+    } else { // Normal seeking behavior
+      DBG("  Seeking to position " << e.x);
+      seekToPosition (e.x);
+    }
   }
 }
 
@@ -716,9 +952,9 @@ void MainComponent::mouseMove (const juce::MouseEvent& e) {
 
 void MainComponent::updateButtonText() {
   if (transportSource.isPlaying())
-    playStopButton.setButtonText (juce::CharPointer_UTF8 ("\xe2\x8f\xb8"));
+    playStopButton.setButtonText (Config::stopButtonText);
   else
-    playStopButton.setButtonText (juce::CharPointer_UTF8 ("\xe2\x96\xb6")); }
+    playStopButton.setButtonText (Config::playButtonText); }
 
 void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) {
   if (readerSource.get() == nullptr) bufferToFill.clearActiveBufferRegion();
@@ -1005,7 +1241,7 @@ void MainComponent::timerCallback() {
         juce::String currentTimeStr = formatTime(currentTime);
         juce::String remainingTimeStr = formatTime(remainingTime);
 
-        int textY = bottomRowTopY - 25;
+        int textY = bottomRowTopY - Config::playbackTimeTextOffsetY;
 
         g.setColour(Config::playbackTextColor);
         g.setFont(Config::playbackTextSize);
@@ -1030,7 +1266,7 @@ void MainComponent::textEditorTextChanged (juce::TextEditor& editor) {
         if (newPercentage >= 1 && newPercentage <= 99) {
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid
         } else {
-            editor.setColour(juce::TextEditor::textColourId, juce::Colours::orange); // Out of range
+            editor.setColour(juce::TextEditor::textColourId, Config::textEditorOutOfRangeColour); // Out of range
         }
     } else if (&editor == &outSilenceThresholdEditor) {
         DBG("  Out Silence Threshold Editor: " << editor.getText());
@@ -1038,7 +1274,7 @@ void MainComponent::textEditorTextChanged (juce::TextEditor& editor) {
         if (newPercentage >= 1 && newPercentage <= 99) {
             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid
         } else {
-            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor); // Out of range
+            editor.setColour(juce::TextEditor::textColourId, Config::textEditorOutOfRangeColour); // Out of range
         }
     } else {
         DBG("  Loop Editor Text Changed: " << editor.getText());

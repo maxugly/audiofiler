@@ -7,6 +7,9 @@
  */
 
 namespace Config{
+    // Define TESTING_MODE to enable test-specific features like auto-loading t.mp3
+    #define TESTING_MODE 0 
+
     // The margin around the entire window content, in pixels.
     constexpr int windowBorderMargins = 15;
 
@@ -25,20 +28,26 @@ namespace Config{
     // Playback and Loop text widths
     constexpr int playbackTextWidth = 220;
     constexpr int loopTextWidth = 165;
+    constexpr int thresholdEditorWidth = 80;
 
     // --- Playback and Loop Text Editor Settings ---
     constexpr int playbackTextHeight = 20; // Height for all single-line text editors showing playback/loop times
+    constexpr int loopTextOffsetY = 10; // Vertical offset for loop text editors in layout
+    constexpr int playbackTimeTextOffsetY = 25; // Vertical offset for playback time text display
 
     // --- Text Editor Colors ---
     const juce::Colour textEditorErrorColor = juce::Colours::red;
     const juce::Colour textEditorWarningColor = juce::Colours::orange;
+    const juce::Colour textEditorOutOfRangeColour = juce::Colours::orange; // For values outside valid range
     /// The background colour for various text editors, derived from a grey with playback text alpha.
     const juce::Colour textEditorBackgroundColour = juce::Colours::grey.withAlpha(Config::playbackTextBackgroundAlpha);
+    constexpr int textEditorOutlineThickness = 1;
 
     // --- Clear Button Settings ---
     const juce::String clearButtonText = "X";
     const juce::Colour clearButtonColor = juce::Colours::red;
     constexpr int clearButtonWidth = 25;
+    constexpr int clearButtonMargin = 25; // Margin for clear buttons in layout
 
     // --- Button Settings ---
     constexpr int buttonWidth = 80;
@@ -58,6 +67,24 @@ namespace Config{
 
     constexpr float buttonTextHeightScale = 0.45f;         // Default scale for button text
     constexpr float buttonPlayPauseTextHeightScale = 0.7f; // Scale for Play/Pause symbols
+
+    // --- Button Texts ---
+    const juce::String openButtonText = "[D]ir";
+    const juce::String playButtonText = juce::CharPointer_UTF8 ("\xe2\x96\xb6"); // Play symbol
+    const juce::String stopButtonText = juce::CharPointer_UTF8 ("\xe2\x8f\xb8"); // Stop symbol
+    const juce::String viewModeClassicText = "[V]iew01";
+    const juce::String viewModeOverlayText = "[V]iew02";
+    const juce::String channelViewMonoText = "[C]han 1";
+    const juce::String channelViewStereoText = "[C]han 2";
+    const juce::String qualityButtonText = "[Q]ual";
+    const juce::String qualityHighText = "[Q]ual H";
+    const juce::String qualityMediumText = "[Q]ual M";
+    const juce::String qualityLowText = "[Q]ual L";
+    const juce::String exitButtonText = "[E]xit";
+    const juce::String statsButtonText = "[S]tats";
+    const juce::String loopButtonText = "[L]oop";
+    const juce::String loopInButtonText = "[I]n";
+    const juce::String loopOutButtonText = "[O]ut";
 
     // --- General Colors ---
     const juce::Colour mainBackgroundColor = juce::Colours::black;
@@ -96,6 +123,9 @@ namespace Config{
     // Playback cursor glow colors (start and end alpha for gradient)
     const juce::Colour playbackCursorGlowColorStart = juce::Colours::lime.withAlpha(0.0f);
     const juce::Colour playbackCursorGlowColorEnd = juce::Colours::lime.withAlpha(0.5f);
+
+    // --- Keyboard Shortcuts ---
+    constexpr double keyboardSkipAmountSeconds = 5.0; // Amount to skip when using left/right arrow keys
 
     // --- Mouse Cursor Colors ---
     const juce::Colour mouseCursorHighlightColor = juce::Colours::darkorange.withAlpha(0.4f);
