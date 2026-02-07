@@ -53,6 +53,8 @@ target_sources(Sorta PRIVATE
         Source/Main.cpp
         Source/MainComponent.h
 		Source/MainComponent.cpp
+        Source/AudioPlayer.h
+        Source/AudioPlayer.cpp
 )
 
 target_link_libraries(Sorta PRIVATE

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <juce_audio_utils/juce_audio_utils.h>
+#include <JuceHeader.h>
 #include "ModernLookAndFeel.h"
+#include "AudioPlayer.h"
 
 class LoopButton : public juce::TextButton {
 public:
@@ -42,204 +43,107 @@ public:
 
   void seekToPosition (int x);
   bool keyPressed (const juce::KeyPress& key) override;
-  void playStopButtonClicked();
-  void updateButtonText();
-  void updateLoopLabels();
-  void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
+  void initialiseButtons();    // New method declaration
 
-  void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill);
-  void releaseResources() override;
-  void changeListenerCallback (juce::ChangeBroadcaster*) override;
-  void timerCallback();
-  void paint (juce::Graphics& g);
-  /**
-   * @brief Called when the component's size has been changed.
-   *
-   * This function is responsible for laying out all child components within the MainComponent.
-   * It calculates row heights and delegates to specific layout helper functions for different UI sections.
-   */
+  void timerCallback() override;
+  void paint(juce::Graphics& g) override;
   void resized() override;
-  void focusGained (juce::Component::FocusChangeType cause) override;
+  void focusGained(juce::Component::FocusChangeType cause) override;
+  void updateLoopLabels(); // Regular member function
+
+    void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
+    void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) override;
+    void releaseResources() override;
+
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
 private:
-  juce::AudioFormatManager formatManager;
-  std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-  juce::AudioTransportSource transportSource;
-  juce::AudioThumbnailCache thumbnailCache;
-  juce::AudioThumbnail thumbnail;
-  juce::FlexBox getBottomRowFlexBox();
+    //==============================================================================
+    // Member Variables
+    //==============================================================================
+    std::unique_ptr<AudioPlayer> audioPlayer;
+    std::unique_ptr<juce::FileChooser> chooser;
+    ModernLookAndFeel modernLF;
 
-  ModernLookAndFeel modernLF;
+    juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton;
+    juce::TextButton clearLoopInButton, clearLoopOutButton;
+    juce::TextEditor statsDisplay, loopInEditor, loopOutEditor, inSilenceThresholdEditor;
+    float currentInSilenceThreshold = Config::silenceThreshold;
+    juce::TextEditor outSilenceThresholdEditor;
+    float currentOutSilenceThreshold = Config::outSilenceThreshold;
+    juce::Rectangle<int> waveformBounds, statsBounds, contentAreaBounds;
+    ViewMode currentMode = ViewMode::Classic;
+    ChannelViewMode currentChannelViewMode = ChannelViewMode::Mono;
+    ThumbnailQuality currentQuality = ThumbnailQuality::Low;
+    PlacementMode currentPlacementMode = PlacementMode::None;
+    bool showStats = false;
+    bool shouldLoop = false;
+    double loopInPosition = -1.0;
+    double loopOutPosition = -1.0;
+    int mouseCursorX = -1, mouseCursorY = -1;
+    int bottomRowTopY = 0; // Initialize to 0
+    int playbackLeftTextX = 0;
+    int playbackRightTextX = 0;
+    int playbackCenterTextX = 0;
+    juce::String totalTimeStaticStr;
+    juce::String loopInDisplayString;
+    juce::String loopOutDisplayString;
+    int loopInTextX = 0;
+    int loopOutTextX = 0;
+    int loopTextY = 0;
+    LoopButton loopInButton, loopOutButton;
+    juce::TextButton autoplayButton; // New autoplay button
+    bool shouldAutoplay = false;      // Autoplay state
+    juce::TextButton autoCutInButton;     // New auto cut in button
+    juce::TextButton autoCutOutButton;    // New auto cut out button
+    bool shouldAutoCutIn = false;         // Auto cut in state
+    bool shouldAutoCutOut = false;        // Auto cut out state
+    float glowAlpha = 0.0f;                 // Glow animation alpha
+    juce::TextButton cutButton;             // New cut button
+    bool isCutModeActive = false;           // Cut mode state
 
-  juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton;
-  juce::TextButton clearLoopInButton, clearLoopOutButton;
-  juce::TextEditor statsDisplay, loopInEditor, loopOutEditor, inSilenceThresholdEditor;
-  float currentInSilenceThreshold = Config::silenceThreshold;
-
-
-  juce::TextEditor outSilenceThresholdEditor;
-  float currentOutSilenceThreshold = Config::outSilenceThreshold;
-  juce::Rectangle<int> waveformBounds, statsBounds, contentAreaBounds;
-  juce::FlexBox getTopRowFlexBox();
-  juce::FlexBox getLoopRowFlexBox();
-
-  std::unique_ptr<juce::FileChooser> chooser;
-
-  ViewMode currentMode = ViewMode::Classic;
-  ChannelViewMode currentChannelViewMode = ChannelViewMode::Mono;
-  ThumbnailQuality currentQuality = ThumbnailQuality::Low;
-  PlacementMode currentPlacementMode = PlacementMode::None;
-  bool showStats = false;
-  bool shouldLoop = false;
-  double loopInPosition = -1.0;
-  double loopOutPosition = -1.0;
-  int mouseCursorX = -1, mouseCursorY = -1;
-  int bottomRowTopY = 0; // Initialize to 0
-  int playbackLeftTextX = 0;
-  int playbackRightTextX = 0;
-  int playbackCenterTextX = 0;
-  juce::String totalTimeStaticStr;
-
-  juce::String loopInDisplayString;
-  juce::String loopOutDisplayString;
-  int loopInTextX = 0;
-  int loopOutTextX = 0;
-  int loopTextY = 0;
-
-  LoopButton loopInButton, loopOutButton;
-  juce::TextButton autoplayButton; // New autoplay button
-  bool shouldAutoplay = false;      // Autoplay state
-  juce::TextButton autoCutInButton;     // New auto cut in button
-  juce::TextButton autoCutOutButton;    // New auto cut out button
-  bool shouldAutoCutIn = false;         // Auto cut in state
-  bool shouldAutoCutOut = false;        // Auto cut out state
-  float glowAlpha = 0.0f;                 // Glow animation alpha
-  juce::TextButton cutButton;             // New cut button
-  bool isCutModeActive = false;           // Cut mode state
-
-
-  void updateQualityButtonText();
-  void drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample);
-  void updateLoopButtonColors();
-  void detectInSilence();
-  void detectOutSilence();
-  void ensureLoopOrder(); // New method declaration
-
-  juce::String formatTime(double seconds);
-
-  // juce::TextEditor::Listener callbacks
-  void textEditorTextChanged (juce::TextEditor& editor) override;
-  void textEditorReturnKeyPressed (juce::TextEditor& editor) override;
-  void textEditorEscapeKeyPressed (juce::TextEditor& editor) override;
-  void textEditorFocusLost (juce::TextEditor& editor) override;
-
-  // Helper function
-  double parseTime(const juce::String& timeString); // Declared as a member function
-
-  bool isFileLoaded = false; // New member variable
-  void updateComponentStates(); // New method declaration
-  void initialiseLoopEditors(); // New method declaration
-  void initialiseClearButtons(); // New method declaration
-  void initialiseButtons();    // New method declaration
-  void finaliseSetup();        // New method declaration
-  void initialiseAudioFormatsAndThumbnail(); // New method declaration
-  void initialiseLookAndFeel();  // New method declaration
-  void initialiseLoopButtons();  // New method declaration
-
-  // New private methods for individual button initialisation
-  void initialiseOpenButton();
-  void initialisePlayStopButton();
-  void initialiseModeButton();
-  void initialiseChannelViewButton();
-  void initialiseQualityButton();
-  void initialiseExitButton();
-  void initialiseStatsButton();
-  void initialiseLoopButton();
-  void initialiseAutoplayButton();
-  void initialiseAutoCutInButton();
-  void initialiseAutoCutOutButton();
-  void initialiseCutButton();
-  /**
-   * @brief Lays out the buttons in the top row of the component.
-   *
-   * This function positions various control buttons (open, play/stop, autoplay, loop, cut, mode, stats, auto-cut in/out, exit)
-   * within the top row of the MainComponent, managing their bounds and spacing.
-   *
-   * @param bounds A reference to the current bounds of the component. This rectangle will be modified
-   *               as space is removed for the top row.
-   * @param rowHeight The calculated height for the top row of buttons.
-   */
-  void layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHeight);
-
-  /**
-   * @brief Lays out the loop and cut-related controls.
-   *
-   * This function positions the loop in/out buttons, their respective text editors for manual time input,
-   * clear buttons, silence threshold editors, and auto-cut in/out buttons within a designated row.
-   *
-   * @param bounds A reference to the current bounds of the component. This rectangle will be modified
-   *               as space is removed for this row.
-   * @param rowHeight The calculated height for the row containing loop and cut controls.
-   */
-  void layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int rowHeight);
-  /**
-   * @brief Lays out the bottom row buttons and configures the playback text displays.
-   *
-   * This function positions the quality, channel view, stats, and mode buttons
-   * in the bottom row of the component. It also calculates the positions for
-   * the playback time text displays (current, total, remaining).
-   *
-   * @param bounds The current bounds of the component, which will be modified
-   *               as sections are laid out.
-   * @param rowHeight The calculated height for each row of buttons.
-   */
-  void layoutBottomRowAndTextDisplay(juce::Rectangle<int>& bounds, int rowHeight); // New method declaration
-  /**
-   * @brief Lays out the waveform area and conditionally displays the stats.
-   *
-   * This function determines the bounds for the audio waveform display based on the
-   * current view mode (Classic or Overlay) and sets the visibility and position
-   * of the stats display based on the `showStats` flag.
-   *
-   * @param bounds The current bounds of the component, which will be used to
-   *               determine the waveform area.
-   */
-  void layoutWaveformAndStats(juce::Rectangle<int>& bounds); // New method declaration
-  /**
-   * @brief Updates the enabled and visible states of general UI buttons.
-   *
-   * This function sets the enabled and visible states for buttons that are
-   * always active or depend only on whether a file is currently loaded,
-   * regardless of the cut mode.
-   *
-   * @param enabled A boolean indicating whether a file is loaded (true) or not (false).
-   */
-  void updateGeneralButtonStates(bool enabled); // New method declaration
-  /**
-   * @brief Updates the enabled and visible states of controls related to "Cut" mode.
-   *
-   * This function manages the interactive states and visibility of loop buttons,
-   * loop editors, clear loop buttons, silence threshold editors, and auto-cut buttons,
-   * all based on whether the "Cut" mode is active and if an audio file is loaded.
-   *
-   * @param isCutModeActive A boolean indicating whether the "Cut" mode is currently active.
-   * @param enabled A boolean indicating whether a file is loaded (true) or not (false).
-   * @param shouldAutoCutIn A boolean indicating if auto-cut-in is active.
-   * @param shouldAutoCutOut A boolean indicating if auto-cut-out is active.
-   */
-  void updateCutModeControlStates(bool isCutModeActive, bool enabled, bool shouldAutoCutIn, bool shouldAutoCutOut); // New method declaration
-  /**
-   * @brief Handles global keybinds for application-wide actions.
-   *
-   * This function processes key presses for actions that should be available
-   * regardless of the current application state, such as quitting or opening a file.
-   *
-   * @param key The `juce::KeyPress` object representing the key that was pressed.
-   * @return `true` if the key press was handled, `false` otherwise.
-   */
-  bool handleGlobalKeybinds(const juce::KeyPress& key); // New method declaration
-  bool handlePlaybackKeybinds(const juce::KeyPress& key);
-  bool handleUIToggleKeybinds(const juce::KeyPress& key);
-  bool handleLoopKeybinds(const juce::KeyPress& key);
+    //==============================================================================
+    // Private Methods
+    //==============================================================================
+    void updateQualityButtonText();
+    void drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample);
+    void updateLoopButtonColors();
+    void detectInSilence();
+    void detectOutSilence();
+    void ensureLoopOrder();
+    juce::String formatTime(double seconds);
+    void textEditorTextChanged (juce::TextEditor& editor) override;
+    void textEditorReturnKeyPressed (juce::TextEditor& editor) override;
+    void textEditorEscapeKeyPressed (juce::TextEditor& editor) override;
+    void textEditorFocusLost (juce::TextEditor& editor) override;
+    double parseTime(const juce::String& timeString);
+    void updateComponentStates();
+    void initialiseLoopEditors();
+    void initialiseClearButtons();
+    void finaliseSetup();
+    void initialiseLookAndFeel();
+    void initialiseLoopButtons();
+    void initialiseOpenButton();
+    void initialisePlayStopButton();
+    void initialiseModeButton();
+    void initialiseChannelViewButton();
+    void initialiseQualityButton();
+    void initialiseExitButton();
+    void initialiseStatsButton();
+    void initialiseLoopButton();
+    void initialiseAutoplayButton();
+    void initialiseAutoCutInButton();
+    void initialiseAutoCutOutButton();
+    void initialiseCutButton();
+    void layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHeight);
+    void layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int rowHeight);
+    void layoutBottomRowAndTextDisplay(juce::Rectangle<int>& bounds, int rowHeight);
+    void layoutWaveformAndStats(juce::Rectangle<int>& bounds);
+    void updateGeneralButtonStates(bool enabled);
+    void updateCutModeControlStates(bool isCutModeActive, bool enabled, bool shouldAutoCutIn, bool shouldAutoCutOut);
+    bool handleGlobalKeybinds(const juce::KeyPress& key);
+    bool handlePlaybackKeybinds(const juce::KeyPress& key);
+    bool handleUIToggleKeybinds(const juce::KeyPress& key);
+    bool handleLoopKeybinds(const juce::KeyPress& key);
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent) };

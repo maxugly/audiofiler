@@ -1,8 +1,11 @@
 #include "MainComponent.h"
 #include "Config.h"
+#include "AudioPlayer.h"
 
-MainComponent::MainComponent() : thumbnailCache (Config::thumbnailCacheSize), thumbnail (Config::thumbnailSizePixels, formatManager, thumbnailCache) {
-  initialiseAudioFormatsAndThumbnail();
+MainComponent::MainComponent()
+{
+    audioPlayer = std::make_unique<AudioPlayer>();
+    audioPlayer->addChangeListener(this);
   initialiseLookAndFeel();
   initialiseLoopButtons(); // Call the new function
   initialiseButtons();
@@ -15,27 +18,20 @@ MainComponent::MainComponent() : thumbnailCache (Config::thumbnailCacheSize), th
   finaliseSetup();
 
 #if TESTING_MODE
-  // Auto-load t.mp3
-  auto file = juce::File::getCurrentWorkingDirectory().getChildFile("t.mp3");
-  if (file.exists()) {
-      auto* reader = formatManager.createReaderFor (file);
-      if (reader != nullptr) {
-          transportSource.stop();
-          transportSource.setSource (nullptr);
-          auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
-          transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
-          thumbnail.setSource (new juce::FileInputSource (file));
-          DBG("TESTING_MODE: Auto-loaded t.mp3");
-          totalTimeStaticStr = formatTime(thumbnail.getTotalLength());
-          isFileLoaded = true;
+  juce::File audioFile(TEST_FILE_PATH);
+  if (audioFile.existsAsFile())
+  {
+      auto result = audioPlayer->loadFile(audioFile);
+      if (result.wasOk())
+      {
+          statsDisplay.setText("File loaded: " + audioFile.getFileName(), juce::dontSendNotification);
+          playStopButton.setEnabled(true);
+          totalTimeStaticStr = formatTime(audioPlayer->getThumbnail().getTotalLength());
           loopInPosition  = 0.0;
-          loopOutPosition = thumbnail.getTotalLength();
-          readerSource.reset (newSource.release());
-          updateButtonText();
-
+          loopOutPosition = audioPlayer->getThumbnail().getTotalLength();
           // Set flags as requested
           shouldAutoplay = true;
-          shouldLoop = true;
+          shouldLoop = true; // Use audioPlayer->setLooping(true) instead of this. This will be handled by the updateComponentStates call implicitly.
           isCutModeActive = true;
           shouldAutoCutIn = true;
           shouldAutoCutOut = true;
@@ -50,25 +46,32 @@ MainComponent::MainComponent() : thumbnailCache (Config::thumbnailCacheSize), th
           // Trigger auto-cut and autoplay
           detectInSilence();
           detectOutSilence();
-          playStopButtonClicked();
           updateComponentStates(); // Ensure UI reflects the new state
 
           DBG("TESTING_MODE: Autoplay, Loop, Cut, AutoCutIn/Out enabled.");
-      } else {
-          DBG("TESTING_MODE: Failed to create reader for t.mp3");
       }
-  } else {
-      DBG("TESTING_MODE: t.mp3 not found at " << file.getFullPathName());
+      else
+      {
+          statsDisplay.setText(result.getErrorMessage(), juce::dontSendNotification);
+          statsDisplay.setColour(juce::Label::textColourId, juce::Colours::red);
+          DBG("TESTING_MODE: Failed to load audio file: " << audioFile.getFileName() << " - " << result.getErrorMessage());
+      }
+  }
+  else
+  {
+      DBG("TESTING_MODE: " << audioFile.getFileName() << " not found at " << audioFile.getFullPathName());
   }
 #endif
 }
+
+
 
 void MainComponent::initialiseLoopButtons()
 {
   addAndMakeVisible (loopInButton);
   loopInButton.setButtonText (Config::loopInButtonText);
   loopInButton.onLeftClick = [this] {
-    loopInPosition = transportSource.getCurrentPosition();
+    loopInPosition = audioPlayer->getTransportSource().getCurrentPosition();
     DBG("Loop In Button Left Clicked. Position: " << loopInPosition);
     ensureLoopOrder(); // Call helper
     updateLoopButtonColors();
@@ -84,7 +87,7 @@ void MainComponent::initialiseLoopButtons()
   addAndMakeVisible (loopOutButton);
   loopOutButton.setButtonText (Config::loopOutButtonText);
   loopOutButton.onLeftClick = [this] {
-    loopOutPosition = transportSource.getCurrentPosition();
+    loopOutPosition = audioPlayer->getTransportSource().getCurrentPosition();
     DBG("Loop Out Button Left Clicked. Position: " << loopOutPosition);
     ensureLoopOrder(); // Call helper
     updateLoopButtonColors();
@@ -106,16 +109,7 @@ void MainComponent::initialiseLookAndFeel()
   modernLF.setTextColor(Config::buttonTextColour);
 }
 
-void MainComponent::initialiseAudioFormatsAndThumbnail()
-{
-  formatManager.registerFormat (new juce::WavAudioFormat(), false);
-  formatManager.registerFormat (new juce::AiffAudioFormat(), false);
-  formatManager.registerFormat (new juce::FlacAudioFormat(), false);
-  formatManager.registerFormat (new juce::OggVorbisAudioFormat(), false);
-  formatManager.registerFormat (new juce::MP3AudioFormat(), false);
 
-  thumbnail.addChangeListener (this);
-}
 
 void MainComponent::initialiseButtons()
 {
@@ -163,8 +157,7 @@ void MainComponent::initialiseOpenButton()
 void MainComponent::initialisePlayStopButton()
 {
   addAndMakeVisible (playStopButton);
-  updateButtonText();
-  playStopButton.onClick = [this] { playStopButtonClicked(); };
+  playStopButton.onClick = [this] { audioPlayer->togglePlayStop(); };
   playStopButton.setEnabled (false);
 }
 
@@ -290,9 +283,6 @@ void MainComponent::initialiseAutoplayButton()
   autoplayButton.onClick = [this] {
     DBG("Button Clicked: Autoplay, new state: " << (autoplayButton.getToggleState() ? "On" : "Off"));
     shouldAutoplay = autoplayButton.getToggleState();
-    if (shouldAutoplay && isFileLoaded && !transportSource.isPlaying()) {
-        playStopButtonClicked();
-    }
   };
 }
 
@@ -311,7 +301,7 @@ void MainComponent::initialiseAutoCutInButton()
   autoCutInButton.onClick = [this] {
     DBG("Button Clicked: Auto Cut In, new state: " << (autoCutInButton.getToggleState() ? "On" : "Off"));
     shouldAutoCutIn = autoCutInButton.getToggleState();
-    if (shouldAutoCutIn && isFileLoaded) { // Only detect if a file is loaded and auto-cut is turned ON
+    if (shouldAutoCutIn && audioPlayer->getThumbnail().getTotalLength() > 0.0) { // Only detect if a file is loaded and auto-cut is turned ON
         detectInSilence();
     }
     updateComponentStates(); // Update component states to reflect changes in shouldAutoCutIn/Out
@@ -333,7 +323,7 @@ void MainComponent::initialiseAutoCutOutButton()
   autoCutOutButton.onClick = [this] {
     DBG("Button Clicked: Auto Cut Out, new state: " << (autoCutOutButton.getToggleState() ? "On" : "Off"));
     shouldAutoCutOut = autoCutOutButton.getToggleState();
-    if (shouldAutoCutOut && isFileLoaded) { // Only detect if a file is loaded and auto-cut is turned ON
+    if (shouldAutoCutOut && audioPlayer->getThumbnail().getTotalLength() > 0.0) { // Only detect if a file is loaded and auto-cut is turned ON
         detectOutSilence();
     }
     updateComponentStates(); // Update component states to reflect changes in shouldAutoCutIn/Out
@@ -380,7 +370,7 @@ void MainComponent::initialiseClearButtons()
   clearLoopOutButton.onClick = [this]
   {
     DBG("Button Clicked: Clear Loop Out (reset to end)");
-    loopOutPosition = thumbnail.getTotalLength();
+    loopOutPosition = audioPlayer->getThumbnail().getTotalLength();
     ensureLoopOrder();
     updateLoopButtonColors();
     updateLoopLabels();
@@ -578,8 +568,8 @@ void MainComponent::updateLoopButtonColors() {
 }
 
 MainComponent::~MainComponent() {
+  audioPlayer->removeChangeListener(this);
   shutdownAudio();
-  thumbnail.removeChangeListener(this);
   stopTimer();
   setLookAndFeel(nullptr); }
 
@@ -609,7 +599,7 @@ double MainComponent::parseTime(const juce::String& timeString) {
     return (double)hours * 3600.0 + (double)minutes * 60.0 + (double)seconds + (double)milliseconds / 1000.0; }
 
 void MainComponent::drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample) {
-  auto audioLength = thumbnail.getTotalLength();
+  auto audioLength = audioPlayer->getThumbnail().getTotalLength();
   if (audioLength <= 0.0)
   return;
   auto width = waveformBounds.getWidth();
@@ -619,71 +609,57 @@ void MainComponent::drawReducedQualityWaveform(juce::Graphics& g, int channel, i
     auto proportion = (double)x / (double)width;
     auto time = proportion * audioLength;
     float minVal, maxVal;
-    thumbnail.getApproximateMinMax(time, time + (audioLength / width) * pixelsPerSample, channel, minVal, maxVal);
+    audioPlayer->getThumbnail().getApproximateMinMax(time, time + (audioLength / width) * pixelsPerSample, channel, minVal, maxVal);
     auto topY = centerY - (maxVal * height * 0.5f);
     auto bottomY = centerY - (minVal * height * 0.5f);
     g.drawVerticalLine(waveformBounds.getX() + x, topY, bottomY); }}
 
 void MainComponent::openButtonClicked() {
   DBG("Button Clicked: Open");
-  isFileLoaded = false; // Assume no file loaded initially
   updateComponentStates(); // Disable buttons until a file is successfully loaded
 
-  auto filter = formatManager.getWildcardForAllFormats();
   chooser = std::make_unique<juce::FileChooser> ("Select Audio...",
-    juce::File::getSpecialLocation (juce::File::userHomeDirectory), filter);
+    juce::File::getSpecialLocation (juce::File::userHomeDirectory), audioPlayer->getFormatManager().getWildcardForAllFormats());
   auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
   chooser->launchAsync (flags, [this] (const juce::FileChooser& fc) {
     auto file = fc.getResult();
     if (file.exists()) {
-      auto* reader = formatManager.createReaderFor (file);
-      if (reader != nullptr) {
-        transportSource.stop();
-        transportSource.setSource (nullptr);
-        auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
-        transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
-        thumbnail.setSource (new juce::FileInputSource (file));
-        DBG("AudioThumbnail: Num Channels = " << thumbnail.getNumChannels() << ", Total Length = " << thumbnail.getTotalLength());
-                totalTimeStaticStr = formatTime(thumbnail.getTotalLength()); // Set total time static string
-                isFileLoaded = true; // Set flag to true after successful load
-                loopInPosition  = 0.0;
-                loopOutPosition = thumbnail.getTotalLength();
-                readerSource.reset (newSource.release());
-                updateButtonText();
-                
-                // --- NEW LOGIC FOR AUTO-CUT ON LOAD ---
-                // If auto-cut-in is active, perform silence detection for the in point
-                if (shouldAutoCutIn) {
-                    detectInSilence();
-                }
-                // If auto-cut-out is active, perform silence detection for the out point
-                if (shouldAutoCutOut) {
-                    detectOutSilence();
-                }
-                // --- END NEW LOGIC ---
+      auto result = audioPlayer->loadFile(file);
+      if (result.wasOk())
+      {
+        statsDisplay.setText("File loaded: " + file.getFileName(), juce::dontSendNotification);
+        playStopButton.setEnabled(true);
+        totalTimeStaticStr = formatTime(audioPlayer->getThumbnail().getTotalLength()); // Set total time static string
+        loopInPosition  = 0.0;
+        loopOutPosition = audioPlayer->getThumbnail().getTotalLength();
+        
+        // --- NEW LOGIC FOR AUTO-CUT ON LOAD ---
+        // If auto-cut-in is active, perform silence detection for the in point
+        if (shouldAutoCutIn) {
+            detectInSilence();
+        }
+        // If auto-cut-out is active, perform silence detection for the out point
+        if (shouldAutoCutOut) {
+            detectOutSilence();
+        }
+        // --- END NEW LOGIC ---
 
-                updateComponentStates(); // Update component states after loading file and potentially auto-cutting
-                grabKeyboardFocus(); // Re-grab focus after file chooser closes
-                
-                if (shouldAutoplay && isFileLoaded) { // Autoplay only if explicitly enabled
-                    playStopButtonClicked(); // Simulate click to start playback
-                }
+        updateComponentStates(); // Update component states after loading file and potentially auto-cutting
+        grabKeyboardFocus(); // Re-grab focus after file chooser closes
+        
+        if (shouldAutoplay && audioPlayer->isPlaying() == false) { // Autoplay only if explicitly enabled
+            audioPlayer->togglePlayStop(); // Simulate click to start playback
+        }
+      }
+      else
+      {
+        statsDisplay.setText(result.getErrorMessage(), juce::dontSendNotification);
+        statsDisplay.setColour(juce::Label::textColourId, juce::Colours::red);
+      }
+    }
+  });}
 
-              }}});}
 
-void MainComponent::playStopButtonClicked() {
-  DBG("Button Clicked: Play/Stop");
-  if (transportSource.isPlaying()) {
-    transportSource.stop(); }
-  else {
-    if (transportSource.hasStreamFinished()) {
-      if (shouldLoop)
-        transportSource.setPosition (0.0);
-          else {
-            updateButtonText();
-              return; }}
-    transportSource.start();}
-  updateButtonText(); }
 
 bool MainComponent::keyPressed (const juce::KeyPress& key) {
     auto keyCode = key.getTextCharacter();
@@ -693,7 +669,7 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
         return true;
 
     // All other actions require a file to be loaded
-    if (isFileLoaded) {
+    if (audioPlayer->getThumbnail().getTotalLength() > 0.0) {
         if (handlePlaybackKeybinds(key))
             return true;
         if (handleUIToggleKeybinds(key))
@@ -717,17 +693,17 @@ bool MainComponent::keyPressed (const juce::KeyPress& key) {
  */
 bool MainComponent::handlePlaybackKeybinds(const juce::KeyPress& key)
 {
-    if (thumbnail.getTotalLength() > 0.0) {
+    if (audioPlayer->getThumbnail().getTotalLength() > 0.0) {
         constexpr double skipAmountSeconds = Config::keyboardSkipAmountSeconds;
         if (key == juce::KeyPress::leftKey) {
-            auto newPos = juce::jmax (0.0, transportSource.getCurrentPosition() - skipAmountSeconds);
-            transportSource.setPosition (newPos);
+            auto newPos = juce::jmax (0.0, audioPlayer->getTransportSource().getCurrentPosition() - skipAmountSeconds);
+            audioPlayer->getTransportSource().setPosition (newPos);
             DBG("  Left arrow key pressed. Seeking to " << newPos);
             return true;
         }
         if (key == juce::KeyPress::rightKey) {
-            auto newPos = juce::jmin (thumbnail.getTotalLength(), transportSource.getCurrentPosition() + skipAmountSeconds);
-            transportSource.setPosition (newPos);
+            auto newPos = juce::jmin (audioPlayer->getThumbnail().getTotalLength(), audioPlayer->getTransportSource().getCurrentPosition() + skipAmountSeconds);
+            audioPlayer->getTransportSource().setPosition (newPos);
             DBG("  Right arrow key pressed. Seeking to " << newPos);
             return true;
         }
@@ -735,7 +711,7 @@ bool MainComponent::handlePlaybackKeybinds(const juce::KeyPress& key)
 
     if (key == juce::KeyPress::spaceKey) {
         DBG("  Space key pressed. Toggling play/stop.");
-        playStopButtonClicked();
+        audioPlayer->togglePlayStop();
         return true;
     }
     return false;
@@ -799,7 +775,7 @@ bool MainComponent::handleLoopKeybinds(const juce::KeyPress& key)
             DBG("  'i' key pressed ignored: Auto Cut In is active.");
             return true;
         }
-        loopInPosition = transportSource.getCurrentPosition();
+        loopInPosition = audioPlayer->getTransportSource().getCurrentPosition();
         DBG("  'i' key pressed. Setting loop in position to " << loopInPosition);
         ensureLoopOrder(); // Call helper
         updateLoopButtonColors();
@@ -812,7 +788,7 @@ bool MainComponent::handleLoopKeybinds(const juce::KeyPress& key)
             DBG("  'o' key pressed ignored: Auto Cut Out is active.");
             return true;
         }
-        loopOutPosition = transportSource.getCurrentPosition();
+        loopOutPosition = audioPlayer->getTransportSource().getCurrentPosition();
         DBG("  'o' key pressed. Setting loop out position to " << loopOutPosition);
         ensureLoopOrder(); // Call helper
         updateLoopButtonColors();
@@ -874,12 +850,12 @@ bool MainComponent::handleGlobalKeybinds(const juce::KeyPress& key) {
  * @param x The X-coordinate in pixels within the waveform display.
  */
 void MainComponent::seekToPosition (int x) {
-  if (thumbnail.getTotalLength() > 0.0) {
+  if (audioPlayer->getThumbnail().getTotalLength() > 0.0) {
     auto relativeX = (double)(x - waveformBounds.getX());
     auto proportion = relativeX / (double)waveformBounds.getWidth();
-    auto newPosition = juce::jlimit (0.0, 1.0, proportion) * thumbnail.getTotalLength();
+    auto newPosition = juce::jlimit (0.0, 1.0, proportion) * audioPlayer->getThumbnail().getTotalLength();
     DBG("Seeking to position " << newPosition << " (x: " << x << ")");
-    transportSource.setPosition (newPosition);
+    audioPlayer->getTransportSource().setPosition (newPosition);
   }
 }
 
@@ -895,9 +871,9 @@ void MainComponent::mouseDown (const juce::MouseEvent& e) {
   }
 
   if (waveformBounds.contains (e.getMouseDownPosition())) {
-    auto newPosition = (double)(e.x - waveformBounds.getX()) / (double)waveformBounds.getWidth() * thumbnail.getTotalLength();
+    auto newPosition = (double)(e.x - waveformBounds.getX()) / (double)waveformBounds.getWidth() * audioPlayer->getThumbnail().getTotalLength();
     if (newPosition < 0.0) newPosition = 0.0;
-    if (newPosition > thumbnail.getTotalLength()) newPosition = thumbnail.getTotalLength();
+    if (newPosition > audioPlayer->getThumbnail().getTotalLength()) newPosition = audioPlayer->getThumbnail().getTotalLength();
 
     if (currentPlacementMode == PlacementMode::LoopIn) {
       loopInPosition = newPosition;
@@ -950,35 +926,29 @@ void MainComponent::mouseMove (const juce::MouseEvent& e) {
 	    mouseCursorY = -1;
 	    repaint(); }}
 
-void MainComponent::updateButtonText() {
-  if (transportSource.isPlaying())
-    playStopButton.setButtonText (Config::stopButtonText);
-  else
-    playStopButton.setButtonText (Config::playButtonText); }
+
 
 void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) {
-  if (readerSource.get() == nullptr) bufferToFill.clearActiveBufferRegion();
-  else transportSource.getNextAudioBlock (bufferToFill); }
+  audioPlayer->getNextAudioBlock (bufferToFill); }
 
 void MainComponent::timerCallback() {
   glowAlpha = 0.5f + 0.5f * std::sin(juce::Time::getMillisecondCounter() * Config::pulseSpeedFactor);
 
-  if (!transportSource.isPlaying() && transportSource.hasStreamFinished() && shouldLoop) {
-    transportSource.setPosition (0.0);
-    transportSource.start(); }
-  if (shouldLoop && loopOutPosition > loopInPosition && transportSource.getCurrentPosition() >= loopOutPosition) {
-    transportSource.setPosition (loopInPosition); }
-  if (!transportSource.isPlaying() && playStopButton.getButtonText().contains(juce::CharPointer_UTF8 ("\xe2\x8f\xb8")))
-    updateButtonText();
+  if (!audioPlayer->isPlaying() && audioPlayer->getTransportSource().hasStreamFinished() && shouldLoop) {
+    audioPlayer->getTransportSource().setPosition (0.0);
+    audioPlayer->getTransportSource().start(); }
+  if (shouldLoop && loopOutPosition > loopInPosition && audioPlayer->getTransportSource().getCurrentPosition() >= loopOutPosition) {
+    audioPlayer->getTransportSource().setPosition (loopInPosition); }
+  // No longer call updateButtonText() directly. Play/Stop button text is updated by changeListenerCallback.
   if (showStats) {
     juce::String debugInfo;
-    debugInfo << "Samples Loaded: " << thumbnail.getNumSamplesFinished() << "\n";
-    debugInfo << "Approx Peak: " << thumbnail.getApproximatePeak() << "\n";
+    debugInfo << "Samples Loaded: " << audioPlayer->getThumbnail().getNumSamplesFinished() << "\n";
+    debugInfo << "Approx Peak: " << audioPlayer->getThumbnail().getApproximatePeak() << "\n";
     float minV, maxV;
-    thumbnail.getApproximateMinMax(0.0, thumbnail.getTotalLength(), 0, minV, maxV);
+    audioPlayer->getThumbnail().getApproximateMinMax(0.0, audioPlayer->getThumbnail().getTotalLength(), 0, minV, maxV);
     debugInfo << "Min/Max: " << minV << " / " << maxV;
     statsDisplay.setText (debugInfo, false); }
-  if (transportSource.isPlaying() || showStats || thumbnail.getTotalLength() > 0.0 || shouldAutoCutIn || shouldAutoCutOut)
+  if (audioPlayer->isPlaying() || showStats || audioPlayer->getThumbnail().getTotalLength() > 0.0 || shouldAutoCutIn || shouldAutoCutOut)
     repaint(); }
 
     void MainComponent::paint (juce::Graphics& g)
@@ -986,7 +956,7 @@ void MainComponent::timerCallback() {
       g.fillAll (Config::mainBackgroundColor);
 
       // Waveform drawing
-      if (thumbnail.getNumChannels() > 0)
+      if (audioPlayer->getThumbnail().getNumChannels() > 0)
       {
         int pixelsPerSample = 1;
         if (currentQuality == ThumbnailQuality::Low)
@@ -994,30 +964,30 @@ void MainComponent::timerCallback() {
         else if (currentQuality == ThumbnailQuality::Medium)
           pixelsPerSample = 2;
 
-        if (currentChannelViewMode == ChannelViewMode::Mono || thumbnail.getNumChannels() == 1)
+        if (currentChannelViewMode == ChannelViewMode::Mono || audioPlayer->getThumbnail().getNumChannels() == 1)
         {
           g.setColour (Config::waveformColor);
           if (pixelsPerSample > 1)
             drawReducedQualityWaveform(g, 0, pixelsPerSample);
           else
-            thumbnail.drawChannel (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 0, 1.0f);
+            audioPlayer->getThumbnail().drawChannel (g, waveformBounds, 0.0, audioPlayer->getThumbnail().getTotalLength(), 0, 1.0f);
         }
         else // Stereo
         {
           g.setColour (Config::waveformColor);
           if (pixelsPerSample > 1)
           {
-            for (int ch = 0; ch < thumbnail.getNumChannels(); ++ch)
+            for (int ch = 0; ch < audioPlayer->getThumbnail().getNumChannels(); ++ch)
               drawReducedQualityWaveform(g, ch, pixelsPerSample);
           }
           else
           {
-            thumbnail.drawChannels (g, waveformBounds, 0.0, thumbnail.getTotalLength(), 1.0f);
+            audioPlayer->getThumbnail().drawChannels (g, waveformBounds, 0.0, audioPlayer->getThumbnail().getTotalLength(), 1.0f);
           }
         }
       } // End of waveform drawing
 
-      auto audioLength = (float)thumbnail.getTotalLength();
+      auto audioLength = (float)audioPlayer->getThumbnail().getTotalLength();
 
       if (audioLength > 0.0) // Main block for drawing elements that depend on audio length
       {
@@ -1111,9 +1081,9 @@ void MainComponent::timerCallback() {
         }
 
         // Playback Cursor
-        auto drawPosition = (float)transportSource.getCurrentPosition();
+        auto drawPosition = (float)audioPlayer->getTransportSource().getCurrentPosition();
         auto x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
-        if (transportSource.isPlaying())
+        if (audioPlayer->isPlaying())
         {
           juce::ColourGradient gradient (
             Config::playbackCursorGlowColorStart,
@@ -1151,7 +1121,7 @@ void MainComponent::timerCallback() {
         {
           float minVal, maxVal;
           double timeAtMouse = (double)(mouseCursorX - waveformBounds.getX()) / (double)waveformBounds.getWidth() * audioLength;
-          thumbnail.getApproximateMinMax(timeAtMouse, timeAtMouse + (audioLength / waveformBounds.getWidth()), 0, minVal, maxVal);
+          audioPlayer->getThumbnail().getApproximateMinMax(timeAtMouse, timeAtMouse + (audioLength / waveformBounds.getWidth()), 0, minVal, maxVal);
 
           float centerY = (float)waveformBounds.getCentreY();
           float halfHeight = (float)waveformBounds.getHeight() / 2.0f;
@@ -1234,8 +1204,8 @@ void MainComponent::timerCallback() {
       // Playback time display (bottom row)
       if (audioLength > 0.0)
       {
-        double currentTime = transportSource.getCurrentPosition();
-        double totalTime = thumbnail.getTotalLength(); // totalTime is calculated but totalTimeStaticStr is used for display
+        double currentTime = audioPlayer->getTransportSource().getCurrentPosition();
+        double totalTime = audioPlayer->getThumbnail().getTotalLength(); // totalTime is calculated but totalTimeStaticStr is used for display
         double remainingTime = totalTime - currentTime;
 
         juce::String currentTimeStr = formatTime(currentTime);
@@ -1278,7 +1248,7 @@ void MainComponent::textEditorTextChanged (juce::TextEditor& editor) {
         }
     } else {
         DBG("  Loop Editor Text Changed: " << editor.getText());
-        double totalLength = thumbnail.getTotalLength();
+        double totalLength = audioPlayer->getThumbnail().getTotalLength();
         double newPosition = parseTime(editor.getText());
 
         if (newPosition >= 0.0 && newPosition <= totalLength) {
@@ -1303,7 +1273,7 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
             return;
         }
         double newPosition = parseTime(editor.getText());
-        if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
+        if (newPosition >= 0.0 && newPosition <= audioPlayer->getThumbnail().getTotalLength()) {
             // Validate against loopOutPosition if it's set
             if (loopOutPosition > -1.0 && newPosition > loopOutPosition) {
                 // Invalid: new loopIn is after loopOut, revert to current loopIn
@@ -1331,10 +1301,10 @@ void MainComponent::textEditorReturnKeyPressed (juce::TextEditor& editor) {
                         return;
                     }
                     double newPosition = parseTime(editor.getText());
-                    if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
-                        if (shouldLoop && transportSource.getCurrentPosition() >= loopOutPosition)
+                    if (newPosition >= 0.0 && newPosition <= audioPlayer->getThumbnail().getTotalLength()) {
+                        if (shouldLoop && audioPlayer->getTransportSource().getCurrentPosition() >= loopOutPosition)
                         {
-                            transportSource.setPosition(loopInPosition);
+                            audioPlayer->getTransportSource().setPosition(loopInPosition);
                         }
                         // Validate against loopInPosition if it's set
                         if (loopInPosition > -1.0 && newPosition < loopInPosition) { // Uncommented and properly nested
@@ -1421,7 +1391,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
             return;
         }
         double newPosition = parseTime(editor.getText());
-        if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
+        if (newPosition >= 0.0 && newPosition <= audioPlayer->getThumbnail().getTotalLength()) {
             // Validate against loopOutPosition if it's set
             if (loopOutPosition > -1.0 && newPosition > loopOutPosition) {
                 // Invalid: new loopIn is after loopOut, revert to current loopIn
@@ -1449,7 +1419,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
                         return;
                     }
                     double newPosition = parseTime(editor.getText());
-                    if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength()) {
+                    if (newPosition >= 0.0 && newPosition <= audioPlayer->getThumbnail().getTotalLength()) {
                         // Validate against loopInPosition if it's set
                         if (loopInPosition > -1.0 && newPosition < loopInPosition) {
                             // Invalid: new loopOut is before loopIn, revert to current loopOut
@@ -1462,7 +1432,7 @@ void MainComponent::textEditorFocusLost (juce::TextEditor& editor) {
                             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
                             repaint();
                         }
-                    } else { // This else belongs to `if (newPosition >= 0.0 && newPosition <= thumbnail.getTotalLength())`
+                    } else { // This 'else' correctly handles out-of-bounds input for loopOutEditor
                         // Revert to last valid position if input is invalid (out of bounds)
                         editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
                         editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor); // Indicate error
@@ -1508,22 +1478,18 @@ void MainComponent::updateLoopLabels() {
 void MainComponent::detectInSilence()
 {
     DBG("detectInSilence() called.");
-    if (!readerSource) {
-        DBG("  readerSource is null. Returning.");
-        return;
-    }
-
-    bool wasPlaying = transportSource.isPlaying();
+    bool wasPlaying = audioPlayer->isPlaying();
     if (wasPlaying) {
-        transportSource.stop();
+        audioPlayer->getTransportSource().stop();
         DBG("  Playback stopped for silence detection.");
     }
 
-    auto* reader = readerSource->getAudioFormatReader();
+    juce::AudioFormatReader* reader = audioPlayer->getAudioFormatReader();
+
     if (!reader) {
         DBG("  AudioFormatReader is null. Returning.");
         if (wasPlaying) { // If we stopped playback, start it again before returning
-            transportSource.start();
+            audioPlayer->getTransportSource().start();
         }
         return;
     }
@@ -1535,7 +1501,7 @@ void MainComponent::detectInSilence()
     if (lengthInSamples <= 0) {
         DBG("  Audio length in samples is non-positive. Returning.");
         if (wasPlaying) { // If we stopped playback, start it again before returning
-            transportSource.start();
+            audioPlayer->getTransportSource().start();
         }
         return;
     }
@@ -1596,7 +1562,7 @@ void MainComponent::detectInSilence()
         DBG("  Setting loopInPosition: " << loopInPosition);
 
         // Jump playhead to loopInPosition
-        transportSource.setPosition(loopInPosition);
+        audioPlayer->getTransportSource().setPosition(loopInPosition);
         DBG("  Transport source position set to: " << loopInPosition);
 
         updateLoopButtonColors();
@@ -1607,7 +1573,7 @@ void MainComponent::detectInSilence()
     }
 
     if (wasPlaying) {
-        transportSource.start();
+        audioPlayer->getTransportSource().start();
         DBG("  Playback restarted.");
     }
     DBG("detectInSilence() finished.");
@@ -1616,22 +1582,18 @@ void MainComponent::detectInSilence()
 void MainComponent::detectOutSilence()
 {
     DBG("detectOutSilence() called.");
-    if (!readerSource) {
-        DBG("  readerSource is null. Returning.");
-        return;
-    }
-
-    bool wasPlaying = transportSource.isPlaying();
+    bool wasPlaying = audioPlayer->isPlaying();
     if (wasPlaying) {
-        transportSource.stop();
+        audioPlayer->getTransportSource().stop();
         DBG("  Playback stopped for silence detection.");
     }
 
-    auto* reader = readerSource->getAudioFormatReader();
+    juce::AudioFormatReader* reader = audioPlayer->getAudioFormatReader();
+
     if (!reader) {
         DBG("  AudioFormatReader is null. Returning.");
         if (wasPlaying) {
-            transportSource.start();
+            audioPlayer->getTransportSource().start();
         }
         return;
     }
@@ -1643,7 +1605,7 @@ void MainComponent::detectOutSilence()
     if (lengthInSamples <= 0) {
         DBG("  Audio length in samples is non-positive. Returning.");
         if (wasPlaying) {
-            transportSource.start();
+            audioPlayer->getTransportSource().start();
         }
         return;
     }
@@ -1702,7 +1664,7 @@ void MainComponent::detectOutSilence()
         loopOutPosition = (double)loopOutSample / reader->sampleRate;
         DBG("  Setting loopOutPosition: " << loopOutPosition);
 
-        transportSource.setPosition(loopOutPosition);
+        audioPlayer->getTransportSource().setPosition(loopOutPosition);
         DBG("  Transport source position set to: " << loopOutPosition);
 
         updateLoopButtonColors();
@@ -1713,7 +1675,7 @@ void MainComponent::detectOutSilence()
     }
 
     if (wasPlaying) {
-        transportSource.start();
+        audioPlayer->getTransportSource().start();
         DBG("  Playback restarted.");
     }
     DBG("detectOutSilence() finished.");
@@ -1750,57 +1712,28 @@ void MainComponent::resized() {
   layoutWaveformAndStats(bounds);
 }
 
-juce::FlexBox MainComponent::getTopRowFlexBox(){
-  juce::FlexBox row;
-  row.flexDirection = juce::FlexBox::Direction::row;
-  row.justifyContent = juce::FlexBox::JustifyContent::flexStart;
-  row.alignItems = juce::FlexBox::AlignItems::center;
 
-  auto addBtn = [&](juce::Button& btn, float width = 80.0f) {
-    juce::FlexItem item(btn);
-    item.flexBasis = width;
-    item.flexGrow = 0.0f;
-    item.flexShrink = 0.0f;
-    item.margin = juce::FlexItem::Margin(0, 5, 0, 0);
-    row.items.add(item); };
 
-  addBtn(openButton);
-  addBtn(playStopButton);
-  addBtn(modeButton);
-  addBtn(statsButton);
-  addBtn(exitButton);
-  return row; }
 
-juce::FlexBox MainComponent::getLoopRowFlexBox() {
-  juce::FlexBox row;
-  row.flexDirection = juce::FlexBox::Direction::row;
-  row.justifyContent = juce::FlexBox::JustifyContent::flexStart;
-  row.alignItems = juce::FlexBox::AlignItems::center;
-
-  auto addItem = [&](juce::Component& comp, float width) {
-    juce::FlexItem item(comp);
-    item.flexBasis = width;
-    item.flexGrow = 0.0f;
-    item.flexShrink = 0.0f;
-    item.margin = juce::FlexItem::Margin(0, 5, 0, 0);
-    row.items.add(item); };
-
-  addItem(loopButton, Config::buttonWidth); // Use Config::buttonWidth
-  addItem(loopInButton, Config::buttonWidth); // Use Config::buttonWidth
-  addItem(loopInEditor, Config::loopTextWidth); // Use loopInEditor and Config::loopTextWidth
-  addItem(loopOutButton, Config::buttonWidth); // Use Config::buttonWidth
-  addItem(loopOutEditor, Config::loopTextWidth); // Use loopOutEditor and Config::loopTextWidth
-  return row; }
 
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate) {
-  transportSource.prepareToPlay (samplesPerBlockExpected, sampleRate); }
+  audioPlayer->prepareToPlay (samplesPerBlockExpected, sampleRate); }
 
-void MainComponent::changeListenerCallback (juce::ChangeBroadcaster*) { repaint(); }
+void MainComponent::changeListenerCallback (juce::ChangeBroadcaster* source) {
+  if (source == audioPlayer.get())
+  {
+    if (audioPlayer->isPlaying())
+      playStopButton.setButtonText (Config::stopButtonText);
+    else
+      playStopButton.setButtonText (Config::playButtonText);
+    repaint();
+  }
+}
 
-void MainComponent::releaseResources() { transportSource.releaseResources(); }
+void MainComponent::releaseResources() { audioPlayer->releaseResources(); }
 
 void MainComponent::updateComponentStates() {
-  const bool enabled = isFileLoaded; // Base enable state depends on file loaded
+  const bool enabled = audioPlayer->getThumbnail().getTotalLength() > 0.0; // Base enable state depends on file loaded
   const bool cutControlsActive = isCutModeActive && enabled; // Cut controls enabled only if Cut mode is active AND file is loaded
 
   updateGeneralButtonStates(enabled); // Call the new function
@@ -1886,25 +1819,7 @@ void MainComponent::updateGeneralButtonStates(bool enabled)
   statsDisplay.setEnabled(enabled);
 }
 
-juce::FlexBox MainComponent::getBottomRowFlexBox() {
-  juce::FlexBox row;
-  row.flexDirection = juce::FlexBox::Direction::row;
-  row.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
-  row.alignItems = juce::FlexBox::AlignItems::center;
 
-  auto addBtn = [&](juce::Button& btn, float width = 80.0f) {
-    juce::FlexItem item(btn);
-    item.flexBasis = width;
-    item.flexGrow = 0.0f;
-    item.flexShrink = 0.0f;
-    item.margin = juce::FlexItem::Margin(0, 5, 0, 0);
-    row.items.add(item); };
-
-  addBtn(qualityButton);
-  addBtn(channelViewButton);
-  addBtn(statsButton);
-  addBtn(modeButton);
-  return row; }
 
 void MainComponent::focusGained (juce::Component::FocusChangeType cause) {
   ignoreUnused (cause);
