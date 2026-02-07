@@ -55,6 +55,9 @@ target_sources(Sorta PRIVATE
 		Source/MainComponent.cpp
         Source/AudioPlayer.h
         Source/AudioPlayer.cpp
+        Source/ControlPanel.h
+        Source/ControlPanel.cpp
+        Source/AppEnums.h
 )
 
 target_link_libraries(Sorta PRIVATE
