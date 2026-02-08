@@ -223,7 +223,7 @@ bool MainComponent::handleLoopKeybinds(const juce::KeyPress& key)
         if (k == 'i' || k == 'I') {
             // Why: If auto-cut in is active, the 'i' keybind should be ignored
             // as the loop-in position is managed automatically.
-            if (controlPanel->shouldAutoCutIn()) return false;
+
             controlPanel->setLoopInPosition(audioPlayer->getTransportSource().getCurrentPosition());
             controlPanel->repaint();
             return true;
@@ -231,7 +231,7 @@ bool MainComponent::handleLoopKeybinds(const juce::KeyPress& key)
         if (k == 'o' || k == 'O') {
             // Why: If auto-cut out is active, the 'o' keybind should be ignored
             // as the loop-out position is managed automatically.
-            if (controlPanel->shouldAutoCutOut()) return false;
+
             controlPanel->setLoopOutPosition(audioPlayer->getTransportSource().getCurrentPosition());
             controlPanel->repaint();
             return true;

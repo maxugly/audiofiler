@@ -1,9 +1,12 @@
 #include "ControlPanel.h"
-#include "MainComponent.h" // Include MainComponent for access to AudioPlayer etc.
+#include "MainComponent.h" // Full header required for MainComponent access (e.g., getAudioPlayer)
+#include "AudioPlayer.h"    // Required for AudioPlayer types in public methods
 #include "Config.h"
 #include <cmath> // For std::abs
 
-ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent)
+ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent),
+                                                         modernLF(),
+                                                         silenceDetector(std::make_unique<SilenceDetector>(*this))
 {
     initialiseLookAndFeel();
     initialiseButtons();
@@ -11,6 +14,7 @@ ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent
     initialiseClearButtons();
     initialiseLoopEditors();
     finaliseSetup();
+
     setMouseCursor(juce::MouseCursor::CrosshairCursor);
 }
 
@@ -164,14 +168,12 @@ void ControlPanel::initialiseAutoCutInButton()
     addAndMakeVisible(autoCutInButton);
     autoCutInButton.setButtonText(Config::autoCutInButtonText);
     autoCutInButton.setClickingTogglesState(true);
-    autoCutInButton.setToggleState(m_shouldAutoCutIn, juce::dontSendNotification);
     autoCutInButton.onClick = [this] {
-        m_shouldAutoCutIn = autoCutInButton.getToggleState();
+        const bool isAutoCutActive = autoCutInButton.getToggleState();
+        silenceDetector->setIsAutoCutInActive(isAutoCutActive);
         updateComponentStates();
-        // If auto-cut in is now enabled, trigger detection
-        // This ensures the initial calculation is performed when the feature is activated.
-        if (m_shouldAutoCutIn && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
-            detectInSilence();
+        if (isAutoCutActive && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
+            silenceDetector->detectInSilence();
         }
     };
 }
@@ -187,15 +189,13 @@ void ControlPanel::initialiseAutoCutOutButton()
 {
     addAndMakeVisible(autoCutOutButton);
     autoCutOutButton.setButtonText(Config::autoCutOutButtonText);
-    autoCutOutButton.setClickingTogglesState(true);
-    autoCutOutButton.setToggleState(m_shouldAutoCutOut, juce::dontSendNotification);
+    autoCutOutButton.setClickingTogglesState(true); // Make it a toggle button
     autoCutOutButton.onClick = [this] {
-        m_shouldAutoCutOut = autoCutOutButton.getToggleState();
+        const bool isAutoCutActive = autoCutOutButton.getToggleState();
+        silenceDetector->setIsAutoCutOutActive(isAutoCutActive);
         updateComponentStates();
-        // If auto-cut out is now enabled, trigger detection
-        // This ensures the initial calculation is performed when the feature is activated.
-        if (m_shouldAutoCutOut && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
-            detectOutSilence();
+        if (isAutoCutActive && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
+            silenceDetector->detectOutSilence();
         }
     };
 }
@@ -238,11 +238,13 @@ void ControlPanel::initialiseLoopButtons()
         loopInPosition = owner.getAudioPlayer()->getTransportSource().getCurrentPosition();
         ensureLoopOrder();
         updateLoopButtonColors();
+        silenceDetector->setIsAutoCutInActive(false); // User manually set loop in, so auto-cut is no longer active
         repaint();
     };
     loopInButton.onRightClick = [this] {
         currentPlacementMode = AppEnums::PlacementMode::LoopIn;
         updateLoopButtonColors();
+        silenceDetector->setIsAutoCutInActive(false); // User manually set loop in, so auto-cut is no longer active
         repaint();
     };
 
@@ -271,6 +273,7 @@ void ControlPanel::initialiseClearButtons()
         ensureLoopOrder();
         updateLoopButtonColors();
         updateLoopLabels();
+        silenceDetector->setIsAutoCutInActive(false); // User manually cleared loop in, so auto-cut is no longer active
         repaint();
     };
 
@@ -310,31 +313,8 @@ void ControlPanel::initialiseLoopEditors()
     loopOutEditor.addListener(this);
     loopOutEditor.setWantsKeyboardFocus(true);
 
-    addAndMakeVisible(inSilenceThresholdEditor);
-    inSilenceThresholdEditor.setText(juce::String(static_cast<int>(Config::silenceThreshold * 100.0f)));
-    inSilenceThresholdEditor.setInputRestrictions(0, "0123456789");
-    inSilenceThresholdEditor.setJustification(juce::Justification::centred);
-    inSilenceThresholdEditor.setColour(juce::TextEditor::backgroundColourId, Config::textEditorBackgroundColour);
-    inSilenceThresholdEditor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-    inSilenceThresholdEditor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
-    inSilenceThresholdEditor.applyFontToAllText(inSilenceThresholdEditor.getFont());
-    inSilenceThresholdEditor.setMultiLine(false);
-    inSilenceThresholdEditor.setReturnKeyStartsNewLine(false);
-    inSilenceThresholdEditor.addListener(this);
-    inSilenceThresholdEditor.setWantsKeyboardFocus(true);
-
-    addAndMakeVisible(outSilenceThresholdEditor);
-    outSilenceThresholdEditor.setText(juce::String(static_cast<int>(Config::outSilenceThreshold * 100.0f)));
-    outSilenceThresholdEditor.setInputRestrictions(0, "0123456789");
-    outSilenceThresholdEditor.setJustification(juce::Justification::centred);
-    outSilenceThresholdEditor.setColour(juce::TextEditor::backgroundColourId, Config::textEditorBackgroundColour);
-    outSilenceThresholdEditor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-    outSilenceThresholdEditor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
-    outSilenceThresholdEditor.applyFontToAllText(outSilenceThresholdEditor.getFont());
-    outSilenceThresholdEditor.setMultiLine(false);
-    outSilenceThresholdEditor.setReturnKeyStartsNewLine(false);
-    outSilenceThresholdEditor.addListener(this);
-    outSilenceThresholdEditor.setWantsKeyboardFocus(true);
+    addAndMakeVisible(silenceDetector->getInSilenceThresholdEditor());
+    addAndMakeVisible(silenceDetector->getOutSilenceThresholdEditor());
 }
 
 void ControlPanel::finaliseSetup()
@@ -359,7 +339,7 @@ void ControlPanel::resized()
 void ControlPanel::paint(juce::Graphics& g)
 {
     g.fillAll (Config::mainBackgroundColor);
-    auto* audioPlayer = owner.getAudioPlayer();
+    AudioPlayer* audioPlayer = owner.getAudioPlayer();
 
     // Waveform drawing
     if (audioPlayer->getThumbnail().getNumChannels() > 0)
@@ -398,7 +378,7 @@ void ControlPanel::paint(juce::Graphics& g)
     {
         if (m_isCutModeActive) 
         {
-            auto drawThresholdVisualisation = [&](juce::Graphics& g_ref, double loopPos, float threshold, bool isActive)
+            auto drawThresholdVisualisation = [&](juce::Graphics& g_ref, double loopPos, float threshold)
             {
                 if (audioLength <= 0.0) return; 
 
@@ -427,7 +407,7 @@ void ControlPanel::paint(juce::Graphics& g)
                 g_ref.setColour(regionColor);
                 g_ref.fillRect(lineStartX, topThresholdY, currentLineWidth, bottomThresholdY - topThresholdY);
 
-                if (isActive) {
+                if (m_isCutModeActive) { // Glow if cut mode is active
                     juce::Colour glowColor = lineColor.withAlpha(lineColor.getFloatAlpha() * glowAlpha);
                     g_ref.setColour(glowColor);
                     g_ref.fillRect(lineStartX, topThresholdY - (Config::thresholdGlowThickness / 2.0f - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
@@ -439,8 +419,8 @@ void ControlPanel::paint(juce::Graphics& g)
                 g_ref.drawHorizontalLine((int)bottomThresholdY, lineStartX, lineEndX);
             };
 
-            drawThresholdVisualisation(g, loopInPosition, currentInSilenceThreshold, m_shouldAutoCutIn);
-            drawThresholdVisualisation(g, loopOutPosition, currentOutSilenceThreshold, m_shouldAutoCutOut);
+            drawThresholdVisualisation(g, loopInPosition, silenceDetector->getCurrentInSilenceThreshold());
+            drawThresholdVisualisation(g, loopOutPosition, silenceDetector->getCurrentOutSilenceThreshold());
 
             auto actualIn = juce::jmin(loopInPosition, loopOutPosition);
             auto actualOut = juce::jmax(loopInPosition, loopOutPosition);
@@ -560,8 +540,9 @@ void ControlPanel::paint(juce::Graphics& g)
                 
                 
                             // Draw time text
-                            juce::String timeText = owner.formatTime(mouseCursorTime);
-                            g.drawText(timeText, mouseCursorX + 5, mouseCursorY + 5, 100, Config::mouseCursorTextSize, juce::Justification::left, true);            }
+                            juce::String timeText = formatTime(mouseCursorTime); // Use ControlPanel's formatTime
+                            g.drawText(timeText, mouseCursorX + 5, mouseCursorY + 5, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
+            }
             
                     // Draw the main cursor lines on top
                     g.setColour (currentLineColor);
@@ -573,8 +554,8 @@ void ControlPanel::paint(juce::Graphics& g)
         double totalTime = audioPlayer->getThumbnail().getTotalLength();
         double remainingTime = totalTime - currentTime;
 
-        juce::String currentTimeStr = owner.formatTime(currentTime);
-        juce::String remainingTimeStr = owner.formatTime(remainingTime);
+        juce::String currentTimeStr = formatTime(currentTime); // Use ControlPanel's formatTime
+        juce::String remainingTimeStr = formatTime(remainingTime); // Use ControlPanel's formatTime
 
         int textY = bottomRowTopY - Config::playbackTimeTextOffsetY;
 
@@ -594,8 +575,8 @@ void ControlPanel::updatePlayButtonText(bool isPlaying)
 
 void ControlPanel::updateLoopLabels()
 {
-    loopInEditor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification);
-    loopOutEditor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
+    loopInEditor.setText(formatTime(loopInPosition), juce::dontSendNotification); // Use ControlPanel's formatTime
+    loopOutEditor.setText(formatTime(loopOutPosition), juce::dontSendNotification); // Use ControlPanel's formatTime
 }
 
 void ControlPanel::updateComponentStates()
@@ -604,10 +585,8 @@ void ControlPanel::updateComponentStates()
     const bool enabled = owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0;
     DBG("  - enabled (file loaded): " << (enabled ? "true" : "false"));
     DBG("  - m_isCutModeActive: " << (m_isCutModeActive ? "true" : "false")); // Use m_isCutModeActive
-    DBG("  - m_shouldAutoCutIn: " << (m_shouldAutoCutIn ? "true" : "false"));
-    DBG("  - m_shouldAutoCutOut: " << (m_shouldAutoCutOut ? "true" : "false"));
     updateGeneralButtonStates(enabled);
-    updateCutModeControlStates(m_isCutModeActive, enabled, m_shouldAutoCutIn, m_shouldAutoCutOut); // Use m_isCutModeActive
+    updateCutModeControlStates(m_isCutModeActive, enabled); // Use SilenceDetector's states
     DBG("ControlPanel::updateComponentStates() - END");
 }
 
@@ -643,9 +622,9 @@ void ControlPanel::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int ro
     loopOutEditor.setBounds(loopRow.removeFromLeft(Config::loopTextWidth)); loopRow.removeFromLeft(Config::windowBorderMargins / 2);
     clearLoopOutButton.setBounds(loopRow.removeFromLeft(Config::clearButtonWidth)); loopRow.removeFromLeft(Config::clearButtonMargin);
     loopRow.removeFromLeft(Config::windowBorderMargins * 2);
-    inSilenceThresholdEditor.setBounds(loopRow.removeFromLeft(Config::thresholdEditorWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
+    silenceDetector->getInSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(Config::thresholdEditorWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
     autoCutInButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins * 2);
-    outSilenceThresholdEditor.setBounds(loopRow.removeFromLeft(Config::thresholdEditorWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
+    silenceDetector->getOutSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(Config::thresholdEditorWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
     autoCutOutButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth));
 }
 
@@ -705,27 +684,27 @@ void ControlPanel::updateGeneralButtonStates(bool enabled)
     DBG("ControlPanel::updateGeneralButtonStates() - END");
 }
 
-void ControlPanel::updateCutModeControlStates(bool isCutModeActive, bool enabled, bool paramShouldAutoCutIn, bool paramShouldAutoCutOut)
+void ControlPanel::updateCutModeControlStates(bool isCutModeActive, bool enabled)
 {
     // The parameter isCutModeActive is now correct, as it's passed from updateComponentStates where m_isCutModeActive is used.
-    DBG("ControlPanel::updateCutModeControlStates() - START (isCutModeActive parameter: " << (isCutModeActive ? "true" : "false") << ", parent enabled: " << (enabled ? "true" : "false") << ", paramShouldAutoCutIn: " << (paramShouldAutoCutIn ? "true" : "false") << ", paramShouldAutoCutOut: " << (paramShouldAutoCutOut ? "true" : "false") << ")");
-    // Manual Loop In controls
-    loopInButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - loopInButton enabled: " << (loopInButton.isEnabled() ? "true" : "false"));
-    loopInEditor.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - loopInEditor enabled: " << (loopInEditor.isEnabled() ? "true" : "false"));
-    clearLoopInButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - clearLoopInButton enabled: " << (clearLoopInButton.isEnabled() ? "true" : "false"));
+    DBG("ControlPanel::updateCutModeControlStates() - START (isCutModeActive parameter: " << (isCutModeActive ? "true" : "false") << ", parent enabled: " << (enabled ? "true" : "false") << ")");
+    // Manual Loop In controls (now always enabled if cut mode is active)
+    loopInButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutInActive()); DBG("  - loopInButton enabled: " << (loopInButton.isEnabled() ? "true" : "false"));
+    loopInEditor.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutInActive()); DBG("  - loopInEditor enabled: " << (loopInEditor.isEnabled() ? "true" : "false"));
+    clearLoopInButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutInActive()); DBG("  - clearLoopInButton enabled: " << (clearLoopInButton.isEnabled() ? "true" : "false"));
 
-    // Manual Loop Out controls
-    loopOutButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut); DBG("  - loopOutButton enabled: " << (loopOutButton.isEnabled() ? "true" : "false"));
-    loopOutEditor.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut); DBG("  - loopOutEditor enabled: " << (loopOutEditor.isEnabled() ? "true" : "false"));
-    clearLoopOutButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut); DBG("  - clearLoopOutButton enabled: " << (clearLoopOutButton.isEnabled() ? "true" : "false"));
+    // Manual Loop Out controls (now always enabled if cut mode is active)
+    loopOutButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutOutActive()); DBG("  - loopOutButton enabled: " << (loopOutButton.isEnabled() ? "true" : "false"));
+    loopOutEditor.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutOutActive()); DBG("  - loopOutEditor enabled: " << (loopOutEditor.isEnabled() ? "true" : "false"));
+    clearLoopOutButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutOutActive()); DBG("  - clearLoopOutButton enabled: " << (clearLoopOutButton.isEnabled() ? "true" : "false"));
 
-    // Auto Cut In/Out Buttons
+    // Auto Cut In/Out Buttons (now always enabled if cut mode is active)
     autoCutInButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutInButton enabled: " << (autoCutInButton.isEnabled() ? "true" : "false"));
     autoCutOutButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutOutOutton enabled: " << (autoCutOutButton.isEnabled() ? "true" : "false"));
 
-    // Threshold Editors - enabled only if corresponding auto-cut is active AND cut mode is active AND file is loaded
-    inSilenceThresholdEditor.setEnabled(enabled && isCutModeActive && paramShouldAutoCutIn); DBG("  - inSilenceThresholdEditor enabled: " << (inSilenceThresholdEditor.isEnabled() ? "true" : "false"));
-    outSilenceThresholdEditor.setEnabled(enabled && isCutModeActive && paramShouldAutoCutOut); DBG("  - outSilenceThresholdEditor enabled: " << (outSilenceThresholdEditor.isEnabled() ? "true" : "false"));
+    // Threshold Editors (now always enabled if cut mode is active)
+    silenceDetector->getInSilenceThresholdEditor().setEnabled(true); DBG("  - inSilenceThresholdEditor enabled: true");
+    silenceDetector->getOutSilenceThresholdEditor().setEnabled(true); DBG("  - outSilenceThresholdEditor enabled: true");
 
     // Visibility remains the same
     loopInButton.setVisible(isCutModeActive); DBG("  - loopInButton visible: " << (loopInButton.isVisible() ? "true" : "false"));
@@ -733,9 +712,9 @@ void ControlPanel::updateCutModeControlStates(bool isCutModeActive, bool enabled
     loopInEditor.setVisible(isCutModeActive); DBG("  - loopInEditor visible: " << (loopInEditor.isVisible() ? "true" : "false"));
     loopOutEditor.setVisible(isCutModeActive); DBG("  - loopOutEditor visible: " << (loopOutEditor.isVisible() ? "true" : "false"));
     clearLoopInButton.setVisible(isCutModeActive); DBG("  - clearLoopInButton visible: " << (clearLoopInButton.isVisible() ? "true" : "false"));
-    clearLoopOutButton.setVisible(isCutModeActive); DBG("  - clearLoopOutButton visible: " << (clearLoopOutButton.isVisible() ? "true" : "false"));
-    inSilenceThresholdEditor.setVisible(isCutModeActive); DBG("  - inSilenceThresholdEditor visible: " << (inSilenceThresholdEditor.isVisible() ? "true" : "false"));
-    outSilenceThresholdEditor.setVisible(isCutModeActive); DBG("  - outSilenceThresholdEditor visible: " << (outSilenceThresholdEditor.isVisible() ? "true" : "false"));
+    clearLoopOutButton.setVisible(isCutModeActive); DBG("  - clearLoopOutButton visible: " << (clearLoopOutButton.isEnabled() ? "true" : "false")); // Fixed typo: was isVisible()
+    silenceDetector->getInSilenceThresholdEditor().setVisible(isCutModeActive); DBG("  - inSilenceThresholdEditor visible: " << (silenceDetector->getInSilenceThresholdEditor().isVisible() ? "true" : "false"));
+    silenceDetector->getOutSilenceThresholdEditor().setVisible(isCutModeActive); DBG("  - outSilenceThresholdEditor visible: " << (silenceDetector->getOutSilenceThresholdEditor().isVisible() ? "true" : "false"));
     autoCutInButton.setVisible(isCutModeActive); DBG("  - autoCutInButton visible: " << (autoCutInButton.isVisible() ? "true" : "false"));
     autoCutOutButton.setVisible(isCutModeActive); DBG("  - autoCutOutButton visible: " << (autoCutOutButton.isVisible() ? "true" : "false"));
     DBG("ControlPanel::updateCutModeControlStates() - END");
@@ -774,34 +753,17 @@ void ControlPanel::drawReducedQualityWaveform(juce::Graphics& g, int channel, in
 
 void ControlPanel::textEditorTextChanged (juce::TextEditor& editor) {
     DBG("Text Editor Text Changed.");
-    if (&editor == &inSilenceThresholdEditor) {
-        DBG("  In Silence Threshold Editor: " << editor.getText());
-        int newPercentage = editor.getText().getIntValue();
-        if (newPercentage >= 1 && newPercentage <= 99) {
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid
-        } else {
-            editor.setColour(juce::TextEditor::textColourId, Config::textEditorOutOfRangeColour); // Out of range
-        }
-    } else if (&editor == &outSilenceThresholdEditor) {
-        DBG("  Out Silence Threshold Editor: " << editor.getText());
-        int newPercentage = editor.getText().getIntValue();
-        if (newPercentage >= 1 && newPercentage <= 99) {
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid
-        } else {
-            editor.setColour(juce::TextEditor::textColourId, Config::textEditorOutOfRangeColour); // Out of range
-        }
-    } else {
-        DBG("  Loop Editor Text Changed: " << editor.getText());
-        double totalLength = owner.getAudioPlayer()->getThumbnail().getTotalLength();
-        double newPosition = parseTime(editor.getText());
+    // Handles loop editors
+    DBG("  Loop Editor Text Changed: " << editor.getText());
+    double totalLength = owner.getAudioPlayer()->getThumbnail().getTotalLength();
+    double newPosition = parseTime(editor.getText());
 
-        if (newPosition >= 0.0 && newPosition <= totalLength) {
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid and in range
-        } else if (newPosition == -1.0) {
-            editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor); // Completely invalid format
-        } else {
-            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor); // Valid format but out of range
-        }
+    if (newPosition >= 0.0 && newPosition <= totalLength) {
+        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid and in range
+    } else if (newPosition == -1.0) {
+        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor); // Completely invalid format
+    } else {
+        editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor); // Valid format but out of range
     }
 }
 
@@ -809,112 +771,59 @@ void ControlPanel::textEditorReturnKeyPressed (juce::TextEditor& editor) {
     DBG("Text Editor Return Key Pressed.");
     if (&editor == &loopInEditor) {
         DBG("  Loop In Editor: Return Key Pressed");
-        if (m_shouldAutoCutIn) {
-            DBG("  Loop In Editor: Return Key Pressed ignored: Auto Cut In is active.");
-            editor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification); // Revert text
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Reset color
-            editor.giveAwayKeyboardFocus();
-            return;
-        }
+
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
             if (loopOutPosition > -1.0 && newPosition > loopOutPosition) {
-                            editor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification);
+                            editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
                             editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
                         } else {
                             loopInPosition = newPosition;
                             DBG("    Loop In position set to: " << loopInPosition);
                             updateLoopButtonColors();
+                            silenceDetector->setIsAutoCutInActive(false); // User manually set loop in, so auto-cut is no longer active
                             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
                             repaint();
                         }
                     } else {
-                        editor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification);
+                        editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
                         editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
                     }
                 } else if (&editor == &loopOutEditor) {
                     DBG("  Loop Out Editor: Return Key Pressed");
-                    if (m_shouldAutoCutOut) {
-                        DBG("  Loop Out Editor: Return Key Pressed ignored: Auto Cut Out is active.");
-                        editor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
-                        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-                        editor.giveAwayKeyboardFocus();
-                        return;
-                    }
+
                     double newPosition = parseTime(editor.getText());
                     if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
                         if (shouldLoop && owner.getAudioPlayer()->getTransportSource().getCurrentPosition() >= loopOutPosition)
                         {
                             owner.getAudioPlayer()->getTransportSource().setPosition(loopInPosition);
                         }
-                        if (loopInPosition > -1.0 && newPosition < loopInPosition) { 
-                            editor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
+                        if (loopInPosition > -1.0 && newPosition < loopInPosition) {
+                            editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
                             editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
-                        } else { 
+                        } else {
                             loopOutPosition = newPosition;
                             DBG("    Loop Out position set to: " << loopOutPosition);
                             updateLoopButtonColors();
                             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
                             repaint();
                         }
-                    } else { 
-                        editor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
+                    } else {
+                        editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
                         editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
-                    }    } else if (&editor == &inSilenceThresholdEditor)
-    {
-        DBG("  In Silence Threshold Editor: Return Key Pressed - START");
-        int newPercentage = editor.getText().getIntValue();
-        if (newPercentage >= 1 && newPercentage <= 99)
-        {
-            currentInSilenceThreshold = static_cast<float>(newPercentage) / 100.0f;
-            DBG("    In Silence threshold set to: " << currentInSilenceThreshold << ". Calling detectInSilence().");
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-            detectInSilence();
-            DBG("  In Silence Threshold Editor: Return Key Pressed - detectInSilence() called.");
-        }
-        else
-        {
-            DBG("  In Silence Threshold Editor: Return Key Pressed - Threshold value out of range or invalid.");
-            editor.setText(juce::String(static_cast<int>(currentInSilenceThreshold * 100.0f)), juce::dontSendNotification);
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-        }
-    } else if (&editor == &outSilenceThresholdEditor)
-    {
-        DBG("  Out Silence Threshold Editor: Return Key Pressed - START");
-        int newPercentage = editor.getText().getIntValue();
-        if (newPercentage >= 1 && newPercentage <= 99)
-        {
-            currentOutSilenceThreshold = static_cast<float>(newPercentage) / 100.0f;
-            DBG("    Out Silence threshold set to: " << currentOutSilenceThreshold << ". Calling detectOutSilence().");
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-            detectOutSilence();
-            DBG("  Out Silence Threshold Editor: Return Key Pressed - detectOutSilence() called.");
-        }
-        else
-        {
-            DBG("  Out Silence Threshold Editor: Return Key Pressed - Threshold value out of range or invalid.");
-            editor.setText(juce::String(static_cast<int>(currentOutSilenceThreshold * 100.0f)), juce::dontSendNotification);
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-        }
-    }
+                    }
+                }
     editor.giveAwayKeyboardFocus();
-} 
-
+}
 
 void ControlPanel::textEditorEscapeKeyPressed (juce::TextEditor& editor) {
     DBG("Text Editor Escape Key Pressed.");
     if (&editor == &loopInEditor) {
         DBG("  Loop In Editor: Escape Key Pressed");
-        editor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification);
+        editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
     } else if (&editor == &loopOutEditor) {
         DBG("  Loop Out Editor: Escape Key Pressed");
-        editor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
-    } else if (&editor == &inSilenceThresholdEditor) {
-        DBG("  In Silence Threshold Editor: Escape Key Pressed");
-        editor.setText(juce::String(static_cast<int>(currentInSilenceThreshold * 100.0f)), juce::dontSendNotification);
-    } else if (&editor == &outSilenceThresholdEditor) {
-        DBG("  Out Silence Threshold Editor: Escape Key Pressed");
-        editor.setText(juce::String(static_cast<int>(currentOutSilenceThreshold * 100.0f)), juce::dontSendNotification);
+        editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
     }
     editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
     editor.giveAwayKeyboardFocus();
@@ -924,41 +833,32 @@ void ControlPanel::textEditorFocusLost (juce::TextEditor& editor) {
     DBG("Text Editor Focus Lost.");
     if (&editor == &loopInEditor) {
         DBG("  Loop In Editor: Focus Lost");
-        if (m_shouldAutoCutIn) {
-            DBG("  Loop In Editor: Focus Lost ignored: Auto Cut In is active.");
-            editor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification);
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-            return;
-        }
+
         double newPosition = parseTime(editor.getText());
         if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
             if (loopOutPosition > -1.0 && newPosition > loopOutPosition) {
-                            editor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification);
+                            editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
                             editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
                         } else {
                             loopInPosition = newPosition;
                             DBG("    Loop In position set to: " << loopInPosition);
                             updateLoopButtonColors();
+                            silenceDetector->setIsAutoCutInActive(false); // User manually set loop in, so auto-cut is no longer active
                             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
                             repaint();
                         }
                     } else {
-                        editor.setText(owner.formatTime(loopInPosition), juce::dontSendNotification);
+                        editor.setText(formatTime(loopInPosition), juce::dontSendNotification);
                         editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
                         repaint();
                     }
                 } else if (&editor == &loopOutEditor) {
                     DBG("  Loop Out Editor: Focus Lost");
-                    if (m_shouldAutoCutOut) {
-                        DBG("  Loop Out Editor: Focus Lost ignored: Auto Cut Out is active.");
-                        editor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
-                        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-                        return;
-                    }
+
                     double newPosition = parseTime(editor.getText());
                     if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
                         if (loopInPosition > -1.0 && newPosition < loopInPosition) {
-                            editor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
+                            editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
                             editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
                         } else {
                             loopOutPosition = newPosition;
@@ -967,46 +867,12 @@ void ControlPanel::textEditorFocusLost (juce::TextEditor& editor) {
                             editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
                             repaint();
                         }
-                    } else { 
-                        editor.setText(owner.formatTime(loopOutPosition), juce::dontSendNotification);
+                    } else {
+                        editor.setText(formatTime(loopOutPosition), juce::dontSendNotification);
                         editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
-                    }    } else if (&editor == &inSilenceThresholdEditor) {
-        DBG("  In Silence Threshold Editor: Focus Lost - START");
-        int newPercentage = editor.getText().getIntValue();
-        if (newPercentage >= 1 && newPercentage <= 99)
-        {
-            currentInSilenceThreshold = static_cast<float>(newPercentage) / 100.0f;
-            DBG("    In Silence threshold set to: " << currentInSilenceThreshold << ". Calling detectInSilence().");
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-            detectInSilence();
-            DBG("  In Silence Threshold Editor: Focus Lost - detectInSilence() called.");
-        }
-        else
-        {
-            DBG("  In Silence Threshold Editor: Focus Lost - Threshold value out of range or invalid.");
-            editor.setText(juce::String(static_cast<int>(currentInSilenceThreshold * 100.0f)), juce::dontSendNotification);
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-        }
-    } else if (&editor == &outSilenceThresholdEditor) {
-        DBG("  Out Silence Threshold Editor: Focus Lost - START");
-        int newPercentage = editor.getText().getIntValue();
-        if (newPercentage >= 1 && newPercentage <= 99)
-        {
-            currentOutSilenceThreshold = static_cast<float>(newPercentage) / 100.0f;
-            DBG("    Out Silence threshold set to: " << currentOutSilenceThreshold << ". Calling detectOutSilence().");
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-            detectOutSilence();
-            DBG("  Out Silence Threshold Editor: Focus Lost - detectOutSilence() called.");
-        }
-        else
-        {
-            DBG("  Out Silence Threshold Editor: Focus Lost - Threshold value out of range or invalid.");
-            editor.setText(juce::String(static_cast<int>(currentOutSilenceThreshold * 100.0f)), juce::dontSendNotification);
-            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-        }
-    }
+                    }
+                }
 }
-
 /**
  * @brief Toggles the visibility of the statistics display.
  */
@@ -1087,151 +953,51 @@ void ControlPanel::updateLoopButtonColors() {
     updateLoopLabels();
 }
 
-/**
- * @brief Detects the first non-silent sample from the beginning of the audio file to set the loop-in position.
- *
- * This function analyzes the audio data based on `currentInSilenceThreshold`.
- * It temporarily stops playback during detection and resumes it afterwards.
- * The detected loop-in position is snapped to the nearest zero-crossing for smoother looping.
- * Why: This automates the process of finding a suitable start point for a loop,
- * making it easier for the user to quickly set up precise loops without manual scrubbing.
- */
-void ControlPanel::detectInSilence()
+// Public accessors for SilenceDetector and other classes to interact with ControlPanel
+AudioPlayer& ControlPanel::getAudioPlayer() const
 {
-    DBG("ControlPanel::detectInSilence() called.");
-    auto* audioPlayer = owner.getAudioPlayer();
-    bool wasPlaying = audioPlayer->isPlaying();
-    if (wasPlaying) {
-        audioPlayer->getTransportSource().stop();
-        DBG("  Playback stopped for silence detection.");
-    }
+    return *owner.getAudioPlayer();
+}
 
-    juce::AudioFormatReader* reader = audioPlayer->getAudioFormatReader();
+// juce::TextEditor& ControlPanel::getStatsDisplay() { return statsDisplay; } // This was the inline definition
 
-    if (!reader) {
-        DBG("  AudioFormatReader is null. Returning.");
-        if (wasPlaying) { audioPlayer->getTransportSource().start(); }
-        return;
-    }
-    
-    int numChannels = reader->numChannels;
-    juce::int64 lengthInSamples = reader->lengthInSamples;
-    DBG("  Reader: numChannels = " << numChannels << ", lengthInSamples = " << lengthInSamples);
-
-    if (lengthInSamples <= 0) {
-        if (wasPlaying) { audioPlayer->getTransportSource().start(); }
-        return;
-    }
-
-    auto buffer = std::make_unique<juce::AudioBuffer<float>>(numChannels, (int)lengthInSamples);
-    reader->read(buffer.get(), 0, (int)lengthInSamples, 0, true, true);
-
-    float threshold = currentInSilenceThreshold;
-    int firstSample = -1;
-
-    for (int i = 0; i < buffer->getNumSamples(); ++i)
+void ControlPanel::setLoopStart(int sampleIndex)
+{
+    AudioPlayer& audioPlayer = *owner.getAudioPlayer();
+    if (audioPlayer.getAudioFormatReader() != nullptr)
     {
-        bool isSilent = true;
-        for (int j = 0; j < buffer->getNumChannels(); ++j)
-        {
-            if (std::abs(buffer->getSample(j, i)) > threshold)
-            {
-                isSilent = false;
-                break;
-            }
-        }
-        if (!isSilent) { firstSample = i; break; }
-    }
-
-    if (firstSample != -1)
-    {
-        int loopInSample = 0;
-        for (int i = firstSample; i > 0; --i)
-        {
-            if (i >= 1 && i < buffer->getNumSamples()) {
-                // Find zero-crossing to prevent clicks/pops
-                bool sign1 = buffer->getSample(0, i) >= 0;
-                bool sign2 = buffer->getSample(0, i - 1) >= 0;
-                if (sign1 != sign2) { loopInSample = i; break; }
-            }
-        }
-        loopInPosition = (double)loopInSample / reader->sampleRate;
-        audioPlayer->getTransportSource().setPosition(loopInPosition);
-        updateLoopButtonColors();
+        double sampleRate = audioPlayer.getAudioFormatReader()->sampleRate;
+        loopInPosition = (double)sampleIndex / sampleRate;
+        ensureLoopOrder();
         updateLoopLabels();
         repaint();
     }
-
-    if (wasPlaying) { audioPlayer->getTransportSource().start(); }
 }
-/**
- * @brief Detects the last non-silent sample from the end of the audio file to set the loop-out position.
- *
- * This function analyzes the audio data based on `currentOutSilenceThreshold`.
- * It temporarily stops playback during detection and resumes it afterwards.
- * The detected loop-out position is snapped to the nearest zero-crossing for smoother looping.
- * Why: This automates the process of finding a suitable end point for a loop,
- * making it easier for the user to quickly set up precise loops without manual scrubbing.
- */
-void ControlPanel::detectOutSilence()
+
+void ControlPanel::setLoopEnd(int sampleIndex)
 {
-    DBG("ControlPanel::detectOutSilence() called.");
-    auto* audioPlayer = owner.getAudioPlayer();
-    bool wasPlaying = audioPlayer->isPlaying();
-    if (wasPlaying) {
-        audioPlayer->getTransportSource().stop();
-    }
-
-    juce::AudioFormatReader* reader = audioPlayer->getAudioFormatReader();
-
-    if (!reader || reader->lengthInSamples <= 0) {
-        if (wasPlaying) audioPlayer->getTransportSource().start();
-        return;
-    }
-    
-    int numChannels = reader->numChannels;
-    juce::int64 lengthInSamples = reader->lengthInSamples;
-    auto buffer = std::make_unique<juce::AudioBuffer<float>>(numChannels, (int)lengthInSamples);
-    reader->read(buffer.get(), 0, (int)lengthInSamples, 0, true, true);
-
-    float threshold = currentOutSilenceThreshold;
-    int lastSample = -1;
-
-    for (int i = buffer->getNumSamples() - 1; i >= 0; --i)
+    AudioPlayer& audioPlayer = *owner.getAudioPlayer();
+    if (audioPlayer.getAudioFormatReader() != nullptr)
     {
-        bool isSilent = true;
-        for (int j = 0; j < buffer->getNumChannels(); ++j)
-        {
-            if (std::abs(buffer->getSample(j, i)) > threshold)
-            {
-                isSilent = false;
-                break;
-            }
-        }
-        if (!isSilent) { lastSample = i; break; }
-    }
-
-    if (lastSample != -1)
-    {
-        int loopOutSample = buffer->getNumSamples() - 1;
-        for (int i = lastSample; i < buffer->getNumSamples() - 1; ++i)
-        {
-            if (i >= 0 && i < buffer->getNumSamples() - 1) {
-                // Find zero-crossing to prevent clicks/pops
-                bool sign1 = buffer->getSample(0, i) >= 0;
-                bool sign2 = buffer->getSample(0, i + 1) >= 0;
-                if (sign1 != sign2) { loopOutSample = i; break; }
-            }
-        }
-        loopOutPosition = (double)loopOutSample / reader->sampleRate;
-        audioPlayer->getTransportSource().setPosition(loopOutPosition);
-        updateLoopButtonColors();
+        double sampleRate = audioPlayer.getAudioFormatReader()->sampleRate;
+        loopOutPosition = (double)sampleIndex / sampleRate;
+        ensureLoopOrder();
         updateLoopLabels();
         repaint();
     }
-
-    if (wasPlaying) { audioPlayer->getTransportSource().start(); }
 }
+
+juce::String ControlPanel::formatTime(double seconds) const
+{
+    return owner.formatTime(seconds);
+}
+
+const juce::LookAndFeel& ControlPanel::getLookAndFeel() const
+{
+    return modernLF;
+}
+
+
 /**
  * @brief Handles mouse movement events.
  *        Updates the mouse cursor position and triggers repaint for visual feedback.
@@ -1243,7 +1009,7 @@ void ControlPanel::mouseMove(const juce::MouseEvent& event)
     {
         mouseCursorX = event.x;
         mouseCursorY = event.y;
-        auto* audioPlayer = owner.getAudioPlayer();
+        AudioPlayer* audioPlayer = owner.getAudioPlayer(); // Use pointer here
         auto audioLength = audioPlayer->getThumbnail().getTotalLength();
         if (audioLength > 0.0)
         {
@@ -1326,7 +1092,7 @@ void ControlPanel::mouseUp(const juce::MouseEvent& event)
     {
         if (currentPlacementMode != AppEnums::PlacementMode::None)
         {
-            auto* audioPlayer = owner.getAudioPlayer();
+            AudioPlayer* audioPlayer = owner.getAudioPlayer(); // Use pointer here
             auto audioLength = audioPlayer->getThumbnail().getTotalLength();
             if (audioLength > 0.0)
             {
@@ -1376,7 +1142,7 @@ void ControlPanel::mouseExit(const juce::MouseEvent& event)
  */
 void ControlPanel::handleRightClickForLoopPlacement(int x)
 {
-    auto* audioPlayer = owner.getAudioPlayer();
+    AudioPlayer* audioPlayer = owner.getAudioPlayer(); // Use pointer here
     auto audioLength = audioPlayer->getThumbnail().getTotalLength();
     if (audioLength <= 0.0) return;
 
@@ -1403,7 +1169,7 @@ void ControlPanel::handleRightClickForLoopPlacement(int x)
  */
 void ControlPanel::seekToMousePosition(int x)
 {
-    auto* audioPlayer = owner.getAudioPlayer();
+    AudioPlayer* audioPlayer = owner.getAudioPlayer(); // Use pointer here
     auto audioLength = audioPlayer->getThumbnail().getTotalLength();
     if (audioLength <= 0.0) return;
 

@@ -4,8 +4,12 @@
 #include "Config.h"
 #include "ModernLookAndFeel.h"
 #include "AppEnums.h"
+#include "AudioPlayer.h" // Added for AudioPlayer type recognition
 
 class MainComponent; // Forward declaration
+
+#include <memory> // Required for std::unique_ptr
+#include "SilenceDetector.h" // Include the new SilenceDetector class
 
 /**
  * @brief A custom button class to handle left and right clicks differently.
@@ -183,23 +187,15 @@ public:
      */
     bool shouldAutoplay() const { return m_shouldAutoplay; }
 
-    /**
-     * @brief Returns whether auto-cut in is enabled.
-     * @return True if auto-cut in is enabled, false otherwise.
-     */
-    bool shouldAutoCutIn() const { return m_shouldAutoCutIn; }
 
-    /**
-     * @brief Returns whether auto-cut out is enabled.
-     * @return True if auto-cut out is enabled, false otherwise.
-     */
-    bool shouldAutoCutOut() const { return m_shouldAutoCutOut; }
     
     /**
      * @brief Returns whether Cut Mode is currently active.
      * @return True if Cut Mode is active, false otherwise.
      */
     bool isCutModeActive() const { return m_isCutModeActive; }
+
+
 
     /**
      * @brief Updates the colors of the loop buttons based on the current placement mode.
@@ -210,6 +206,43 @@ public:
      * @brief Gets the bounds of the waveform display area.
      */
     juce::Rectangle<int> getWaveformBounds() const { return waveformBounds; }
+
+    /**
+     * @brief Provides access to the AudioPlayer instance.
+     * @return A reference to the AudioPlayer.
+     */
+    AudioPlayer& getAudioPlayer() const;
+
+    /**
+     * @brief Provides access to the stats display TextEditor.
+     * @return A reference to the stats display TextEditor.
+     */
+    juce::TextEditor& getStatsDisplay() { return statsDisplay; }
+
+    /**
+     * @brief Sets the loop-in position using sample index.
+     * @param sampleIndex The sample index to set as the loop-in point.
+     */
+    void setLoopStart(int sampleIndex);
+
+    /**
+     * @brief Sets the loop-out position using sample index.
+     * @param sampleIndex The sample index to set as the loop-out point.
+     */
+    void setLoopEnd(int sampleIndex);
+
+    /**
+     * @brief Formats a time in seconds into a human-readable string (HH:MM:SS:mmm).
+     * @param seconds The time in seconds.
+     * @return A formatted juce::String.
+     */
+    juce::String formatTime(double seconds) const;
+
+    /**
+     * @brief Provides access to the LookAndFeel for drawing.
+     * @return A const reference to the LookAndFeel.
+     */
+    const juce::LookAndFeel& getLookAndFeel() const;
 
     /**
      * @brief Handles mouse movement events.
@@ -246,9 +279,7 @@ public:
      */
     void mouseExit(const juce::MouseEvent& event) override;
 
-    // Silence detection
-    void detectInSilence();
-    void detectOutSilence();
+
 
 private:
     /**
@@ -277,11 +308,12 @@ private:
 
     MainComponent& owner;
     ModernLookAndFeel modernLF;
+    std::unique_ptr<SilenceDetector> silenceDetector; // Owned instance of SilenceDetector
 
     // UI Components
     juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton;
     juce::TextButton clearLoopInButton, clearLoopOutButton;
-    juce::TextEditor statsDisplay, loopInEditor, loopOutEditor, inSilenceThresholdEditor, outSilenceThresholdEditor;
+    juce::TextEditor statsDisplay, loopInEditor, loopOutEditor;
     LoopButton loopInButton, loopOutButton;
     juce::TextButton autoplayButton, autoCutInButton, autoCutOutButton, cutButton;
 
@@ -313,13 +345,10 @@ private:
     int loopInTextX = 0, loopOutTextX = 0, loopTextY = 0;
 
     bool m_shouldAutoplay = false; ///< @brief Flag indicating if autoplay is currently enabled.
-    bool m_shouldAutoCutIn = false; ///< @brief Flag indicating if auto-cut for loop-in point is enabled.
-    bool m_shouldAutoCutOut = false; ///< @brief Flag indicating if auto-cut for loop-out point is enabled.
     float glowAlpha = 0.0f;
     bool m_isCutModeActive = false; ///< @brief Flag indicating if Cut Mode is currently active.
 
-    float currentInSilenceThreshold = Config::silenceThreshold;
-    float currentOutSilenceThreshold = Config::outSilenceThreshold;
+
 
     // Private helper methods for mouse interaction
     /**
@@ -362,7 +391,7 @@ private:
 
     // State Updates
     void updateGeneralButtonStates(bool enabled);
-    void updateCutModeControlStates(bool isCutModeActive, bool enabled, bool shouldAutoCutIn, bool shouldAutoCutOut);
+    void updateCutModeControlStates(bool isCutModeActive, bool enabled);
     void updateQualityButtonText();
 
     // Drawing
