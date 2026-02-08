@@ -201,9 +201,17 @@ void SilenceDetector::applyThresholdFromEditor(juce::TextEditor& editor)
     if (intValue >= 1 && intValue <= 99) // Check integer percentage range
     {
         if (&editor == &inSilenceThresholdEditor)
+        {
             currentInSilenceThreshold = newThreshold;
+            if (getIsAutoCutInActive()) // If auto-cut-in is active, re-run detection
+                detectInSilence();
+        }
         else if (&editor == &outSilenceThresholdEditor)
+        {
             currentOutSilenceThreshold = newThreshold;
+            if (getIsAutoCutOutActive()) // If auto-cut-out is active, re-run detection
+                detectOutSilence();
+        }
 
         // On success, reset text color to playbackTextColor and background to default
         editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);

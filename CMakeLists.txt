@@ -60,6 +60,8 @@ target_sources(Sorta PRIVATE
         Source/ControlPanel.h
         Source/ControlPanel.cpp
         Source/AppEnums.h
+        Source/SilenceDetector.h
+        Source/SilenceDetector.cpp
 )
 
 target_link_libraries(Sorta PRIVATE
