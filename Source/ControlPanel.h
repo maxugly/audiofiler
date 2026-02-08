@@ -94,13 +94,13 @@ public:
      * @brief Sets the loop-in position.
      * @param pos The new loop-in position in seconds.
      */
-    void setLoopInPosition(double pos) { loopInPosition = pos; updateComponentStates(); }
+    void setLoopInPosition(double pos) { loopInPosition = pos; }
 
     /**
      * @brief Sets the loop-out position.
      * @param pos The new loop-out position in seconds.
      */
-    void setLoopOutPosition(double pos) { loopOutPosition = pos; updateComponentStates(); }
+    void setLoopOutPosition(double pos) { loopOutPosition = pos; }
 
     /**
      * @brief Ensures loopInPosition is not after loopOutPosition, swapping if necessary.

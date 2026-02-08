@@ -161,6 +161,10 @@ void ControlPanel::initialiseAutoCutInButton()
     autoCutInButton.onClick = [this] {
         m_shouldAutoCutIn = autoCutInButton.getToggleState();
         updateComponentStates();
+        // If auto-cut in is now enabled, trigger detection
+        if (m_shouldAutoCutIn && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
+            detectInSilence();
+        }
     };
 }
 
@@ -173,6 +177,10 @@ void ControlPanel::initialiseAutoCutOutButton()
     autoCutOutButton.onClick = [this] {
         m_shouldAutoCutOut = autoCutOutButton.getToggleState();
         updateComponentStates();
+        // If auto-cut out is now enabled, trigger detection
+        if (m_shouldAutoCutOut && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
+            detectOutSilence();
+        }
     };
 }
 
@@ -196,7 +204,6 @@ void ControlPanel::initialiseLoopButtons()
         loopInPosition = owner.getAudioPlayer()->getTransportSource().getCurrentPosition();
         ensureLoopOrder();
         updateLoopButtonColors();
-        updateComponentStates(); // Added
         repaint();
     };
     loopInButton.onRightClick = [this] {
@@ -211,7 +218,6 @@ void ControlPanel::initialiseLoopButtons()
         loopOutPosition = owner.getAudioPlayer()->getTransportSource().getCurrentPosition();
         ensureLoopOrder();
         updateLoopButtonColors();
-        updateComponentStates(); // Added
         repaint();
     };
     loopOutButton.onRightClick = [this] {
@@ -231,7 +237,6 @@ void ControlPanel::initialiseClearButtons()
         ensureLoopOrder();
         updateLoopButtonColors();
         updateLoopLabels();
-        updateComponentStates(); // Added
         repaint();
     };
 
@@ -243,7 +248,6 @@ void ControlPanel::initialiseClearButtons()
         ensureLoopOrder();
         updateLoopButtonColors();
         updateLoopLabels();
-        updateComponentStates(); // Added
         repaint();
     };
 }
@@ -307,6 +311,7 @@ void ControlPanel::finaliseSetup()
 
 void ControlPanel::resized()
 {
+    DBG("ControlPanel::resized() - START");
     auto bounds = getLocalBounds();
     int rowHeight = Config::buttonHeight + Config::windowBorderMargins * 2;
 
@@ -314,6 +319,7 @@ void ControlPanel::resized()
     layoutLoopAndCutControls(bounds, rowHeight);
     layoutBottomRowAndTextDisplay(bounds, rowHeight);
     layoutWaveformAndStats(bounds);
+    DBG("ControlPanel::resized() - END");
 }
 
 void ControlPanel::paint(juce::Graphics& g)
@@ -529,9 +535,15 @@ void ControlPanel::updateLoopLabels()
 
 void ControlPanel::updateComponentStates()
 {
+    DBG("ControlPanel::updateComponentStates() - START");
     const bool enabled = owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0;
+    DBG("  - enabled (file loaded): " << (enabled ? "true" : "false"));
+    DBG("  - isCutModeActive: " << (isCutModeActive ? "true" : "false"));
+    DBG("  - m_shouldAutoCutIn: " << (m_shouldAutoCutIn ? "true" : "false"));
+    DBG("  - m_shouldAutoCutOut: " << (m_shouldAutoCutOut ? "true" : "false"));
     updateGeneralButtonStates(enabled);
     updateCutModeControlStates(isCutModeActive, enabled, m_shouldAutoCutIn, m_shouldAutoCutOut);
+    DBG("ControlPanel::updateComponentStates() - END");
 }
 
 /**
@@ -612,52 +624,55 @@ void ControlPanel::layoutWaveformAndStats(juce::Rectangle<int>& bounds)
 
 void ControlPanel::updateGeneralButtonStates(bool enabled)
 {
-    openButton.setEnabled(true);
-    exitButton.setEnabled(true);
-    loopButton.setEnabled(true);
-    autoplayButton.setEnabled(true);
-    cutButton.setEnabled(true);
+    DBG("ControlPanel::updateGeneralButtonStates() - START (parent enabled: " << (enabled ? "true" : "false") << ")");
+    openButton.setEnabled(true); DBG("  - openButton enabled: " << (openButton.isEnabled() ? "true" : "false"));
+    exitButton.setEnabled(true); DBG("  - exitButton enabled: " << (exitButton.isEnabled() ? "true" : "false"));
+    loopButton.setEnabled(true); DBG("  - loopButton enabled: " << (loopButton.isEnabled() ? "true" : "false"));
+    autoplayButton.setEnabled(true); DBG("  - autoplayButton enabled: " << (autoplayButton.isEnabled() ? "true" : "false"));
+    cutButton.setEnabled(true); DBG("  - cutButton enabled: " << (cutButton.isEnabled() ? "true" : "false"));
 
-    playStopButton.setEnabled(enabled);
-    playStopButton.repaint();
-    modeButton.setEnabled(enabled);
-    statsButton.setEnabled(enabled);
-    channelViewButton.setEnabled(enabled);
-    qualityButton.setEnabled(enabled);
-    statsDisplay.setEnabled(enabled);
+    playStopButton.setEnabled(enabled); DBG("  - playStopButton enabled: " << (playStopButton.isEnabled() ? "true" : "false"));
+    modeButton.setEnabled(enabled); DBG("  - modeButton enabled: " << (modeButton.isEnabled() ? "true" : "false"));
+    statsButton.setEnabled(enabled); DBG("  - statsButton enabled: " << (statsButton.isEnabled() ? "true" : "false"));
+    channelViewButton.setEnabled(enabled); DBG("  - channelViewButton enabled: " << (channelViewButton.isEnabled() ? "true" : "false"));
+    qualityButton.setEnabled(enabled); DBG("  - qualityButton enabled: " << (qualityButton.isEnabled() ? "true" : "false"));
+    statsDisplay.setEnabled(enabled); DBG("  - statsDisplay enabled: " << (statsDisplay.isEnabled() ? "true" : "false"));
+    DBG("ControlPanel::updateGeneralButtonStates() - END");
 }
 
 void ControlPanel::updateCutModeControlStates(bool isCutModeActive, bool enabled, bool paramShouldAutoCutIn, bool paramShouldAutoCutOut)
 {
+    DBG("ControlPanel::updateCutModeControlStates() - START (isCutModeActive: " << (isCutModeActive ? "true" : "false") << ", parent enabled: " << (enabled ? "true" : "false") << ", paramShouldAutoCutIn: " << (paramShouldAutoCutIn ? "true" : "false") << ", paramShouldAutoCutOut: " << (paramShouldAutoCutOut ? "true" : "false") << ")");
     // Manual Loop In controls
-    loopInButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn);
-    loopInEditor.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn);
-    clearLoopInButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn);
+    loopInButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - loopInButton enabled: " << (loopInButton.isEnabled() ? "true" : "false"));
+    loopInEditor.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - loopInEditor enabled: " << (loopInEditor.isEnabled() ? "true" : "false"));
+    clearLoopInButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - clearLoopInButton enabled: " << (clearLoopInButton.isEnabled() ? "true" : "false"));
 
     // Manual Loop Out controls
-    loopOutButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut);
-    loopOutEditor.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut);
-    clearLoopOutButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut);
+    loopOutButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut); DBG("  - loopOutButton enabled: " << (loopOutButton.isEnabled() ? "true" : "false"));
+    loopOutEditor.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut); DBG("  - loopOutEditor enabled: " << (loopOutEditor.isEnabled() ? "true" : "false"));
+    clearLoopOutButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutOut); DBG("  - clearLoopOutButton enabled: " << (clearLoopOutButton.isEnabled() ? "true" : "false"));
 
     // Auto Cut In/Out Buttons
-    autoCutInButton.setEnabled(enabled && isCutModeActive);
-    autoCutOutButton.setEnabled(enabled && isCutModeActive);
+    autoCutInButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutInButton enabled: " << (autoCutInButton.isEnabled() ? "true" : "false"));
+    autoCutOutButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutOutOutton enabled: " << (autoCutOutButton.isEnabled() ? "true" : "false"));
 
     // Threshold Editors - enabled only if corresponding auto-cut is active AND cut mode is active AND file is loaded
-    inSilenceThresholdEditor.setEnabled(enabled && isCutModeActive && paramShouldAutoCutIn);
-    outSilenceThresholdEditor.setEnabled(enabled && isCutModeActive && paramShouldAutoCutOut);
+    inSilenceThresholdEditor.setEnabled(enabled && isCutModeActive && paramShouldAutoCutIn); DBG("  - inSilenceThresholdEditor enabled: " << (inSilenceThresholdEditor.isEnabled() ? "true" : "false"));
+    outSilenceThresholdEditor.setEnabled(enabled && isCutModeActive && paramShouldAutoCutOut); DBG("  - outSilenceThresholdEditor enabled: " << (outSilenceThresholdEditor.isEnabled() ? "true" : "false"));
 
     // Visibility remains the same
-    loopInButton.setVisible(isCutModeActive);
-    loopOutButton.setVisible(isCutModeActive);
-    loopInEditor.setVisible(isCutModeActive);
-    loopOutEditor.setVisible(isCutModeActive);
-    clearLoopInButton.setVisible(isCutModeActive);
-    clearLoopOutButton.setVisible(isCutModeActive);
-    inSilenceThresholdEditor.setVisible(isCutModeActive);
-    outSilenceThresholdEditor.setVisible(isCutModeActive);
-    autoCutInButton.setVisible(isCutModeActive);
-    autoCutOutButton.setVisible(isCutModeActive);
+    loopInButton.setVisible(isCutModeActive); DBG("  - loopInButton visible: " << (loopInButton.isVisible() ? "true" : "false"));
+    loopOutButton.setVisible(isCutModeActive); DBG("  - loopOutButton visible: " << (loopOutButton.isVisible() ? "true" : "false"));
+    loopInEditor.setVisible(isCutModeActive); DBG("  - loopInEditor visible: " << (loopInEditor.isVisible() ? "true" : "false"));
+    loopOutEditor.setVisible(isCutModeActive); DBG("  - loopOutEditor visible: " << (loopOutEditor.isVisible() ? "true" : "false"));
+    clearLoopInButton.setVisible(isCutModeActive); DBG("  - clearLoopInButton visible: " << (clearLoopInButton.isVisible() ? "true" : "false"));
+    clearLoopOutButton.setVisible(isCutModeActive); DBG("  - clearLoopOutButton visible: " << (clearLoopOutButton.isVisible() ? "true" : "false"));
+    inSilenceThresholdEditor.setVisible(isCutModeActive); DBG("  - inSilenceThresholdEditor visible: " << (inSilenceThresholdEditor.isVisible() ? "true" : "false"));
+    outSilenceThresholdEditor.setVisible(isCutModeActive); DBG("  - outSilenceThresholdEditor visible: " << (outSilenceThresholdEditor.isVisible() ? "true" : "false"));
+    autoCutInButton.setVisible(isCutModeActive); DBG("  - autoCutInButton visible: " << (autoCutInButton.isVisible() ? "true" : "false"));
+    autoCutOutButton.setVisible(isCutModeActive); DBG("  - autoCutOutButton visible: " << (autoCutOutButton.isVisible() ? "true" : "false"));
+    DBG("ControlPanel::updateCutModeControlStates() - END");
 }
 
 void ControlPanel::updateQualityButtonText()
@@ -1170,8 +1185,22 @@ void ControlPanel::mouseMove(const juce::MouseEvent& event)
  *        Initiates dragging for seeking or handles right-click for loop placement.
  * @param event The mouse event details.
  */
-void ControlPanel::mouseDown(const juce::MouseEvent& event)
+void ControlPanel::mouseDown(juce::MouseEvent const& event)
 {
+    // Explicitly handle focus loss for any TextEditor children
+    // If a TextEditor has focus and the click is not on it, it should lose focus.
+    for (auto* child : getChildren())
+    {
+        juce::TextEditor* editorChild = dynamic_cast<juce::TextEditor*>(child);
+        if (editorChild != nullptr && editorChild->hasKeyboardFocus(false))
+        {
+            if (! editorChild->getBoundsInParent().contains(event.getPosition()))
+            {
+                editorChild->giveAwayKeyboardFocus();
+            }
+        }
+    }
+
     if (waveformBounds.contains(event.getPosition()))
     {
         if (event.mods.isLeftButtonDown())
@@ -1230,7 +1259,6 @@ void ControlPanel::mouseUp(const juce::MouseEvent& event)
                 }
                 ensureLoopOrder();
                 updateLoopLabels();
-                updateComponentStates(); // Added
             }
             currentPlacementMode = AppEnums::PlacementMode::None; // Reset placement mode
             updateLoopButtonColors(); // Update button colours
@@ -1282,7 +1310,6 @@ void ControlPanel::handleRightClickForLoopPlacement(int x)
     ensureLoopOrder();
     updateLoopButtonColors();
     updateLoopLabels();
-    updateComponentStates(); // Added
     repaint();
 }
 
