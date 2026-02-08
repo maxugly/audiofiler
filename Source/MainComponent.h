@@ -5,6 +5,8 @@
 #include "ControlPanel.h" 
 #include "AppEnums.h"
 
+class KeybindHandler;
+
 /**
  * @file MainComponent.h
  * @brief Declares the MainComponent class, the central UI component of the Sorta++ application.
@@ -207,47 +209,12 @@ private:
     std::unique_ptr<AudioPlayer> audioPlayer;       ///< The audio playback manager.
     std::unique_ptr<juce::FileChooser> chooser;     ///< Used for opening audio files.
     std::unique_ptr<ControlPanel> controlPanel;     ///< The main control panel containing buttons and displays.
+    std::unique_ptr<KeybindHandler> keybindHandler; ///< Delegates keyboard shortcut logic.
     
     /** @} */
     //==============================================================================
 
     //==============================================================================
-    /** @name Private Keybind Handlers
-     *  Internal methods for organizing keyboard shortcut logic.
-     *  @{
-     */
-
-    /**
-     * @brief Handles global application keybinds (e.g., opening a file).
-     * @param key The `juce::KeyPress` object.
-     * @return True if the key was handled, false otherwise.
-     */
-    bool handleGlobalKeybinds(const juce::KeyPress& key);
-
-    /**
-     * @brief Handles playback-related keybinds (e.g., play/stop, skip).
-     * @param key The `juce::KeyPress` object.
-     * @return True if the key was handled, false otherwise.
-     */
-    bool handlePlaybackKeybinds(const juce::KeyPress& key);
-
-    /**
-     * @brief Handles UI toggle keybinds (e.g., changing view mode).
-     * @param key The `juce::KeyPress` object.
-     * @return True if the key was handled, false otherwise.
-     */
-    bool handleUIToggleKeybinds(const juce::KeyPress& key);
-
-    /**
-     * @brief Handles loop-related keybinds (e.g., enabling loop, setting loop points).
-     * @param key The `juce::KeyPress` object.
-     * @return True if the key was handled, false otherwise.
-     */
-    bool handleLoopKeybinds(const juce::KeyPress& key);
-
-    /** @} */
-    //==============================================================================
-
     //==============================================================================
     /** @name Private Utility Methods
      *  @{

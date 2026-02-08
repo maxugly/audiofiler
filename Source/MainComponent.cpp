@@ -2,6 +2,7 @@
 #include "ControlPanel.h"
 #include "Config.h"
 #include <cmath> // For std::abs
+#include "KeybindHandler.h"
 
 MainComponent::MainComponent()
 {
@@ -10,6 +11,7 @@ MainComponent::MainComponent()
     
     controlPanel = std::make_unique<ControlPanel>(*this);
     addAndMakeVisible(controlPanel.get());
+    keybindHandler = std::make_unique<KeybindHandler>(*this, *audioPlayer, *controlPanel);
 
     setSize(Config::initialWindowWidth, Config::initialWindowHeight);
     setAudioChannels(0, 2);
@@ -169,76 +171,8 @@ void MainComponent::seekToPosition(int x)
 
 bool MainComponent::keyPressed(const juce::KeyPress& key)
 {
-    if (handleGlobalKeybinds(key)) return true;
-    if (audioPlayer->getThumbnail().getTotalLength() > 0.0)
-    {
-        if (handlePlaybackKeybinds(key)) return true;
-        if (handleUIToggleKeybinds(key)) return true;
-        if (handleLoopKeybinds(key)) return true;
-    }
-    return false;
-}
-
-bool MainComponent::handleGlobalKeybinds(const juce::KeyPress& key)
-{
-    if (key.getTextCharacter() == 'e' || key.getTextCharacter() == 'E') {
-        juce::JUCEApplication::getInstance()->systemRequestedQuit();
-        return true;
-    }
-    if (key.getTextCharacter() == 'd' || key.getTextCharacter() == 'D') {
-        openButtonClicked();
-        return true;
-    }
-    return false;
-}
-
-bool MainComponent::handlePlaybackKeybinds(const juce::KeyPress& key)
-{
-    if (key == juce::KeyPress::spaceKey) {
-        audioPlayer->togglePlayStop();
-        return true;
-    }
-    // Arrow key logic...
-    return false;
-}
-
-bool MainComponent::handleUIToggleKeybinds(const juce::KeyPress& key)
-{
-    auto k = key.getTextCharacter();
-    if (k == 's' || k == 'S') { controlPanel->toggleStats(); return true; }
-    if (k == 'v' || k == 'V') { controlPanel->triggerModeButton(); return true; }
-    if (k == 'c' || k == 'C') { controlPanel->triggerChannelViewButton(); return true; }
-    if (k == 'q' || k == 'Q') { controlPanel->triggerQualityButton(); return true; }
-    if (k == 'l' || k == 'L') { controlPanel->triggerLoopButton(); return true; }
-    return false;
-}
-
-bool MainComponent::handleLoopKeybinds(const juce::KeyPress& key)
-{
-    auto k = key.getTextCharacter();
-    // Why: Prevent manual loop point setting via keybinds when auto-cut is active
-    // or when in a waveform placement mode, to avoid conflicts and unexpected behavior.
-    if (controlPanel->getPlacementMode() == AppEnums::PlacementMode::None) // Only allow keybinds if not in waveform placement mode
-    {
-        if (k == 'i' || k == 'I') {
-            // Why: If auto-cut in is active, the 'i' keybind should be ignored
-            // as the loop-in position is managed automatically.
-
-            controlPanel->setLoopInPosition(audioPlayer->getTransportSource().getCurrentPosition());
-            controlPanel->repaint();
-            return true;
-        }
-        if (k == 'o' || k == 'O') {
-            // Why: If auto-cut out is active, the 'o' keybind should be ignored
-            // as the loop-out position is managed automatically.
-
-            controlPanel->setLoopOutPosition(audioPlayer->getTransportSource().getCurrentPosition());
-            controlPanel->repaint();
-            return true;
-        }
-    }
-    if (k == 'u' || k == 'U') { controlPanel->clearLoopIn(); return true; }
-    if (k == 'p' || k == 'P') { controlPanel->clearLoopOut(); return true; }
+    if (keybindHandler != nullptr)
+        return keybindHandler->handleKeyPress(key);
     return false;
 }
 
