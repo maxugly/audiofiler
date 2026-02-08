@@ -4,6 +4,25 @@
 #include "Config.h"
 #include <cmath> // For std::abs
 
+/**
+ * @file ControlPanel.cpp
+ * @brief Implements the ControlPanel class, which manages the application's UI controls and interactions.
+ */
+
+/**
+ * @brief Constructs the ControlPanel.
+ * @param ownerComponent A reference to the `MainComponent` that owns this panel.
+ *                       This reference is vital for inter-component communication,
+ *                       allowing the `ControlPanel` to delegate core application
+ *                       logic (like file opening or audio playback) to its owner.
+ *
+ * This constructor initializes member variables, including the `ModernLookAndFeel`
+ * for custom styling and a `SilenceDetector` for automatic loop point finding.
+ * It then calls various `initialise` methods to set up all UI buttons, editors,
+ * and their respective callbacks, and finally performs any necessary post-initialization
+ * setup with `finaliseSetup()`. The mouse cursor is set to `CrosshairCursor`
+ * to provide immediate visual feedback for interactive elements.
+ */
 ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent),
                                                          modernLF(),
                                                          silenceDetector(std::make_unique<SilenceDetector>(*this))
@@ -18,11 +37,26 @@ ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent
     setMouseCursor(juce::MouseCursor::CrosshairCursor);
 }
 
+/**
+ * @brief Destructor for the ControlPanel.
+ *
+ * Ensures that the custom `ModernLookAndFeel` instance is properly dereferenced
+ * by setting the LookAndFeel to `nullptr`. This prevents potential issues if
+ * the custom LookAndFeel outlives components that were using it.
+ */
 ControlPanel::~ControlPanel()
 {
     setLookAndFeel(nullptr);
 }
 
+/**
+ * @brief Initializes and applies the custom `ModernLookAndFeel`.
+ *
+ * This method sets the `ModernLookAndFeel` instance as the active look and feel
+ * for this component and its children. It also configures the base and active
+ * colors for buttons, as well as text colors, using values from `Config.h`
+ * to ensure a consistent visual theme across the application.
+ */
 void ControlPanel::initialiseLookAndFeel()
 {
     setLookAndFeel (&modernLF);
@@ -31,6 +65,15 @@ void ControlPanel::initialiseLookAndFeel()
     modernLF.setTextColor(Config::buttonTextColour);
 }
 
+/**
+ * @brief Orchestrates the initialization of all individual UI buttons.
+ *
+ * This method calls a series of specialized `initialise` methods to create,
+ * configure, and add to the visible hierarchy all the `juce::TextButton`
+ * and custom `LoopButton` instances used in the control panel. It also
+ * initializes the `statsDisplay` TextEditor here due to its close relation
+ * to button states.
+ */
 void ControlPanel::initialiseButtons()
 {
     initialiseOpenButton();
@@ -46,15 +89,23 @@ void ControlPanel::initialiseButtons()
     initialiseAutoCutOutButton();
     initialiseCutButton();
 
+    // Stats Display TextEditor setup
     addAndMakeVisible (statsDisplay);
-    statsDisplay.setReadOnly (true);
-    statsDisplay.setMultiLine (true);
-    statsDisplay.setWantsKeyboardFocus (false);
+    statsDisplay.setReadOnly (true); // User cannot type in this display
+    statsDisplay.setMultiLine (true); // Allows multiple lines of text
+    statsDisplay.setWantsKeyboardFocus (false); // Does not grab keyboard focus
     statsDisplay.setColour (juce::TextEditor::backgroundColourId, Config::statsDisplayBackgroundColour);
     statsDisplay.setColour (juce::TextEditor::textColourId, Config::statsDisplayTextColour);
-    statsDisplay.setVisible (false);
+    statsDisplay.setVisible (false); // Initially hidden
 }
 
+/**
+ * @brief Initializes the "Open Directory" button.
+ *
+ * Sets the button's text from `Config.h` and assigns an `onClick` lambda
+ * that calls `owner.openButtonClicked()`, delegating the file opening
+ * functionality to the `MainComponent`.
+ */
 void ControlPanel::initialiseOpenButton()
 {
     addAndMakeVisible(openButton);
@@ -62,39 +113,71 @@ void ControlPanel::initialiseOpenButton()
     openButton.onClick = [this] { owner.openButtonClicked(); };
 }
 
+/**
+ * @brief Initializes the "Play/Stop" button.
+ *
+ * Sets the initial button text to "Play" (from `Config.h`), and assigns an
+ * `onClick` lambda that toggles the `AudioPlayer`'s playback state.
+ * It's initially disabled until an audio file is loaded.
+ */
 void ControlPanel::initialisePlayStopButton()
 {
     addAndMakeVisible(playStopButton);
     playStopButton.setButtonText(Config::playButtonText); // Initialize text
     playStopButton.onClick = [this] { owner.getAudioPlayer()->togglePlayStop(); };
-    playStopButton.setEnabled(false);
+    playStopButton.setEnabled(false); // Disabled until an audio file is loaded
 }
 
+/**
+ * @brief Initializes the "View Mode" button.
+ *
+ * Configures the button to toggle between `AppEnums::ViewMode::Classic` and
+ * `AppEnums::ViewMode::Overlay`. The `onClick` lambda updates the internal
+ * `currentMode` state, changes the button's text accordingly, and triggers
+ * a `resized()` and `repaint()` to update the UI layout and appearance.
+ */
 void ControlPanel::initialiseModeButton()
 {
     addAndMakeVisible (modeButton);
     modeButton.setButtonText (Config::viewModeClassicText);
-    modeButton.setClickingTogglesState (true);
+    modeButton.setClickingTogglesState (true); // Makes it a toggle button
     modeButton.onClick = [this] {
         currentMode = modeButton.getToggleState() ? AppEnums::ViewMode::Overlay : AppEnums::ViewMode::Classic;
         modeButton.setButtonText (currentMode == AppEnums::ViewMode::Classic ? Config::viewModeClassicText : Config::viewModeOverlayText);
-        resized();
-        repaint();
+        resized(); // Re-layout components based on new view mode
+        repaint(); // Redraw to reflect changes
     };
 }
 
+/**
+ * @brief Initializes the "Channel View" button.
+ *
+ * Configures the button to toggle between `AppEnums::ChannelViewMode::Mono`
+ * and `AppEnums::ChannelViewMode::Stereo`. The `onClick` lambda updates the
+ * internal `currentChannelViewMode` state, changes the button's text, and
+ * triggers a `repaint()` to update the waveform display.
+ */
 void ControlPanel::initialiseChannelViewButton()
 {
     addAndMakeVisible(channelViewButton);
     channelViewButton.setButtonText(Config::channelViewMonoText);
-    channelViewButton.setClickingTogglesState(true);
+    channelViewButton.setClickingTogglesState(true); // Makes it a toggle button
     channelViewButton.onClick = [this] {
         currentChannelViewMode = channelViewButton.getToggleState() ? AppEnums::ChannelViewMode::Stereo : AppEnums::ChannelViewMode::Mono;
         channelViewButton.setButtonText(currentChannelViewMode == AppEnums::ChannelViewMode::Mono ? Config::channelViewMonoText : Config::channelViewStereoText);
-        repaint();
+        repaint(); // Redraw waveform to reflect channel view change
     };
 }
 
+/**
+ * @brief Initializes the "Quality" button.
+ *
+ * Configures the button to cycle through `AppEnums::ThumbnailQuality` settings
+ * (High, Medium, Low) on each click. The `onClick` lambda updates the internal
+ * `currentQuality` state, calls `updateQualityButtonText()` to update the
+ * button's label, and triggers a `repaint()` to redraw the waveform with the
+ * new quality setting.
+ */
 void ControlPanel::initialiseQualityButton()
 {
     addAndMakeVisible(qualityButton);
@@ -104,74 +187,106 @@ void ControlPanel::initialiseQualityButton()
             currentQuality = AppEnums::ThumbnailQuality::Medium;
         else if (currentQuality == AppEnums::ThumbnailQuality::Medium)
             currentQuality = AppEnums::ThumbnailQuality::Low;
-        else
+        else // currentQuality == AppEnums::ThumbnailQuality::Low
             currentQuality = AppEnums::ThumbnailQuality::High;
-        updateQualityButtonText();
-        repaint();
+        updateQualityButtonText(); // Update button text to reflect new quality
+        repaint(); // Redraw waveform with new quality
     };
-    updateQualityButtonText();
+    updateQualityButtonText(); // Set initial text
 }
 
+/**
+ * @brief Initializes the "Exit" button.
+ *
+ * Sets the button's text and a distinct color from `Config.h`. The `onClick`
+ * lambda requests the JUCE application to quit, ensuring a graceful shutdown.
+ */
 void ControlPanel::initialiseExitButton()
 {
     addAndMakeVisible(exitButton);
     exitButton.setButtonText(Config::exitButtonText);
-    exitButton.setColour(juce::TextButton::buttonColourId, Config::exitButtonColor);
+    exitButton.setColour(juce::TextButton::buttonColourId, Config::exitButtonColor); // Distinct color for exit
     exitButton.onClick = [] {
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
     };
 }
 
+/**
+ * @brief Initializes the "Stats" button.
+ *
+ * Configures the button to toggle the visibility of the `statsDisplay` `TextEditor`.
+ * The `onClick` lambda updates the `showStats` flag, triggers a `resized()`
+ * to adjust layout, and calls `updateComponentStates()` to update visibility.
+ */
 void ControlPanel::initialiseStatsButton()
 {
     addAndMakeVisible(statsButton);
     statsButton.setButtonText(Config::statsButtonText);
-    statsButton.setClickingTogglesState(true);
+    statsButton.setClickingTogglesState(true); // Makes it a toggle button
     statsButton.onClick = [this] {
-        showStats = statsButton.getToggleState();
-        resized();
-        updateComponentStates();
+        showStats = statsButton.getToggleState(); // Update internal state
+        resized(); // Re-layout components
+        updateComponentStates(); // Update visibility based on new state
     };
 }
 
+/**
+ * @brief Initializes the "Loop" button.
+ *
+ * Configures the button to toggle the global looping behavior of the `AudioPlayer`.
+ * The `onClick` lambda updates the internal `shouldLoop` flag and then informs
+ * the `AudioPlayer` about the new looping state.
+ */
 void ControlPanel::initialiseLoopButton()
 {
     addAndMakeVisible(loopButton);
     loopButton.setButtonText(Config::loopButtonText);
-    loopButton.setClickingTogglesState(true);
+    loopButton.setClickingTogglesState(true); // Makes it a toggle button
     loopButton.onClick = [this] {
-        shouldLoop = loopButton.getToggleState();
-        owner.getAudioPlayer()->setLooping(shouldLoop);
+        shouldLoop = loopButton.getToggleState(); // Update internal state
+        owner.getAudioPlayer()->setLooping(shouldLoop); // Inform AudioPlayer
     };
 }
 
+/**
+ * @brief Initializes the "Autoplay" button.
+ *
+ * Configures the button to toggle the `m_shouldAutoplay` flag.
+ * The button's initial state is set from `m_shouldAutoplay`, and the `onClick`
+ * lambda simply updates this flag.
+ */
 void ControlPanel::initialiseAutoplayButton()
 {
     addAndMakeVisible(autoplayButton);
     autoplayButton.setButtonText(Config::autoplayButtonText);
-    autoplayButton.setClickingTogglesState(true);
-    autoplayButton.setToggleState(m_shouldAutoplay, juce::dontSendNotification);
+    autoplayButton.setClickingTogglesState(true); // Makes it a toggle button
+    autoplayButton.setToggleState(m_shouldAutoplay, juce::dontSendNotification); // Set initial state
     autoplayButton.onClick = [this] {
-        m_shouldAutoplay = autoplayButton.getToggleState();
+        m_shouldAutoplay = autoplayButton.getToggleState(); // Update internal flag
     };
 }
 
 /**
  * @brief Initializes the Auto Cut In button.
  *
- * Configures the button to toggle the `m_shouldAutoCutIn` state.
- * Upon toggling ON, it immediately triggers `detectInSilence()` if an audio file is loaded,
- * ensuring automatic loop-in calculation at activation.
+ * Configures the button to toggle the `silenceDetector`'s "auto-cut in" state.
+ * Upon toggling ON, it immediately triggers `detectInSilence()` if an audio file
+ * is loaded, ensuring automatic loop-in calculation at activation. This provides
+ * an "apply on toggle" behavior. `updateComponentStates()` is called to reflect
+ * changes in enabled/disabled status of related UI elements.
  */
 void ControlPanel::initialiseAutoCutInButton()
 {
     addAndMakeVisible(autoCutInButton);
     autoCutInButton.setButtonText(Config::autoCutInButtonText);
-    autoCutInButton.setClickingTogglesState(true);
+    autoCutInButton.setClickingTogglesState(true); // Make it a toggle button
     autoCutInButton.onClick = [this] {
         const bool isAutoCutActive = autoCutInButton.getToggleState();
-        silenceDetector->setIsAutoCutInActive(isAutoCutActive);
-        updateComponentStates();
+        silenceDetector->setIsAutoCutInActive(isAutoCutActive); // Inform SilenceDetector
+        updateComponentStates(); // Update related component states
+        // Why: If auto-cut in is activated and an audio file is loaded,
+        // immediately run the detection to set the loop-in point.
+        // This provides instant feedback and functionality to the user.
         if (isAutoCutActive && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
             silenceDetector->detectInSilence();
         }
@@ -181,9 +296,10 @@ void ControlPanel::initialiseAutoCutInButton()
 /**
  * @brief Initializes the Auto Cut Out button.
  *
- * Configures the button to toggle the `m_shouldAutoCutOut` state.
- * Upon toggling ON, it immediately triggers `detectOutSilence()` if an audio file is loaded,
- * ensuring automatic loop-out calculation at activation.
+ * Configures the button to toggle the `silenceDetector`'s "auto-cut out" state.
+ * Similar to `initialiseAutoCutInButton`, toggling ON immediately triggers
+ * `detectOutSilence()` if audio is loaded, providing instant feedback.
+ * `updateComponentStates()` is called to adjust related UI element states.
  */
 void ControlPanel::initialiseAutoCutOutButton()
 {
@@ -192,31 +308,44 @@ void ControlPanel::initialiseAutoCutOutButton()
     autoCutOutButton.setClickingTogglesState(true); // Make it a toggle button
     autoCutOutButton.onClick = [this] {
         const bool isAutoCutActive = autoCutOutButton.getToggleState();
-        silenceDetector->setIsAutoCutOutActive(isAutoCutActive);
-        updateComponentStates();
+        silenceDetector->setIsAutoCutOutActive(isAutoCutActive); // Inform SilenceDetector
+        updateComponentStates(); // Update related component states
+        // Why: If auto-cut out is activated and an audio file is loaded,
+        // immediately run the detection to set the loop-out point.
+        // This provides instant feedback and functionality to the user.
         if (isAutoCutActive && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
             silenceDetector->detectOutSilence();
         }
     };
 }
 
+/**
+ * @brief Initializes the "Cut" button.
+ *
+ * Configures the button to toggle the global `m_isCutModeActive` flag, which
+ * controls the visibility and functionality of loop-related controls and visualisations.
+ * If "Cut Mode" is activated while playback is active and the current position
+ * is outside the defined loop range, the playback position is immediately
+ * jumped to the loop-in point. This ensures that engaging "Cut Mode" instantly
+ * enforces playback within the specified boundaries.
+ */
 void ControlPanel::initialiseCutButton()
 {
     addAndMakeVisible(cutButton);
     cutButton.setButtonText(Config::cutButtonText);
     cutButton.setClickingTogglesState(true);
-    cutButton.setToggleState(m_isCutModeActive, juce::dontSendNotification); // Use m_isCutModeActive
+    cutButton.setToggleState(m_isCutModeActive, juce::dontSendNotification); // Set initial state
     cutButton.onClick = [this] {
-        m_isCutModeActive = cutButton.getToggleState(); // Update m_isCutModeActive
-        updateComponentStates();
+        m_isCutModeActive = cutButton.getToggleState(); // Update internal flag
+        updateComponentStates(); // Adjust visibility/enabled states of related controls
         // Why: If Cut Mode is activated while the audio is playing outside the defined loop range,
         // the playback position should immediately jump to the loop-in point.
         // This ensures playback adheres to the cut boundaries from the moment the mode is engaged.
-        if (m_isCutModeActive && owner.getAudioPlayer()->isPlaying()) // Check m_isCutModeActive
+        if (m_isCutModeActive && owner.getAudioPlayer()->isPlaying())
         {
             double currentPosition = owner.getAudioPlayer()->getTransportSource().getCurrentPosition();
             double loopIn = loopInPosition;
-            double loopOut = loopOutPosition; // Need to ensure loopOut is greater than loopIn for valid range
+            double loopOut = loopOutPosition;
 
             // Ensure valid loop range before checking current position against it
             if (loopOut > loopIn)
@@ -230,6 +359,17 @@ void ControlPanel::initialiseCutButton()
     };
 }
 
+/**
+ * @brief Initializes the custom `LoopButton` instances for setting loop in/out points.
+ *
+ * This method sets up `loopInButton` and `loopOutButton`, which are custom
+ * `TextButton` derivatives allowing for different actions on left and right clicks.
+ * - **Left Click:** Directly sets the corresponding loop point to the current
+ *   playback position. It also disables automatic detection for that loop point.
+ * - **Right Click:** Enters a `PlacementMode`, where the user can click on the
+ *   waveform to precisely set the loop point.
+ * The button colors and associated `SilenceDetector` states are updated accordingly.
+ */
 void ControlPanel::initialiseLoopButtons()
 {
     addAndMakeVisible(loopInButton);
@@ -263,6 +403,15 @@ void ControlPanel::initialiseLoopButtons()
     };
 }
 
+/**
+ * @brief Initializes the "Clear Loop In" and "Clear Loop Out" buttons.
+ *
+ * These buttons provide a quick way to reset the loop points.
+ * - `clearLoopInButton` resets `loopInPosition` to the beginning of the audio (0.0).
+ * - `clearLoopOutButton` resets `loopOutPosition` to the total length of the audio.
+ * Both actions also ensure loop order, update button colors, labels, and disable
+ * any active auto-cut feature for the respective loop point.
+ */
 void ControlPanel::initialiseClearButtons()
 {
     addAndMakeVisible(clearLoopInButton);
@@ -289,40 +438,66 @@ void ControlPanel::initialiseClearButtons()
     };
 }
 
+/**
+ * @brief Initializes the `juce::TextEditor` instances for displaying and editing loop points and silence thresholds.
+ *
+ * This method sets up `loopInEditor`, `loopOutEditor` for numerical input
+ * of loop start/end times, and also integrates the TextEditors managed by the
+ * `silenceDetector` (`inSilenceThresholdEditor`, `outSilenceThresholdEditor`).
+ * All editors are configured with consistent styling (read-only state, justification,
+ * colors, font), keyboard focus behavior, and listeners (`this` for loop editors,
+ * `silenceDetector` for threshold editors) to process user input.
+ */
 void ControlPanel::initialiseLoopEditors()
 {
     addAndMakeVisible(loopInEditor);
-    loopInEditor.setReadOnly(false);
+    loopInEditor.setReadOnly(false); // Allows user to type
     loopInEditor.setJustification(juce::Justification::centred);
     loopInEditor.setColour(juce::TextEditor::backgroundColourId, Config::textEditorBackgroundColour);
     loopInEditor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
     loopInEditor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
-    loopInEditor.setMultiLine(false);
-    loopInEditor.setReturnKeyStartsNewLine(false);
-    loopInEditor.addListener(this);
-    loopInEditor.setWantsKeyboardFocus(true);
+    loopInEditor.setMultiLine(false); // Single line input
+    loopInEditor.setReturnKeyStartsNewLine(false); // Enter key applies value
+    loopInEditor.addListener(this); // ControlPanel listens for changes
+    loopInEditor.setWantsKeyboardFocus(true); // Can receive keyboard focus
 
     addAndMakeVisible(loopOutEditor);
-    loopOutEditor.setReadOnly(false);
+    loopOutEditor.setReadOnly(false); // Allows user to type
     loopOutEditor.setJustification(juce::Justification::centred);
     loopOutEditor.setColour(juce::TextEditor::backgroundColourId, Config::textEditorBackgroundColour);
     loopOutEditor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
     loopOutEditor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
-    loopOutEditor.setMultiLine(false);
-    loopOutEditor.setReturnKeyStartsNewLine(false);
-    loopOutEditor.addListener(this);
-    loopOutEditor.setWantsKeyboardFocus(true);
+    loopOutEditor.setMultiLine(false); // Single line input
+    loopOutEditor.setReturnKeyStartsNewLine(false); // Enter key applies value
+    loopOutEditor.addListener(this); // ControlPanel listens for changes
+    loopOutEditor.setWantsKeyboardFocus(true); // Can receive keyboard focus
 
+    // Add TextEditors managed by SilenceDetector
     addAndMakeVisible(silenceDetector->getInSilenceThresholdEditor());
     addAndMakeVisible(silenceDetector->getOutSilenceThresholdEditor());
 }
-
+/**
+ * @brief Performs final setup steps after all components are initialized.
+ *
+ * This method ensures that the loop time labels are correctly displayed
+ * and that the enabled/disabled and visible states of all UI components
+ * are updated to reflect the initial application state (e.g., no audio loaded).
+ */
 void ControlPanel::finaliseSetup()
 {
     updateLoopLabels();
     updateComponentStates();
 }
 
+/**
+ * @brief Recalculates the layout of all child components when the ControlPanel is resized.
+ *
+ * This method is central to the responsive design of the UI. It divides the
+ * available area into logical sections (top row, loop/cut controls, bottom row,
+ * and the main waveform/stats area) and calls specialized layout helper methods
+ * to position buttons, editors, and display areas dynamically. Debugging statements
+ * (`DBG`) are included to help trace layout changes during development.
+ */
 void ControlPanel::resized()
 {
     DBG("ControlPanel::resized() - START");

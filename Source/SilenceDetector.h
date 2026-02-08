@@ -7,126 +7,170 @@
 class ControlPanel;
 
 /**
- * @class SilenceDetector
- * @brief Manages silence detection logic and associated UI components.
+ * @file SilenceDetector.h
+ * @brief Defines the SilenceDetector class for managing silence detection logic and UI.
  *
- * @details This class encapsulates the functionality for detecting silence at the start
- * and end of an audio sample. It owns the UI elements (TextEditors) for
- * setting silence thresholds and handles the detection logic, decoupling these
- * concerns from the main ControlPanel per the Single Responsibility Principle.
+ * This class encapsulates the functionality for detecting periods of silence at the
+ * beginning and end of an audio sample. It also owns and manages the UI components
+ * (TextEditors) for setting the silence thresholds, decoupling this specific
+ * functionality from the main `ControlPanel`.
  */
 class SilenceDetector : public juce::TextEditor::Listener
 {
 public:
     /**
      * @brief Constructs a SilenceDetector.
-     * @param owner The ControlPanel that owns this detector, used to access
-     *              the AudioPlayer and other shared UI components like the stats display.
+     * @param owner The ControlPanel that owns this detector. This is required to
+     *              access the AudioPlayer and to update the main application state
+     *              (e.g., setting loop points).
      */
     explicit SilenceDetector(ControlPanel& owner);
 
     /**
-     * @brief Destructor. Removes listeners to prevent dangling pointers.
+     * @brief Destructor.
+     *
+     * Ensures this object is correctly removed as a listener from its
+     * TextEditors to prevent dangling pointers and crashes.
      */
     ~SilenceDetector() override;
 
+    //==============================================================================
+    /** @name Core Detection Logic
+     *  Methods for running the silence detection algorithms.
+     *  @{
+     */
+
     /**
-     * @brief Finds the first audible sound and sets the audio loop start point.
-     * @details Scans from the beginning of the audio buffer to find the first
-     *          sample that exceeds the defined 'in' silence threshold. It communicates
-     *          the result back to the owner ControlPanel.
+     * @brief Finds the first audible sound to automatically set the loop start point.
+     *
+     * This method scans the audio file from the beginning, sample by sample,
+     * to find the first moment the audio level exceeds the `currentInSilenceThreshold`.
+     * If successful, it instructs the parent `ControlPanel` to update the loop start time.
      */
     void detectInSilence();
 
     /**
-     * @brief Finds the last audible sound and sets the audio loop end point.
-     * @details Scans from the end of the audio buffer backwards to find the last
-     *          sample that exceeds the defined 'out' silence threshold, which helps
-     *          avoid clipping the natural decay of the sound.
+     * @brief Finds the last audible sound to automatically set the loop end point.
+     *
+     * This method scans the audio file backwards from the end to find the last
+     * moment the audio level exceeds the `currentOutSilenceThreshold`. This is useful
+     * for trimming silence from the end of a sample while preserving the natural
+     * decay (reverb tail) of the sound.
      */
     void detectOutSilence();
 
-    //================================s==============================================
-    // juce::TextEditor::Listener overrides
+    /** @} */
+    //==============================================================================
+
+    //==============================================================================
+    /** @name UI Component Access
+     *  Getters for the UI elements owned by this class.
+     *  @{
+     */
+
+    /** @brief Returns a reference to the TextEditor for the 'in' silence threshold. */
+    juce::TextEditor& getInSilenceThresholdEditor() { return inSilenceThresholdEditor; }
+
+    /** @brief Returns a reference to the TextEditor for the 'out' silence threshold. */
+    juce::TextEditor& getOutSilenceThresholdEditor() { return outSilenceThresholdEditor; }
+
+    /** @} */
+    //==============================================================================
+
+    //==============================================================================
+    /** @name State Getters and Setters
+     *  Methods for accessing and modifying the internal state of the detector.
+     *  @{
+     */
+
+    /** @brief Gets the current threshold for detecting the start of sound.
+     *  @return The threshold as a normalized float (0.0 to 1.0).
+     */
+    float getCurrentInSilenceThreshold() const { return currentInSilenceThreshold; }
+
+    /** @brief Gets the current threshold for detecting the end of sound.
+     *  @return The threshold as a normalized float (0.0 to 1.0).
+     */
+    float getCurrentOutSilenceThreshold() const { return currentOutSilenceThreshold; }
+
+    /** @brief Checks if the "auto-cut in" feature is currently active.
+     *  @return True if active, false otherwise.
+     */
+    bool getIsAutoCutInActive() const { return m_isAutoCutInActive; }
+
+    /** @brief Sets the "auto-cut in" feature's active state.
+     *  @param value The new state for the feature.
+     */
+    void setIsAutoCutInActive(bool value) { m_isAutoCutInActive = value; }
+
+    /** @brief Checks if the "auto-cut out" feature is currently active.
+     *  @return True if active, false otherwise.
+     */
+    bool getIsAutoCutOutActive() const { return m_isAutoCutOutActive; }
+
+    /** @brief Sets the "auto-cut out" feature's active state.
+     *  @param value The new state for the feature.
+     */
+    void setIsAutoCutOutActive(bool value) { m_isAutoCutOutActive = value; }
+
+    /** @} */
+    //==============================================================================
+
+private:
+    //==============================================================================
+    /** @name juce::TextEditor::Listener Overrides
+     *  Private callbacks to handle UI events from the threshold editors.
+     *  @{
+     */
+
     /**
-     * @brief Callback for when a listened-to TextEditor's text changes.
-     * @param editor A reference to the editor that triggered the callback.
+     * @brief Called when the text in an editor changes. Provides real-time validation feedback.
+     * @param editor A reference to the editor that was modified.
      */
     void textEditorTextChanged(juce::TextEditor& editor) override;
 
     /**
-     * @brief Callback for when return is pressed in a TextEditor.
-     * @param editor A reference to the editor that triggered the callback.
+     * @brief Called when the user presses Return in an editor. Finalizes the value.
+     * @param editor A reference to the editor where Return was pressed.
      */
     void textEditorReturnKeyPressed(juce::TextEditor& editor) override;
 
     /**
-     * @brief Callback for when a TextEditor loses focus.
-     * @param editor A reference to the editor that triggered the callback.
+     * @brief Called when an editor loses focus. Finalizes the value.
+     * @param editor A reference to the editor that lost focus.
      */
     void textEditorFocusLost(juce::TextEditor& editor) override;
 
-    /**
-     * @brief Returns a reference to the inSilenceThresholdEditor.
-     * @return A reference to the inSilenceThresholdEditor.
-     */
-    juce::TextEditor& getInSilenceThresholdEditor() { return inSilenceThresholdEditor; }
+    /** @} */
+    //==============================================================================
 
-    /**
-     * @brief Returns a reference to the outSilenceThresholdEditor.
-     * @return A reference to the outSilenceThresholdEditor.
-     */
-    juce::TextEditor& getOutSilenceThresholdEditor() { return outSilenceThresholdEditor; }
-
-    // --- Member Components ---
-    juce::TextEditor inSilenceThresholdEditor;
-    juce::TextEditor outSilenceThresholdEditor;
-    
-    // --- Getters for internal state ---
-    float getCurrentInSilenceThreshold() const { return currentInSilenceThreshold; }
-    float getCurrentOutSilenceThreshold() const { return currentOutSilenceThreshold; }
-
-    /**
-     * @brief Returns whether auto-cut in is currently active.
-     * @return True if auto-cut in is active, false otherwise.
-     */
-    bool getIsAutoCutInActive() const { return m_isAutoCutInActive; }
-
-    /**
-     * @brief Sets whether auto-cut in should be active.
-     * @param value True to activate, false to deactivate.
-     */
-    void setIsAutoCutInActive(bool value) { m_isAutoCutInActive = value; }
-
-    /**
-     * @brief Returns whether auto-cut out is currently active.
-     * @return True if auto-cut out is active, false otherwise.
-     */
-    bool getIsAutoCutOutActive() const { return m_isAutoCutOutActive; }
-
-    /**
-     * @brief Sets whether auto-cut out should be active.
-     * @param value True to activate, false to deactivate.
-     */
-    void setIsAutoCutOutActive(bool value) { m_isAutoCutOutActive = value; }
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SilenceDetector)
-
-private:
     /**
      * @brief Validates and applies the threshold value from a TextEditor.
-     * @details This is the single point of entry for updating threshold values from the UI,
-     *          ensuring input is validated and state is updated consistently.
-     * @param editor The TextEditor containing the new threshold value.
+     *
+     * This is the internal logic triggered by `textEditorReturnKeyPressed` or
+     * `textEditorFocusLost`. It parses the text, validates it's within a sensible
+     * range (1-99%), and updates the internal threshold state. If an auto-cut
+     * feature is active, it will also trigger the corresponding detection method.
+     * @param editor The TextEditor containing the new threshold value to apply.
      */
     void applyThresholdFromEditor(juce::TextEditor& editor);
-
-    /// @brief A reference to the owning ControlPanel to access the AudioPlayer and other components.
+    
+    //==============================================================================
+    // Member Variables
+    //==============================================================================
+    
+    /// @brief A reference to the owning ControlPanel, for callbacks and state access.
     ControlPanel& owner;
 
+    // --- UI Components ---
+    juce::TextEditor inSilenceThresholdEditor;  ///< Editor for the 'in' silence threshold (e.g., 1-99%).
+    juce::TextEditor outSilenceThresholdEditor; ///< Editor for the 'out' silence threshold (e.g., 1-99%).
+
     // --- Internal State ---
-    float currentInSilenceThreshold;
-    float currentOutSilenceThreshold;
-    bool m_isAutoCutInActive = false;
-    bool m_isAutoCutOutActive = false;
+    float currentInSilenceThreshold;  ///< Normalized (0.0-1.0) threshold for detecting the start of sound.
+    float currentOutSilenceThreshold; ///< Normalized (0.0-1.0) threshold for detecting the end of sound.
+    bool m_isAutoCutInActive = false;  ///< If true, `detectInSilence` is run automatically when the threshold changes.
+    bool m_isAutoCutOutActive = false; ///< If true, `detectOutSilence` is run automatically when the threshold changes.
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SilenceDetector)
 };
