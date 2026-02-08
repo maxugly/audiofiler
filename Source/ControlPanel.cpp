@@ -427,7 +427,10 @@ void ControlPanel::paint(juce::Graphics& g)
             auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
             auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
             g.setColour(Config::loopRegionColor);
-            g.fillRect(juce::Rectangle<float>(inX, (float)waveformBounds.getY(), outX - inX, (float)waveformBounds.getHeight()));
+            // Draw region to the left of loopIn
+            g.fillRect(juce::Rectangle<float>((float)waveformBounds.getX(), (float)waveformBounds.getY(), inX - (float)waveformBounds.getX(), (float)waveformBounds.getHeight()));
+            // Draw region to the right of loopOut
+            g.fillRect(juce::Rectangle<float>(outX, (float)waveformBounds.getY(), (float)waveformBounds.getRight() - outX, (float)waveformBounds.getHeight()));
 
             juce::Colour glowColor = Config::loopLineColor.withAlpha(Config::loopLineColor.getFloatAlpha() * (1.0f - glowAlpha));
             g.setColour(glowColor);
