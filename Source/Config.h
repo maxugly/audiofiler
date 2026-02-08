@@ -26,12 +26,12 @@ namespace Config{
     constexpr int mouseCursorTextSize = 20;
 
     // Playback and Loop text widths
-    constexpr int playbackTextWidth = 220;
+    constexpr int playbackTextWidth = 260; // Increased width to accommodate HH:MM:SS:mmm
     constexpr int loopTextWidth = 165;
     constexpr int thresholdEditorWidth = 80;
 
     // --- Playback and Loop Text Editor Settings ---
-    constexpr int playbackTextHeight = 20; // Height for all single-line text editors showing playback/loop times
+    constexpr int playbackTextHeight = 30; // Height to match font size and prevent cutoff
     constexpr int loopTextOffsetY = 10; // Vertical offset for loop text editors in layout
     constexpr int playbackTimeTextOffsetY = 25; // Vertical offset for playback time text display
 
@@ -135,6 +135,10 @@ namespace Config{
     const float mouseAmplitudeLineThickness = 1.0f;
     const float mouseAmplitudeGlowThickness = 3.0f;
     const float mouseAmplitudeLineLength = 50.0f;
+    // Placement Mode Mouse Cursor Colors
+    const juce::Colour placementModeCursorColor = juce::Colours::deeppink; // Pink lines
+    const juce::Colour placementModeGlowColor = juce::Colours::red.withAlpha(0.7f); // Red glow
+    constexpr float placementModeGlowThickness = 3.0f; // Thickness of the glow
 
     // --- Silence Threshold Visualization Colors ---
     const juce::Colour thresholdLineColor = juce::Colour(0xffe600e6); // Reddish purple

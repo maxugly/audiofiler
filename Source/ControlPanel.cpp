@@ -152,6 +152,13 @@ void ControlPanel::initialiseAutoplayButton()
     };
 }
 
+/**
+ * @brief Initializes the Auto Cut In button.
+ *
+ * Configures the button to toggle the `m_shouldAutoCutIn` state.
+ * Upon toggling ON, it immediately triggers `detectInSilence()` if an audio file is loaded,
+ * ensuring automatic loop-in calculation at activation.
+ */
 void ControlPanel::initialiseAutoCutInButton()
 {
     addAndMakeVisible(autoCutInButton);
@@ -162,12 +169,20 @@ void ControlPanel::initialiseAutoCutInButton()
         m_shouldAutoCutIn = autoCutInButton.getToggleState();
         updateComponentStates();
         // If auto-cut in is now enabled, trigger detection
+        // This ensures the initial calculation is performed when the feature is activated.
         if (m_shouldAutoCutIn && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
             detectInSilence();
         }
     };
 }
 
+/**
+ * @brief Initializes the Auto Cut Out button.
+ *
+ * Configures the button to toggle the `m_shouldAutoCutOut` state.
+ * Upon toggling ON, it immediately triggers `detectOutSilence()` if an audio file is loaded,
+ * ensuring automatic loop-out calculation at activation.
+ */
 void ControlPanel::initialiseAutoCutOutButton()
 {
     addAndMakeVisible(autoCutOutButton);
@@ -178,6 +193,7 @@ void ControlPanel::initialiseAutoCutOutButton()
         m_shouldAutoCutOut = autoCutOutButton.getToggleState();
         updateComponentStates();
         // If auto-cut out is now enabled, trigger detection
+        // This ensures the initial calculation is performed when the feature is activated.
         if (m_shouldAutoCutOut && owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0) {
             detectOutSilence();
         }
@@ -189,10 +205,28 @@ void ControlPanel::initialiseCutButton()
     addAndMakeVisible(cutButton);
     cutButton.setButtonText(Config::cutButtonText);
     cutButton.setClickingTogglesState(true);
-    cutButton.setToggleState(isCutModeActive, juce::dontSendNotification);
+    cutButton.setToggleState(m_isCutModeActive, juce::dontSendNotification); // Use m_isCutModeActive
     cutButton.onClick = [this] {
-        isCutModeActive = cutButton.getToggleState();
+        m_isCutModeActive = cutButton.getToggleState(); // Update m_isCutModeActive
         updateComponentStates();
+        // Why: If Cut Mode is activated while the audio is playing outside the defined loop range,
+        // the playback position should immediately jump to the loop-in point.
+        // This ensures playback adheres to the cut boundaries from the moment the mode is engaged.
+        if (m_isCutModeActive && owner.getAudioPlayer()->isPlaying()) // Check m_isCutModeActive
+        {
+            double currentPosition = owner.getAudioPlayer()->getTransportSource().getCurrentPosition();
+            double loopIn = loopInPosition;
+            double loopOut = loopOutPosition; // Need to ensure loopOut is greater than loopIn for valid range
+
+            // Ensure valid loop range before checking current position against it
+            if (loopOut > loopIn)
+            {
+                if (currentPosition < loopIn || currentPosition >= loopOut)
+                {
+                    owner.getAudioPlayer()->getTransportSource().setPosition(loopIn);
+                }
+            }
+        }
     };
 }
 
@@ -362,7 +396,7 @@ void ControlPanel::paint(juce::Graphics& g)
 
     if (audioLength > 0.0) // Main block for drawing elements that depend on audio length
     {
-        if (isCutModeActive) 
+        if (m_isCutModeActive) 
         {
             auto drawThresholdVisualisation = [&](juce::Graphics& g_ref, double loopPos, float threshold, bool isActive)
             {
@@ -445,63 +479,94 @@ void ControlPanel::paint(juce::Graphics& g)
         g.drawVerticalLine ((int)x, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
     } 
 
-    if (mouseCursorX != -1)
-    {
-        g.setColour (Config::mouseCursorHighlightColor);
-        g.fillRect (mouseCursorX - 2, waveformBounds.getY(), 5, waveformBounds.getHeight());
-        g.fillRect (waveformBounds.getX(), mouseCursorY - 2, waveformBounds.getWidth(), 5);
-
-        if (audioLength > 0.0) 
+        if (mouseCursorX != -1)
         {
-            float amplitude = 0.0f;
-            if (audioPlayer->getThumbnail().getNumChannels() > 0)
+            juce::Colour currentLineColor;
+            juce::Colour currentHighlightColor;
+            juce::Colour currentGlowColor;
+            float currentGlowThickness;
+    
+            // Why: Change mouse cursor color and add glow/shadow when in loop placement mode
+            // to provide visual feedback that the mouse is "armed" to set a loop point.
+            if (currentPlacementMode == AppEnums::PlacementMode::LoopIn || currentPlacementMode == AppEnums::PlacementMode::LoopOut)
             {
-                // Get the amplitude at the mouse cursor's time position
-                // Note: getLevel usually takes start/end times. For a single point, 
-                // we approximate by taking a very small time window around mouseCursorTime.
-                // A more accurate method might involve directly sampling the AudioFormatReader,
-                // but this is simpler for visualization.
-                auto* reader = audioPlayer->getAudioFormatReader();
-                double sampleRate = (reader != nullptr) ? reader->sampleRate : 0.0;
-                // Ensure sampleIndex is within valid range
-                if (sampleRate > 0) // Check to avoid division by zero
-                {
-                    float minVal, maxVal;
-                    // Use a very small window around the mouseCursorTime to get an approximate amplitude
-                    audioPlayer->getThumbnail().getApproximateMinMax(mouseCursorTime, mouseCursorTime + (1.0 / sampleRate), 0, minVal, maxVal);
-                    amplitude = juce::jmax(std::abs(minVal), std::abs(maxVal));
-                }
+                currentLineColor = Config::placementModeCursorColor;
+                currentHighlightColor = Config::placementModeCursorColor.withAlpha(0.4f);
+                currentGlowColor = Config::placementModeGlowColor;
+                currentGlowThickness = Config::placementModeGlowThickness;
+    
+                // Draw glow/shadow for the vertical line
+                g.setColour(currentGlowColor.withAlpha(0.3f)); // Semi-transparent for shadow effect
+                g.fillRect(mouseCursorX - (int)(currentGlowThickness / 2) - 1, waveformBounds.getY(), (int)currentGlowThickness + 2, waveformBounds.getHeight());
+                // Draw glow/shadow for the horizontal line
+                g.fillRect(waveformBounds.getX(), mouseCursorY - (int)(currentGlowThickness / 2) - 1, waveformBounds.getWidth(), (int)currentGlowThickness + 2);
+    
             }
-
-            // Draw amplitude line
-            float centerY = (float)waveformBounds.getCentreY();
-            float amplitudeY = centerY - (amplitude * waveformBounds.getHeight() * 0.5f);
+            else
+            {
+                currentLineColor = Config::mouseCursorLineColor;
+                currentHighlightColor = Config::mouseCursorHighlightColor;
+                currentGlowColor = Config::mouseAmplitudeGlowColor; // Reusing for amplitude glow, not general cursor glow
+                currentGlowThickness = 0.0f; // No extra glow for default cursor
+            }
+    
+            g.setColour (currentHighlightColor);
+            g.fillRect (mouseCursorX - 2, waveformBounds.getY(), 5, waveformBounds.getHeight());
+            g.fillRect (waveformBounds.getX(), mouseCursorY - 2, waveformBounds.getWidth(), 5);
+    
+            if (audioLength > 0.0)
+            {
+                float amplitude = 0.0f;
+                if (audioPlayer->getThumbnail().getNumChannels() > 0)
+                {
+                    auto* reader = audioPlayer->getAudioFormatReader();
+                    double sampleRate = (reader != nullptr) ? reader->sampleRate : 0.0;
+                    if (sampleRate > 0)
+                    {
+                        float minVal, maxVal;
+                        audioPlayer->getThumbnail().getApproximateMinMax(mouseCursorTime, mouseCursorTime + (1.0 / sampleRate), 0, minVal, maxVal);
+                        amplitude = juce::jmax(std::abs(minVal), std::abs(maxVal));
+                    }
+                }
+    
+                            // Draw amplitude line
+                            float centerY = (float)waveformBounds.getCentreY();
+                            float amplitudeY = centerY - (amplitude * waveformBounds.getHeight() * 0.5f);
+                            float bottomAmplitudeY = centerY + (amplitude * waveformBounds.getHeight() * 0.5f); // The bottom amplitude line Y position
+                            
+                            juce::ColourGradient amplitudeGlowGradient(Config::mouseAmplitudeGlowColor.withAlpha(0.0f), (float)mouseCursorX, amplitudeY,
+                                                                      Config::mouseAmplitudeGlowColor.withAlpha(0.7f), (float)mouseCursorX, centerY, true);
+                            g.setGradientFill(amplitudeGlowGradient);
+                            g.fillRect(juce::Rectangle<float>((float)mouseCursorX - Config::mouseAmplitudeGlowThickness / 2, amplitudeY, Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
+                            g.fillRect(juce::Rectangle<float>((float)mouseCursorX - Config::mouseAmplitudeGlowThickness / 2, centerY, Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
+                
+                            g.setColour(Config::mouseAmplitudeLineColor);
+                            g.drawVerticalLine((float)mouseCursorX, amplitudeY, bottomAmplitudeY);
+                            
+                            // Why: Draw two short horizontal lines at the top and bottom of the amplitude visualization
+                            // to clearly indicate the min/max amplitude range at the mouse cursor's X position.
+                            float halfLineLength = Config::mouseAmplitudeLineLength / 2.0f;
+                            g.drawHorizontalLine(amplitudeY, (float)mouseCursorX - halfLineLength, (float)mouseCursorX + halfLineLength);
+                            g.drawHorizontalLine(bottomAmplitudeY, (float)mouseCursorX - halfLineLength, (float)mouseCursorX + halfLineLength);
+                
+                            // Draw amplitude text
+                            juce::String amplitudeText = juce::String(amplitude, 2); // Positive amplitude
+                            juce::String negativeAmplitudeText = juce::String(-amplitude, 2); // Negative amplitude
+                            g.setColour(Config::playbackTextColor);
+                            g.setFont(Config::mouseCursorTextSize);
+                            g.drawText(amplitudeText, mouseCursorX + 5, (int)amplitudeY - Config::mouseCursorTextSize, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
+                            // Why: Display the negative amplitude value to provide complete information about the peak-to-peak amplitude.
+                            g.drawText(negativeAmplitudeText, mouseCursorX + 5, (int)bottomAmplitudeY, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
+                
+                
+                            // Draw time text
+                            juce::String timeText = owner.formatTime(mouseCursorTime);
+                            g.drawText(timeText, mouseCursorX + 5, mouseCursorY + 5, 100, Config::mouseCursorTextSize, juce::Justification::left, true);            }
             
-            juce::ColourGradient amplitudeGlowGradient(Config::mouseAmplitudeGlowColor.withAlpha(0.0f), (float)mouseCursorX, amplitudeY,
-                                                      Config::mouseAmplitudeGlowColor.withAlpha(0.7f), (float)mouseCursorX, centerY, true);
-            g.setGradientFill(amplitudeGlowGradient);
-            g.fillRect(juce::Rectangle<float>((float)mouseCursorX - Config::mouseAmplitudeGlowThickness / 2, amplitudeY, Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
-            g.fillRect(juce::Rectangle<float>((float)mouseCursorX - Config::mouseAmplitudeGlowThickness / 2, centerY, Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
-
-            g.setColour(Config::mouseAmplitudeLineColor);
-            g.drawVerticalLine((float)mouseCursorX, centerY - (amplitude * waveformBounds.getHeight() * 0.5f), centerY + (amplitude * waveformBounds.getHeight() * 0.5f));
-
-            // Draw amplitude text
-            juce::String amplitudeText = juce::String(amplitude, 2);
-            g.setColour(Config::playbackTextColor);
-            g.setFont(Config::mouseCursorTextSize);
-            g.drawText(amplitudeText, mouseCursorX + 5, (int)amplitudeY - Config::mouseCursorTextSize, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
-
-            // Draw time text
-            juce::String timeText = owner.formatTime(mouseCursorTime);
-            g.drawText(timeText, mouseCursorX + 5, mouseCursorY + 5, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
-        }
-
-        g.setColour (Config::mouseCursorLineColor);
-        g.drawVerticalLine (mouseCursorX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
-        g.drawHorizontalLine (mouseCursorY, (float)waveformBounds.getX(), (float)waveformBounds.getRight());
-    } 
-
+                    // Draw the main cursor lines on top
+                    g.setColour (currentLineColor);
+                    g.drawVerticalLine (mouseCursorX, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+                    g.drawHorizontalLine (mouseCursorY, (float)waveformBounds.getX(), (float)waveformBounds.getRight());        }
     if (audioLength > 0.0)
     {
         double currentTime = audioPlayer->getTransportSource().getCurrentPosition();
@@ -538,11 +603,11 @@ void ControlPanel::updateComponentStates()
     DBG("ControlPanel::updateComponentStates() - START");
     const bool enabled = owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0;
     DBG("  - enabled (file loaded): " << (enabled ? "true" : "false"));
-    DBG("  - isCutModeActive: " << (isCutModeActive ? "true" : "false"));
+    DBG("  - m_isCutModeActive: " << (m_isCutModeActive ? "true" : "false")); // Use m_isCutModeActive
     DBG("  - m_shouldAutoCutIn: " << (m_shouldAutoCutIn ? "true" : "false"));
     DBG("  - m_shouldAutoCutOut: " << (m_shouldAutoCutOut ? "true" : "false"));
     updateGeneralButtonStates(enabled);
-    updateCutModeControlStates(isCutModeActive, enabled, m_shouldAutoCutIn, m_shouldAutoCutOut);
+    updateCutModeControlStates(m_isCutModeActive, enabled, m_shouldAutoCutIn, m_shouldAutoCutOut); // Use m_isCutModeActive
     DBG("ControlPanel::updateComponentStates() - END");
 }
 
@@ -642,7 +707,8 @@ void ControlPanel::updateGeneralButtonStates(bool enabled)
 
 void ControlPanel::updateCutModeControlStates(bool isCutModeActive, bool enabled, bool paramShouldAutoCutIn, bool paramShouldAutoCutOut)
 {
-    DBG("ControlPanel::updateCutModeControlStates() - START (isCutModeActive: " << (isCutModeActive ? "true" : "false") << ", parent enabled: " << (enabled ? "true" : "false") << ", paramShouldAutoCutIn: " << (paramShouldAutoCutIn ? "true" : "false") << ", paramShouldAutoCutOut: " << (paramShouldAutoCutOut ? "true" : "false") << ")");
+    // The parameter isCutModeActive is now correct, as it's passed from updateComponentStates where m_isCutModeActive is used.
+    DBG("ControlPanel::updateCutModeControlStates() - START (isCutModeActive parameter: " << (isCutModeActive ? "true" : "false") << ", parent enabled: " << (enabled ? "true" : "false") << ", paramShouldAutoCutIn: " << (paramShouldAutoCutIn ? "true" : "false") << ", paramShouldAutoCutOut: " << (paramShouldAutoCutOut ? "true" : "false") << ")");
     // Manual Loop In controls
     loopInButton.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - loopInButton enabled: " << (loopInButton.isEnabled() ? "true" : "false"));
     loopInEditor.setEnabled(enabled && isCutModeActive && !paramShouldAutoCutIn); DBG("  - loopInEditor enabled: " << (loopInEditor.isEnabled() ? "true" : "false"));
@@ -1021,6 +1087,15 @@ void ControlPanel::updateLoopButtonColors() {
     updateLoopLabels();
 }
 
+/**
+ * @brief Detects the first non-silent sample from the beginning of the audio file to set the loop-in position.
+ *
+ * This function analyzes the audio data based on `currentInSilenceThreshold`.
+ * It temporarily stops playback during detection and resumes it afterwards.
+ * The detected loop-in position is snapped to the nearest zero-crossing for smoother looping.
+ * Why: This automates the process of finding a suitable start point for a loop,
+ * making it easier for the user to quickly set up precise loops without manual scrubbing.
+ */
 void ControlPanel::detectInSilence()
 {
     DBG("ControlPanel::detectInSilence() called.");
@@ -1074,6 +1149,7 @@ void ControlPanel::detectInSilence()
         for (int i = firstSample; i > 0; --i)
         {
             if (i >= 1 && i < buffer->getNumSamples()) {
+                // Find zero-crossing to prevent clicks/pops
                 bool sign1 = buffer->getSample(0, i) >= 0;
                 bool sign2 = buffer->getSample(0, i - 1) >= 0;
                 if (sign1 != sign2) { loopInSample = i; break; }
@@ -1088,7 +1164,15 @@ void ControlPanel::detectInSilence()
 
     if (wasPlaying) { audioPlayer->getTransportSource().start(); }
 }
-
+/**
+ * @brief Detects the last non-silent sample from the end of the audio file to set the loop-out position.
+ *
+ * This function analyzes the audio data based on `currentOutSilenceThreshold`.
+ * It temporarily stops playback during detection and resumes it afterwards.
+ * The detected loop-out position is snapped to the nearest zero-crossing for smoother looping.
+ * Why: This automates the process of finding a suitable end point for a loop,
+ * making it easier for the user to quickly set up precise loops without manual scrubbing.
+ */
 void ControlPanel::detectOutSilence()
 {
     DBG("ControlPanel::detectOutSilence() called.");
@@ -1133,6 +1217,7 @@ void ControlPanel::detectOutSilence()
         for (int i = lastSample; i < buffer->getNumSamples() - 1; ++i)
         {
             if (i >= 0 && i < buffer->getNumSamples() - 1) {
+                // Find zero-crossing to prevent clicks/pops
                 bool sign1 = buffer->getSample(0, i) >= 0;
                 bool sign2 = buffer->getSample(0, i + 1) >= 0;
                 if (sign1 != sign2) { loopOutSample = i; break; }
@@ -1147,7 +1232,6 @@ void ControlPanel::detectOutSilence()
 
     if (wasPlaying) { audioPlayer->getTransportSource().start(); }
 }
-
 /**
  * @brief Handles mouse movement events.
  *        Updates the mouse cursor position and triggers repaint for visual feedback.

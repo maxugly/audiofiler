@@ -196,6 +196,12 @@ public:
     bool shouldAutoCutOut() const { return m_shouldAutoCutOut; }
     
     /**
+     * @brief Returns whether Cut Mode is currently active.
+     * @return True if Cut Mode is active, false otherwise.
+     */
+    bool isCutModeActive() const { return m_isCutModeActive; }
+
+    /**
      * @brief Updates the colors of the loop buttons based on the current placement mode.
      */
     void updateLoopButtonColors();
@@ -306,11 +312,11 @@ private:
     juce::String loopInDisplayString, loopOutDisplayString;
     int loopInTextX = 0, loopOutTextX = 0, loopTextY = 0;
 
-    bool m_shouldAutoplay = false;
-    bool m_shouldAutoCutIn = false;
-    bool m_shouldAutoCutOut = false;
+    bool m_shouldAutoplay = false; ///< @brief Flag indicating if autoplay is currently enabled.
+    bool m_shouldAutoCutIn = false; ///< @brief Flag indicating if auto-cut for loop-in point is enabled.
+    bool m_shouldAutoCutOut = false; ///< @brief Flag indicating if auto-cut for loop-out point is enabled.
     float glowAlpha = 0.0f;
-    bool isCutModeActive = false;
+    bool m_isCutModeActive = false; ///< @brief Flag indicating if Cut Mode is currently active.
 
     float currentInSilenceThreshold = Config::silenceThreshold;
     float currentOutSilenceThreshold = Config::outSilenceThreshold;

@@ -87,7 +87,23 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void MainComponent::timerCallback()
 {
-    if (controlPanel->getShouldLoop() && controlPanel->getLoopOutPosition() > controlPanel->getLoopInPosition() && audioPlayer->getTransportSource().getCurrentPosition() >= controlPanel->getLoopOutPosition())
+    // Why: Enforce playback within loop points if Cut Mode is active.
+    // If playback position exceeds loopOutPosition:
+    //   - If looping is also enabled, jump back to loopInPosition.
+    //   - If looping is not enabled, stop playback.
+    if (controlPanel->isCutModeActive() && controlPanel->getLoopOutPosition() > controlPanel->getLoopInPosition() && audioPlayer->getTransportSource().getCurrentPosition() >= controlPanel->getLoopOutPosition())
+    {
+        if (controlPanel->getShouldLoop())
+        {
+            audioPlayer->getTransportSource().setPosition(controlPanel->getLoopInPosition());
+        }
+        else
+        {
+            audioPlayer->getTransportSource().stop();
+        }
+    }
+    // Original loop logic, now only active if Cut Mode is OFF
+    else if (controlPanel->getShouldLoop() && controlPanel->getLoopOutPosition() > controlPanel->getLoopInPosition() && audioPlayer->getTransportSource().getCurrentPosition() >= controlPanel->getLoopOutPosition())
     {
         audioPlayer->getTransportSource().setPosition(controlPanel->getLoopInPosition());
     }
@@ -200,17 +216,22 @@ bool MainComponent::handleUIToggleKeybinds(const juce::KeyPress& key)
 bool MainComponent::handleLoopKeybinds(const juce::KeyPress& key)
 {
     auto k = key.getTextCharacter();
-    // Simplified, assuming controlPanel handles the logic of whether to ignore
+    // Why: Prevent manual loop point setting via keybinds when auto-cut is active
+    // or when in a waveform placement mode, to avoid conflicts and unexpected behavior.
     if (controlPanel->getPlacementMode() == AppEnums::PlacementMode::None) // Only allow keybinds if not in waveform placement mode
     {
         if (k == 'i' || k == 'I') {
-            if (controlPanel->shouldAutoCutIn()) return false; // Ignore if auto-cut in is active
+            // Why: If auto-cut in is active, the 'i' keybind should be ignored
+            // as the loop-in position is managed automatically.
+            if (controlPanel->shouldAutoCutIn()) return false;
             controlPanel->setLoopInPosition(audioPlayer->getTransportSource().getCurrentPosition());
             controlPanel->repaint();
             return true;
         }
         if (k == 'o' || k == 'O') {
-            if (controlPanel->shouldAutoCutOut()) return false; // Ignore if auto-cut out is active
+            // Why: If auto-cut out is active, the 'o' keybind should be ignored
+            // as the loop-out position is managed automatically.
+            if (controlPanel->shouldAutoCutOut()) return false;
             controlPanel->setLoopOutPosition(audioPlayer->getTransportSource().getCurrentPosition());
             controlPanel->repaint();
             return true;
