@@ -81,6 +81,8 @@ target_sources(Sorta PRIVATE
         Source/SilenceDetectionLogger.h
         Source/SilenceDetectionLogger.cpp
         Source/ControlPanelCopy.h
+        Source/ControlButtonsPresenter.h
+        Source/ControlButtonsPresenter.cpp
         Source/SilenceThresholdPresenter.h
         Source/SilenceThresholdPresenter.cpp
         Source/StatsPresenter.h

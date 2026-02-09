@@ -18,6 +18,7 @@ class LoopPresenter;
 class ControlStatePresenter;
 class TransportPresenter;
 class SilenceDetectionPresenter;
+class ControlButtonsPresenter;
 
 /**
  * @file ControlPanel.h
@@ -456,6 +457,7 @@ private:
     friend class ControlStatePresenter;
     friend class TransportPresenter;
     friend class SilenceDetectionPresenter;
+    friend class ControlButtonsPresenter;
 
     //==============================================================================
     /** @name juce::TextEditor::Listener Overrides (Private)
@@ -483,6 +485,7 @@ private:
     std::unique_ptr<ControlStatePresenter> controlStatePresenter; ///< Centralises component enable/visibility logic.
     std::unique_ptr<TransportPresenter> transportPresenter; ///< Handles loop/autoplay/cut button behaviour.
     std::unique_ptr<SilenceDetectionPresenter> silenceDetectionPresenter; ///< Owns auto-cut toggle behaviour.
+    std::unique_ptr<ControlButtonsPresenter> buttonPresenter; ///< Handles button initialization.
 
     // --- UI Components ---
     juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton; ///< Standard TextButtons for various actions.
@@ -527,38 +530,9 @@ private:
 
     /** @brief Initializes the custom `ModernLookAndFeel` for this component. */
     void initialiseLookAndFeel();
-    /** @brief Initializes all `juce::TextButton` instances and adds them as child components. */
-    void initialiseButtons();
-    /** @brief Initializes the "Open Directory" button (`openButton`). */
-    void initialiseOpenButton();
-    /** @brief Initializes the "Play/Stop" button (`playStopButton`). */
-    void initialisePlayStopButton();
-    /** @brief Initializes the "View Mode" button (`modeButton`). */
-    void initialiseModeButton();
-    /** @brief Initializes the "Channel View" button (`channelViewButton`). */
-    void initialiseChannelViewButton();
-    /** @brief Initializes the "Thumbnail Quality" button (`qualityButton`). */
-    void initialiseQualityButton();
-    /** @brief Initializes the "Exit" button (`exitButton`). */
-    void initialiseExitButton();
-    /** @brief Initializes the "Stats" button (`statsButton`). */
-    void initialiseStatsButton();
-    /** @brief Initializes the "Loop" toggle button (`loopButton`). */
-    void initialiseLoopButton();
-    /** @brief Initializes the "Autoplay" toggle button (`autoplayButton`). */
-    void initialiseAutoplayButton();
-    /** @brief Initializes the "Auto Cut In" toggle button (`autoCutInButton`). */
-    void initialiseAutoCutInButton();
-    /** @brief Initializes the "Auto Cut Out" toggle button (`autoCutOutButton`). */
-    void initialiseAutoCutOutButton();
-    /** @brief Initializes the "Cut Mode" toggle button (`cutButton`). */
-    void initialiseCutButton();
-    /** @brief Initializes the custom `LoopButton` instances (`loopInButton`, `loopOutButton`). */
-    void initialiseLoopButtons();
-    /** @brief Initializes the "Clear Loop In" and "Clear Loop Out" buttons (`clearLoopInButton`, `clearLoopOutButton`). */
-    void initialiseClearButtons();
     /** @brief Initializes the `juce::TextEditor` instances for loop point display (`loopInEditor`, `loopOutEditor`). */
     void initialiseLoopEditors();
+    void invokeOwnerOpenDialog();
     /** @brief Performs final setup steps after all components are initialized. */
     void finaliseSetup();
 
