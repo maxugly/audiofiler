@@ -22,7 +22,7 @@ public:
     explicit WaveformRenderer(ControlPanel& controlPanel);
 
     /**
-     * @brief Paints the waveform, overlays, and playback time text.
+     * @brief Paints the waveform and overlays for the ControlPanel.
      * @param g Graphics context supplied by ControlPanel::paint.
      */
     void render(juce::Graphics& g);
@@ -33,7 +33,6 @@ private:
     void drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
     void drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
     void drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
-    void drawPlaybackTimeText(juce::Graphics& g, AudioPlayer& audioPlayer) const;
 
     ControlPanel& controlPanel;
 };

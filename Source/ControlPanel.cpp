@@ -10,8 +10,11 @@
 #include "TransportPresenter.h"
 #include "SilenceDetectionPresenter.h"
 #include "ControlButtonsPresenter.h"
+#include "LoopButtonPresenter.h"
 #include "LoopEditorPresenter.h"
+#include "LoopResetPresenter.h"
 #include "WaveformRenderer.h"
+#include "PlaybackTextPresenter.h"
 #include <cmath> // For std::abs
 
 /**
@@ -33,19 +36,22 @@
  * setup with `finaliseSetup()`. The mouse cursor is set to `CrosshairCursor`
  * to provide immediate visual feedback for interactive elements.
  */
-ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent),
-                                                         modernLF(),
-                                                         silenceDetector(std::make_unique<SilenceDetector>(*this)),
-                                                         mouseHandler(std::make_unique<MouseHandler>(*this)),
-                                                         layoutManager(std::make_unique<LayoutManager>(*this)),
-                                                         waveformRenderer(std::make_unique<WaveformRenderer>(*this))
+ControlPanel::ControlPanel(MainComponent& ownerComponent)
+    : owner(ownerComponent),
+      modernLF(),
+      silenceDetector(std::make_unique<SilenceDetector>(*this)),
+      mouseHandler(std::make_unique<MouseHandler>(*this)),
+      layoutManager(std::make_unique<LayoutManager>(*this)),
+      waveformRenderer(std::make_unique<WaveformRenderer>(*this))
 {
     initialiseLookAndFeel();
     statsPresenter = std::make_unique<StatsPresenter>(*this);
     silenceDetectionPresenter = std::make_unique<SilenceDetectionPresenter>(*this);
+    playbackTextPresenter = std::make_unique<PlaybackTextPresenter>(*this);
     buttonPresenter = std::make_unique<ControlButtonsPresenter>(*this);
     buttonPresenter->initialiseAllButtons();
     initialiseLoopEditors();
+    loopButtonPresenter = std::make_unique<LoopButtonPresenter>(*this);
     loopPresenter = std::make_unique<LoopPresenter>(*this, *silenceDetector, loopInEditor, loopOutEditor);
     controlStatePresenter = std::make_unique<ControlStatePresenter>(*this);
     transportPresenter = std::make_unique<TransportPresenter>(*this);
@@ -89,6 +95,7 @@ void ControlPanel::initialiseLoopEditors()
 {
     loopEditorPresenter = std::make_unique<LoopEditorPresenter>(*this);
     loopEditorPresenter->initialiseEditors();
+    loopResetPresenter = std::make_unique<LoopResetPresenter>(*this);
 
     addAndMakeVisible(silenceDetector->getInSilenceThresholdEditor());
     addAndMakeVisible(silenceDetector->getOutSilenceThresholdEditor());
@@ -131,6 +138,8 @@ void ControlPanel::paint(juce::Graphics& g)
     g.fillAll (Config::mainBackgroundColor);
     if (waveformRenderer != nullptr)
         waveformRenderer->render(g);
+    if (playbackTextPresenter != nullptr)
+        playbackTextPresenter->render(g);
 }
 
 void ControlPanel::updatePlayButtonText(bool isPlaying)
@@ -261,24 +270,16 @@ void ControlPanel::setShouldShowStats(bool shouldShowStatsParam) {
 }
 
 void ControlPanel::setTotalTimeStaticString(const juce::String& timeString) {
-    totalTimeStaticStr = timeString;
+    if (playbackTextPresenter != nullptr)
+        playbackTextPresenter->setTotalTimeStaticString(timeString);
 }
 
 void ControlPanel::setShouldLoop(bool shouldLoopParam) {
     shouldLoop = shouldLoopParam;
 }
 void ControlPanel::updateLoopButtonColors() {
-    if (mouseHandler->getCurrentPlacementMode() == AppEnums::PlacementMode::LoopIn) {
-        loopInButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonPlacementModeColor);
-    } else {
-        loopInButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonActiveColor);
-    }
-    if (mouseHandler->getCurrentPlacementMode() == AppEnums::PlacementMode::LoopOut) {
-        loopOutButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonPlacementModeColor);
-    } else {
-        loopOutButton.setColour(juce::TextButton::buttonColourId, Config::loopButtonActiveColor);
-    }
-    updateLoopLabels();
+    if (loopButtonPresenter != nullptr)
+        loopButtonPresenter->updateColours();
 }
 
 // Public accessors for SilenceDetector and other classes to interact with ControlPanel

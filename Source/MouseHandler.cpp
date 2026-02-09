@@ -124,9 +124,8 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
                 if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
                 {
                     owner.setLoopInPosition(time);
-                    // User manually set loop in, so auto-cut is no longer active.
-                    // This needs to be communicated back to ControlPanel / SilenceDetector.
-                    // Owner.getSilenceDetector()->setIsAutoCutInActive(false); -- Need a getter for SilenceDetector from ControlPanel if it needs to happen here.
+                    owner.getSilenceDetector().setIsAutoCutInActive(false);
+                    owner.updateComponentStates();
                 }
                 else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
                 {

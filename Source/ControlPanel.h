@@ -21,6 +21,9 @@ class TransportPresenter;
 class SilenceDetectionPresenter;
 class ControlButtonsPresenter;
 class LoopEditorPresenter;
+class LoopResetPresenter;
+class LoopButtonPresenter;
+class PlaybackTextPresenter;
 
 /**
  * @file ControlPanel.h
@@ -343,9 +346,10 @@ public:
     const MouseHandler& getMouseHandler() const { return *mouseHandler; }
 
     /**
-     * @brief Provides read-only access to the silence detector for threshold rendering.
+     * @brief Provides access to the silence detector for threshold rendering.
      * @return Reference to the owned `SilenceDetector`.
      */
+    SilenceDetector& getSilenceDetector() { return *silenceDetector; }
     const SilenceDetector& getSilenceDetector() const { return *silenceDetector; }
 
     /**
@@ -359,12 +363,6 @@ public:
      * @return Tuple of left/centre/right X coordinates.
      */
     std::tuple<int, int, int> getPlaybackLabelXs() const { return { layoutCache.playbackLeftTextX, layoutCache.playbackCenterTextX, layoutCache.playbackRightTextX }; }
-
-    /**
-     * @brief Retrieves the formatted total time text displayed in the centre label.
-     * @return Reference to the cached string.
-     */
-    const juce::String& getTotalTimeStaticString() const { return totalTimeStaticStr; }
 
     /** @brief Provides access to the stats TextEditor managed by `StatsPresenter`.
      *  @return A reference to the `juce::TextEditor` used for displaying statistics.
@@ -461,6 +459,8 @@ private:
     friend class SilenceDetectionPresenter;
     friend class ControlButtonsPresenter;
     friend class LoopEditorPresenter;
+    friend class LoopButtonPresenter;
+    friend class LoopResetPresenter;
 
     //==============================================================================
     /** @name juce::TextEditor::Listener Overrides (Private)
@@ -483,6 +483,7 @@ private:
     std::unique_ptr<MouseHandler> mouseHandler;     ///< Manages all mouse interaction logic.
     std::unique_ptr<LayoutManager> layoutManager;   ///< Extracted helper that owns layout calculations.
     std::unique_ptr<WaveformRenderer> waveformRenderer; ///< Handles waveform and overlay painting.
+    std::unique_ptr<PlaybackTextPresenter> playbackTextPresenter; ///< Draws playback time labels under the waveform.
     std::unique_ptr<StatsPresenter> statsPresenter; ///< Handles stats building, layout, and presentation.
     std::unique_ptr<LoopPresenter> loopPresenter;   ///< Owns the loop editors and loop position logic.
     std::unique_ptr<ControlStatePresenter> controlStatePresenter; ///< Centralises component enable/visibility logic.
@@ -490,6 +491,8 @@ private:
     std::unique_ptr<SilenceDetectionPresenter> silenceDetectionPresenter; ///< Owns auto-cut toggle behaviour.
     std::unique_ptr<ControlButtonsPresenter> buttonPresenter; ///< Handles button initialization.
     std::unique_ptr<LoopEditorPresenter> loopEditorPresenter; ///< Manages loop editor setup and validation.
+    std::unique_ptr<LoopButtonPresenter> loopButtonPresenter; ///< Handles loop button colouring.
+    std::unique_ptr<LoopResetPresenter> loopResetPresenter; ///< Clears loop bounds.
 
     // --- UI Components ---
     juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton; ///< Standard TextButtons for various actions.
@@ -508,7 +511,6 @@ private:
     
     bool shouldLoop = false;                    ///< Flag indicating if audio playback should loop.
 
-    juce::String totalTimeStaticStr;            ///< Stores the formatted total duration of the loaded audio.
     juce::String loopInDisplayString, loopOutDisplayString; ///< Formatted strings for loop in/out display.
     int loopInTextX = 0, loopOutTextX = 0, loopTextY = 0;   ///< Coordinates for loop point text displays.
 

@@ -5,6 +5,7 @@
 #include "MouseHandler.h"
 #include "SilenceDetector.h"
 #include "Config.h"
+#include "PlaybackCursorGlow.h"
 
 WaveformRenderer::WaveformRenderer(ControlPanel& controlPanelIn)
     : controlPanel(controlPanelIn)
@@ -26,9 +27,6 @@ void WaveformRenderer::render(juce::Graphics& g)
     }
 
     drawMouseCursorOverlays(g, audioPlayer, audioLength);
-
-    if (audioLength > 0.0f)
-        drawPlaybackTimeText(g, audioPlayer);
 }
 
 void WaveformRenderer::drawWaveform(juce::Graphics& g, AudioPlayer& audioPlayer) const
@@ -171,29 +169,10 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
 void WaveformRenderer::drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const
 {
     const auto waveformBounds = controlPanel.getWaveformBounds();
+    PlaybackCursorGlow::renderGlow(g, controlPanel, waveformBounds);
+    g.setColour(Config::playbackCursorColor);
     const float drawPosition = (float)audioPlayer.getTransportSource().getCurrentPosition();
     const float x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
-
-    if (audioPlayer.isPlaying())
-    {
-        juce::ColourGradient gradient(Config::playbackCursorGlowColorStart, x - 10.0f, (float)waveformBounds.getCentreY(),
-                                      Config::playbackCursorGlowColorEnd, x, (float)waveformBounds.getCentreY(), false);
-        g.setGradientFill(gradient);
-        g.fillRect(juce::Rectangle<float>(x - 10.0f, (float)waveformBounds.getY(), 10.0f, (float)waveformBounds.getHeight()));
-    }
-    else
-    {
-        juce::ColourGradient glowGradient;
-        glowGradient.addColour(0.0, Config::playbackCursorGlowColorStart);
-        glowGradient.addColour(0.5, Config::playbackCursorGlowColorEnd);
-        glowGradient.addColour(1.0, Config::playbackCursorColor.withAlpha(0.0f));
-        glowGradient.point1 = { x - 5.0f, (float)waveformBounds.getCentreY() };
-        glowGradient.point2 = { x + 5.0f, (float)waveformBounds.getCentreY() };
-        g.setGradientFill(glowGradient);
-        g.fillRect(juce::Rectangle<float>(x - 5.0f, (float)waveformBounds.getY(), 10.0f, (float)waveformBounds.getHeight()));
-    }
-
-    g.setColour(Config::playbackCursorColor);
     g.drawVerticalLine((int)x, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
 }
 
@@ -289,23 +268,4 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
     g.setColour(currentLineColor);
     g.drawVerticalLine(mouseHandler.getMouseCursorX(), (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
     g.drawHorizontalLine(mouseHandler.getMouseCursorY(), (float)waveformBounds.getX(), (float)waveformBounds.getRight());
-}
-
-void WaveformRenderer::drawPlaybackTimeText(juce::Graphics& g, AudioPlayer& audioPlayer) const
-{
-    auto [leftX, centreX, rightX] = controlPanel.getPlaybackLabelXs();
-    const int textY = controlPanel.getBottomRowTopY() - Config::playbackTimeTextOffsetY;
-
-    const double currentTime = audioPlayer.getTransportSource().getCurrentPosition();
-    const double totalTime = audioPlayer.getThumbnail().getTotalLength();
-    const double remainingTime = totalTime - currentTime;
-
-    const juce::String currentTimeStr = controlPanel.formatTime(currentTime);
-    const juce::String remainingTimeStr = controlPanel.formatTime(remainingTime);
-
-    g.setColour(Config::playbackTextColor);
-    g.setFont(Config::playbackTextSize);
-    g.drawText(currentTimeStr, leftX, textY, Config::playbackTextWidth, Config::playbackTextHeight, juce::Justification::left, false);
-    g.drawText(controlPanel.getTotalTimeStaticString(), centreX, textY, Config::playbackTextWidth, 20, juce::Justification::centred, false);
-    g.drawText(remainingTimeStr, rightX, textY, Config::playbackTextWidth, 20, juce::Justification::right, false);
 }

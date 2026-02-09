@@ -2,6 +2,7 @@
 #include "ControlPanel.h"
 #include "Config.h"
 #include "KeybindHandler.h"
+#include "PlaybackLoopController.h"
 
 MainComponent::MainComponent()
 {
@@ -11,6 +12,7 @@ MainComponent::MainComponent()
     controlPanel = std::make_unique<ControlPanel>(*this);
     addAndMakeVisible(controlPanel.get());
     keybindHandler = std::make_unique<KeybindHandler>(*this, *audioPlayer, *controlPanel);
+    playbackLoopController = std::make_unique<PlaybackLoopController>(*audioPlayer, *controlPanel);
 
     setSize(Config::initialWindowWidth, Config::initialWindowHeight);
     setAudioChannels(0, 2);
@@ -87,26 +89,8 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void MainComponent::timerCallback()
 {
-    // Why: Enforce playback within loop points if Cut Mode is active.
-    // If playback position exceeds loopOutPosition:
-    //   - If looping is also enabled, jump back to loopInPosition.
-    //   - If looping is not enabled, stop playback.
-    if (controlPanel->isCutModeActive() && controlPanel->getLoopOutPosition() > controlPanel->getLoopInPosition() && audioPlayer->getTransportSource().getCurrentPosition() >= controlPanel->getLoopOutPosition())
-    {
-        if (controlPanel->getShouldLoop())
-        {
-            audioPlayer->getTransportSource().setPosition(controlPanel->getLoopInPosition());
-        }
-        else
-        {
-            audioPlayer->getTransportSource().stop();
-        }
-    }
-    // Original loop logic, now only active if Cut Mode is OFF
-    else if (controlPanel->getShouldLoop() && controlPanel->getLoopOutPosition() > controlPanel->getLoopInPosition() && audioPlayer->getTransportSource().getCurrentPosition() >= controlPanel->getLoopOutPosition())
-    {
-        audioPlayer->getTransportSource().setPosition(controlPanel->getLoopInPosition());
-    }
+    if (playbackLoopController != nullptr)
+        playbackLoopController->tick();
     
     // We repaint continuously for animations and playback cursor
     controlPanel->repaint();

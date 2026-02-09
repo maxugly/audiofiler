@@ -87,6 +87,16 @@ target_sources(Sorta PRIVATE
         Source/SilenceThresholdPresenter.cpp
         Source/LoopEditorPresenter.h
         Source/LoopEditorPresenter.cpp
+        Source/LoopButtonPresenter.h
+        Source/LoopButtonPresenter.cpp
+        Source/LoopResetPresenter.h
+        Source/LoopResetPresenter.cpp
+        Source/PlaybackLoopController.h
+        Source/PlaybackLoopController.cpp
+        Source/PlaybackTextPresenter.h
+        Source/PlaybackTextPresenter.cpp
+        Source/PlaybackCursorGlow.h
+        Source/PlaybackCursorGlow.cpp
         Source/StatsPresenter.h
         Source/StatsPresenter.cpp
         Source/MouseHandler.h
