@@ -1,15 +1,19 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <tuple>
 #include "Config.h"
 #include "ModernLookAndFeel.h" // Added include for ModernLookAndFeel
 #include "AppEnums.h"
 #include "AudioPlayer.h" // Added for AudioPlayer type recognition
-
-class MainComponent; // Forward declaration
 #include <memory>    // Required for std::unique_ptr
 #include "SilenceDetector.h" // Include the new SilenceDetector class
 #include "MouseHandler.h" // Include the new MouseHandler class
+
+class MainComponent; // Forward declaration
+class LayoutManager;
+class WaveformRenderer;
+class StatsPresenter;
 
 /**
  * @file ControlPanel.h
@@ -262,10 +266,9 @@ public:
     void setStatsDisplayText(const juce::String& text, juce::Colour color = Config::statsDisplayTextColour);
 
     /**
-     * @brief Updates the stats display with dynamically changing audio statistics.
-     * @param statsText The formatted string containing real-time audio statistics (e.g., current position).
+     * @brief Pulls the latest audio statistics via the StatsPresenter and updates the display.
      */
-    void updateStatsDisplay(const juce::String& statsText);
+    void updateStatsFromAudio();
 
     /** @} */
     //==============================================================================
@@ -309,10 +312,58 @@ public:
      */
     AudioPlayer& getAudioPlayer() const;
 
-    /** @brief Provides access to the `statsDisplay` TextEditor.
+    /**
+     * @brief Retrieves the current waveform thumbnail quality setting.
+     * @return The active `AppEnums::ThumbnailQuality` value.
+     */
+    AppEnums::ThumbnailQuality getCurrentQualitySetting() const { return currentQuality; }
+
+    /**
+     * @brief Retrieves the current channel view mode (Mono/Stereo).
+     * @return The active `AppEnums::ChannelViewMode` value.
+     */
+    AppEnums::ChannelViewMode getChannelViewMode() const { return currentChannelViewMode; }
+
+    /**
+     * @brief Provides read-only access to the current glow alpha for pulsing effects.
+     * @return Alpha value between 0 and 1.
+     */
+    float getGlowAlpha() const { return glowAlpha; }
+
+    /**
+     * @brief Provides read-only access to the mouse handler for rendering.
+     * @return Reference to the owned `MouseHandler`.
+     */
+    const MouseHandler& getMouseHandler() const { return *mouseHandler; }
+
+    /**
+     * @brief Provides read-only access to the silence detector for threshold rendering.
+     * @return Reference to the owned `SilenceDetector`.
+     */
+    const SilenceDetector& getSilenceDetector() const { return *silenceDetector; }
+
+    /**
+     * @brief Gets the cached Y coordinate for the bottom row's top.
+     * @return Y coordinate in pixels.
+     */
+    int getBottomRowTopY() const { return bottomRowTopY; }
+
+    /**
+     * @brief Retrieves the cached playback label X positions (left, centre, right).
+     * @return Tuple of left/centre/right X coordinates.
+     */
+    std::tuple<int, int, int> getPlaybackLabelXs() const { return { playbackLeftTextX, playbackCenterTextX, playbackRightTextX }; }
+
+    /**
+     * @brief Retrieves the formatted total time text displayed in the centre label.
+     * @return Reference to the cached string.
+     */
+    const juce::String& getTotalTimeStaticString() const { return totalTimeStaticStr; }
+
+    /** @brief Provides access to the stats TextEditor managed by `StatsPresenter`.
      *  @return A reference to the `juce::TextEditor` used for displaying statistics.
      */
-    juce::TextEditor& getStatsDisplay() { return statsDisplay; }
+    juce::TextEditor& getStatsDisplay();
 
     /**
      * @brief Sets the loop-in position using a sample index.
@@ -398,6 +449,8 @@ public:
     //==============================================================================
 
 private:
+    friend class LayoutManager;
+
     //==============================================================================
     /** @name juce::TextEditor::Listener Overrides (Private)
      *  Callbacks for handling text editor events.
@@ -449,17 +502,19 @@ private:
     ModernLookAndFeel modernLF;                 ///< Custom look and feel instance for UI styling.
     std::unique_ptr<SilenceDetector> silenceDetector; ///< Manages silence detection logic and its UI.
     std::unique_ptr<MouseHandler> mouseHandler;     ///< Manages all mouse interaction logic.
+    std::unique_ptr<LayoutManager> layoutManager;   ///< Extracted helper that owns layout calculations.
+    std::unique_ptr<WaveformRenderer> waveformRenderer; ///< Handles waveform and overlay painting.
+    std::unique_ptr<StatsPresenter> statsPresenter; ///< Handles stats building, layout, and presentation.
 
     // --- UI Components ---
     juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton; ///< Standard TextButtons for various actions.
     juce::TextButton clearLoopInButton, clearLoopOutButton;                                                                      ///< Small buttons to clear specific loop points.
-    juce::TextEditor statsDisplay, loopInEditor, loopOutEditor;                                                                   ///< TextEditors for displaying statistics and editing loop points.
+    juce::TextEditor loopInEditor, loopOutEditor;                                                                                ///< TextEditors for displaying statistics and editing loop points.
     LoopButton loopInButton, loopOutButton;                                                                                       ///< Custom buttons for 'in' and 'out' loop point setting, with distinct left/right click behavior.
     juce::TextButton autoplayButton, autoCutInButton, autoCutOutButton, cutButton;                                                ///< Buttons for automation features.
 
     // --- Layout ---
     juce::Rectangle<int> waveformBounds;        ///< The calculated area within the control panel reserved for the waveform display.
-    juce::Rectangle<int> statsBounds;           ///< The calculated area for the statistics display.
     juce::Rectangle<int> contentAreaBounds;     ///< The main content area excluding borders.
 
     // --- State ---
@@ -467,7 +522,6 @@ private:
     AppEnums::ChannelViewMode currentChannelViewMode = AppEnums::ChannelViewMode::Mono; ///< The currently selected channel view mode.
     AppEnums::ThumbnailQuality currentQuality = AppEnums::ThumbnailQuality::Low; ///< The currently selected waveform thumbnail quality.
     
-    bool showStats = false;                     ///< Flag indicating if the statistics display is currently visible.
     bool shouldLoop = false;                    ///< Flag indicating if audio playback should loop.
     double loopInPosition = -1.0;               ///< The start time of the loop region in seconds (-1.0 means unset).
     double loopOutPosition = -1.0;              ///< The end time of the loop region in seconds (-1.0 means unset).
@@ -536,40 +590,6 @@ private:
     //==============================================================================
 
     //==============================================================================
-    /** @name Private Helper Methods - Layout
-     *  @{
-     */
-
-    /**
-     * @brief Lays out the buttons in the top row of the control panel.
-     * @param bounds The current available bounds for layout.
-     * @param rowHeight The height allocated for this row.
-     */
-    void layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHeight);
-
-    /**
-     * @brief Lays out the loop and cut control buttons and editors.
-     * @param bounds The current available bounds for layout.
-     * @param rowHeight The height allocated for this row.
-     */
-    void layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int rowHeight);
-
-    /**
-     * @brief Lays out buttons and text displays in the bottom row.
-     * @param bounds The current available bounds for layout.
-     * @param rowHeight The height allocated for this row.
-     */
-    void layoutBottomRowAndTextDisplay(juce::Rectangle<int>& bounds, int rowHeight);
-
-    /**
-     * @brief Calculates and sets the bounds for the waveform and statistics display areas.
-     * @param bounds The current available bounds for layout.
-     */
-    void layoutWaveformAndStats(juce::Rectangle<int>& bounds);
-
-    /** @} */
-    //==============================================================================
-
     //==============================================================================
     /** @name Private Helper Methods - State Updates
      *  @{
@@ -598,14 +618,6 @@ private:
     /** @name Private Helper Methods - Drawing
      *  @{
      */
-
-    /**
-     * @brief Draws a reduced quality version of the waveform for a given channel.
-     * @param g The graphics context to draw into.
-     * @param channel The audio channel to draw.
-     * @param pixelsPerSample The number of pixels representing each sample.
-     */
-    void drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample);
 
     /** @} */
     //==============================================================================

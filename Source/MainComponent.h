@@ -220,15 +220,6 @@ private:
      *  @{
      */
 
-    /**
-     * @brief Builds a string containing various audio statistics.
-     *
-     * This method compiles information about the loaded audio file, its duration,
-     * sample rate, and other relevant details for display in the stats panel.
-     * @return A `juce::String` with formatted audio statistics.
-     */
-    juce::String buildStatsString();
-
     /** @} */
     //==============================================================================
 

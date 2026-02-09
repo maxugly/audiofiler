@@ -2,6 +2,9 @@
 #include "MainComponent.h" // Full header required for MainComponent access (e.g., getAudioPlayer)
 #include "AudioPlayer.h"    // Required for AudioPlayer types in public methods
 #include "Config.h"
+#include "LayoutManager.h"
+#include "StatsPresenter.h"
+#include "WaveformRenderer.h"
 #include <cmath> // For std::abs
 
 /**
@@ -26,9 +29,12 @@
 ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent),
                                                          modernLF(),
                                                          silenceDetector(std::make_unique<SilenceDetector>(*this)),
-                                                         mouseHandler(std::make_unique<MouseHandler>(*this))
+                                                         mouseHandler(std::make_unique<MouseHandler>(*this)),
+                                                         layoutManager(std::make_unique<LayoutManager>(*this)),
+                                                         waveformRenderer(std::make_unique<WaveformRenderer>(*this))
 {
     initialiseLookAndFeel();
+    statsPresenter = std::make_unique<StatsPresenter>(*this);
     initialiseButtons();
     initialiseLoopButtons();
     initialiseClearButtons();
@@ -71,9 +77,7 @@ void ControlPanel::initialiseLookAndFeel()
  *
  * This method calls a series of specialized `initialise` methods to create,
  * configure, and add to the visible hierarchy all the `juce::TextButton`
- * and custom `LoopButton` instances used in the control panel. It also
- * initializes the `statsDisplay` TextEditor here due to its close relation
- * to button states.
+ * and custom `LoopButton` instances used in the control panel.
  */
 void ControlPanel::initialiseButtons()
 {
@@ -89,15 +93,6 @@ void ControlPanel::initialiseButtons()
     initialiseAutoCutInButton();
     initialiseAutoCutOutButton();
     initialiseCutButton();
-
-    // Stats Display TextEditor setup
-    addAndMakeVisible (statsDisplay);
-    statsDisplay.setReadOnly (true); // User cannot type in this display
-    statsDisplay.setMultiLine (true); // Allows multiple lines of text
-    statsDisplay.setWantsKeyboardFocus (false); // Does not grab keyboard focus
-    statsDisplay.setColour (juce::TextEditor::backgroundColourId, Config::statsDisplayBackgroundColour);
-    statsDisplay.setColour (juce::TextEditor::textColourId, Config::statsDisplayTextColour);
-    statsDisplay.setVisible (false); // Initially hidden
 }
 
 /**
@@ -501,271 +496,15 @@ void ControlPanel::finaliseSetup()
  */
 void ControlPanel::resized()
 {
-    DBG("ControlPanel::resized() - START");
-    auto bounds = getLocalBounds();
-    int rowHeight = Config::buttonHeight + Config::windowBorderMargins * 2;
-
-    layoutTopRowButtons(bounds, rowHeight);
-    layoutLoopAndCutControls(bounds, rowHeight);
-    layoutBottomRowAndTextDisplay(bounds, rowHeight);
-    layoutWaveformAndStats(bounds);
-    DBG("ControlPanel::resized() - END");
+    if (layoutManager != nullptr)
+        layoutManager->performLayout();
 }
 
 void ControlPanel::paint(juce::Graphics& g)
 {
     g.fillAll (Config::mainBackgroundColor);
-    AudioPlayer* audioPlayer = owner.getAudioPlayer();
-
-    // Waveform drawing
-    if (audioPlayer->getThumbnail().getNumChannels() > 0)
-    {
-        int pixelsPerSample = 1;
-        if (currentQuality == AppEnums::ThumbnailQuality::Low)
-                pixelsPerSample = 4;
-            else if (currentQuality == AppEnums::ThumbnailQuality::Medium)
-                pixelsPerSample = 2;
-        
-            if (currentChannelViewMode == AppEnums::ChannelViewMode::Mono || audioPlayer->getThumbnail().getNumChannels() == 1)        {
-            g.setColour (Config::waveformColor);
-            if (pixelsPerSample > 1)
-                drawReducedQualityWaveform(g, 0, pixelsPerSample);
-            else
-                audioPlayer->getThumbnail().drawChannel (g, waveformBounds, 0.0, audioPlayer->getThumbnail().getTotalLength(), 0, 1.0f);
-        }
-        else // Stereo
-        {
-            g.setColour (Config::waveformColor);
-            if (pixelsPerSample > 1)
-            {
-                for (int ch = 0; ch < audioPlayer->getThumbnail().getNumChannels(); ++ch)
-                    drawReducedQualityWaveform(g, ch, pixelsPerSample);
-            }
-            else
-            {
-                audioPlayer->getThumbnail().drawChannels (g, waveformBounds, 0.0, audioPlayer->getThumbnail().getTotalLength(), 1.0f);
-            }
-        }
-    } // End of waveform drawing
-
-    auto audioLength = (float)audioPlayer->getThumbnail().getTotalLength();
-
-    if (audioLength > 0.0) // Main block for drawing elements that depend on audio length
-    {
-        if (m_isCutModeActive) 
-        {
-            auto drawThresholdVisualisation = [&](juce::Graphics& g_ref, double loopPos, float threshold)
-            {
-                if (audioLength <= 0.0) return; 
-
-                float normalisedThreshold = threshold; 
-                float centerY = (float)waveformBounds.getCentreY();
-                float halfHeight = (float)waveformBounds.getHeight() / 2.0f;
-
-                float topThresholdY = centerY - (normalisedThreshold * halfHeight);
-                float bottomThresholdY = centerY + (normalisedThreshold * halfHeight);
-
-                topThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), topThresholdY);
-                bottomThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), bottomThresholdY);
-
-                float xPos = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopPos / audioLength);
-                float halfThresholdLineWidth = Config::thresholdLineWidth / 2.0f;
-                float lineStartX = xPos - halfThresholdLineWidth;
-                float lineEndX = xPos + halfThresholdLineWidth;
-
-                lineStartX = juce::jmax(lineStartX, (float)waveformBounds.getX());
-                lineEndX = juce::jmin(lineEndX, (float)waveformBounds.getRight());
-                float currentLineWidth = lineEndX - lineStartX;
-
-                juce::Colour lineColor = Config::thresholdLineColor;
-                juce::Colour regionColor = Config::thresholdRegionColor;
-
-                g_ref.setColour(regionColor);
-                g_ref.fillRect(lineStartX, topThresholdY, currentLineWidth, bottomThresholdY - topThresholdY);
-
-                if (m_isCutModeActive) { // Glow if cut mode is active
-                    juce::Colour glowColor = lineColor.withAlpha(lineColor.getFloatAlpha() * glowAlpha);
-                    g_ref.setColour(glowColor);
-                    g_ref.fillRect(lineStartX, topThresholdY - (Config::thresholdGlowThickness / 2.0f - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
-                    g_ref.fillRect(lineStartX, bottomThresholdY - (Config::thresholdGlowThickness / 2.0f - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
-                }
-
-                g_ref.setColour(lineColor);
-                g_ref.drawHorizontalLine((int)topThresholdY, lineStartX, lineEndX);
-                g_ref.drawHorizontalLine((int)bottomThresholdY, lineStartX, lineEndX);
-            };
-
-            drawThresholdVisualisation(g, getLoopInPosition(), silenceDetector->getCurrentInSilenceThreshold());
-            drawThresholdVisualisation(g, getLoopOutPosition(), silenceDetector->getCurrentOutSilenceThreshold());
-
-            auto actualIn = juce::jmin(loopInPosition, loopOutPosition);
-            auto actualOut = juce::jmax(loopInPosition, loopOutPosition);
-            auto inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
-            auto outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
-            const float fadeLength = waveformBounds.getWidth() * Config::waveBoxHaze;
-
-            // Draw region to the left of loopIn with fade
-            juce::Rectangle<float> leftRegion((float)waveformBounds.getX(), (float)waveformBounds.getY(), inX - (float)waveformBounds.getX(), (float)waveformBounds.getHeight());
-            if (leftRegion.getWidth() > 0)
-            {
-                juce::ColourGradient leftFadeGradient(Config::loopRegionColor, inX, leftRegion.getCentreY(),
-                                                      Config::hazyWaveBoxFadeColor, inX - fadeLength, leftRegion.getCentreY(), false);
-                g.setGradientFill(leftFadeGradient);
-                g.fillRect(leftRegion);
-            }
-            
-            // Draw region to the right of loopOut with fade
-            juce::Rectangle<float> rightRegion(outX, (float)waveformBounds.getY(), (float)waveformBounds.getRight() - outX, (float)waveformBounds.getHeight());
-            if (rightRegion.getWidth() > 0)
-            {
-                juce::ColourGradient rightFadeGradient(Config::hazyWaveBoxFadeColor, outX + fadeLength, rightRegion.getCentreY(),
-                                                       Config::loopRegionColor, outX, rightRegion.getCentreY(), false);
-                g.setGradientFill(rightFadeGradient);
-                g.fillRect(rightRegion);
-            }
-
-            juce::Colour glowColor = Config::loopLineColor.withAlpha(Config::loopLineColor.getFloatAlpha() * (1.0f - glowAlpha));
-            g.setColour(glowColor);
-            g.fillRect(inX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
-            g.fillRect(outX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
-
-            // Draw horizontal lines connecting loop in/out markers at top and bottom
-            g.setColour(Config::loopLineColor); // Use the same color as vertical lines
-            g.drawHorizontalLine(waveformBounds.getY(), (int)inX, (int)outX); // Top line
-            g.drawHorizontalLine(waveformBounds.getBottom() - 1, (int)inX, (int)outX); // Bottom line (offset by 1 to be inside bounds)
-        }
-
-        // Playback Cursor
-        auto drawPosition = (float)audioPlayer->getTransportSource().getCurrentPosition();
-        auto x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
-        if (audioPlayer->isPlaying())
-        {
-            juce::ColourGradient gradient (Config::playbackCursorGlowColorStart, (float)x - 10.0f, (float)waveformBounds.getCentreY(), Config::playbackCursorGlowColorEnd, (float)x, (float)waveformBounds.getCentreY(), false );
-            g.setGradientFill (gradient);
-            g.fillRect (juce::Rectangle<float>((int)x - 10, (float)waveformBounds.getY(), 10, (float)waveformBounds.getHeight()));
-        }
-        else
-        {
-            juce::ColourGradient glowGradient;
-            glowGradient.addColour (0.0, Config::playbackCursorGlowColorStart);
-            glowGradient.addColour (0.5, Config::playbackCursorGlowColorEnd);
-            glowGradient.addColour (1.0, Config::playbackCursorColor.withAlpha(0.0f));
-            glowGradient.point1 = { (float)x - 5.0f, (float)waveformBounds.getCentreY() };
-            glowGradient.point2 = { (float)x + 5.0f, (float)waveformBounds.getCentreY() };
-            g.setGradientFill (glowGradient);
-            g.fillRect (juce::Rectangle<float>((int)x - 5, (float)waveformBounds.getY(), 10, (float)waveformBounds.getHeight()));
-        }
-        g.setColour (Config::playbackCursorColor);
-        g.drawVerticalLine ((int)x, (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
-    } 
-
-        if (mouseHandler->getMouseCursorX() != -1)
-        {
-            juce::Colour currentLineColor;
-            juce::Colour currentHighlightColor;
-            juce::Colour currentGlowColor;
-            float currentGlowThickness;
-    
-            // Why: Change mouse cursor color and add glow/shadow when in loop placement mode
-            // to provide visual feedback that the mouse is "armed" to set a loop point.
-            if (mouseHandler->getCurrentPlacementMode() == AppEnums::PlacementMode::LoopIn || mouseHandler->getCurrentPlacementMode() == AppEnums::PlacementMode::LoopOut)
-            {
-                currentLineColor = Config::placementModeCursorColor;
-                currentHighlightColor = Config::placementModeCursorColor.withAlpha(0.4f);
-                currentGlowColor = Config::placementModeGlowColor;
-                currentGlowThickness = Config::placementModeGlowThickness;
-    
-                // Draw glow/shadow for the vertical line
-                g.setColour(currentGlowColor.withAlpha(0.3f)); // Semi-transparent for shadow effect
-                g.fillRect(mouseHandler->getMouseCursorX() - (int)(currentGlowThickness / 2) - 1, waveformBounds.getY(), (int)currentGlowThickness + 2, waveformBounds.getHeight());
-                // Draw glow/shadow for the horizontal line
-                g.fillRect(waveformBounds.getX(), mouseHandler->getMouseCursorY() - (int)(currentGlowThickness / 2) - 1, waveformBounds.getWidth(), (int)currentGlowThickness + 2);
-    
-            }
-            else
-            {
-                currentLineColor = Config::mouseCursorLineColor;
-                currentHighlightColor = Config::mouseCursorHighlightColor;
-                currentGlowColor = Config::mouseAmplitudeGlowColor; // Reusing for amplitude glow, not general cursor glow
-                currentGlowThickness = 0.0f; // No extra glow for default cursor
-            }
-    
-            g.setColour (currentHighlightColor);
-            g.fillRect (mouseHandler->getMouseCursorX() - 2, waveformBounds.getY(), 5, waveformBounds.getHeight());
-            g.fillRect (waveformBounds.getX(), mouseHandler->getMouseCursorY() - 2, waveformBounds.getWidth(), 5);
-    
-            if (audioLength > 0.0)
-            {
-                float amplitude = 0.0f;
-                if (audioPlayer->getThumbnail().getNumChannels() > 0)
-                {
-                    auto* reader = audioPlayer->getAudioFormatReader();
-                    double sampleRate = (reader != nullptr) ? reader->sampleRate : 0.0;
-                    if (sampleRate > 0)
-                    {
-                        float minVal, maxVal;
-                        audioPlayer->getThumbnail().getApproximateMinMax(mouseHandler->getMouseCursorTime(), mouseHandler->getMouseCursorTime() + (1.0 / sampleRate), 0, minVal, maxVal);
-                        amplitude = juce::jmax(std::abs(minVal), std::abs(maxVal));
-                    }
-                }
-    
-                            // Draw amplitude line
-                            float centerY = (float)waveformBounds.getCentreY();
-                            float amplitudeY = centerY - (amplitude * waveformBounds.getHeight() * 0.5f);
-                            float bottomAmplitudeY = centerY + (amplitude * waveformBounds.getHeight() * 0.5f); // The bottom amplitude line Y position
-                            
-                            juce::ColourGradient amplitudeGlowGradient(Config::mouseAmplitudeGlowColor.withAlpha(0.0f), (float)mouseHandler->getMouseCursorX(), amplitudeY,
-                                                                      Config::mouseAmplitudeGlowColor.withAlpha(0.7f), (float)mouseHandler->getMouseCursorX(), centerY, true);
-                            g.setGradientFill(amplitudeGlowGradient);
-                            g.fillRect(juce::Rectangle<float>((float)mouseHandler->getMouseCursorX() - Config::mouseAmplitudeGlowThickness / 2, amplitudeY, Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
-                            g.fillRect(juce::Rectangle<float>((float)mouseHandler->getMouseCursorX() - Config::mouseAmplitudeGlowThickness / 2, centerY, Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
-                
-                            g.setColour(Config::mouseAmplitudeLineColor);
-                            g.drawVerticalLine((float)mouseHandler->getMouseCursorX(), amplitudeY, bottomAmplitudeY);
-                            
-                            // Why: Draw two short horizontal lines at the top and bottom of the amplitude visualization
-                            // to clearly indicate the min/max amplitude range at the mouse cursor's X position.
-                            float halfLineLength = Config::mouseAmplitudeLineLength / 2.0f;
-                            g.drawHorizontalLine(amplitudeY, (float)mouseHandler->getMouseCursorX() - halfLineLength, (float)mouseHandler->getMouseCursorX() + halfLineLength);
-                            g.drawHorizontalLine(bottomAmplitudeY, (float)mouseHandler->getMouseCursorX() - halfLineLength, (float)mouseHandler->getMouseCursorX() + halfLineLength);
-                
-                            // Draw amplitude text
-                            juce::String amplitudeText = juce::String(amplitude, 2); // Positive amplitude
-                            juce::String negativeAmplitudeText = juce::String(-amplitude, 2); // Negative amplitude
-                            g.setColour(Config::playbackTextColor);
-                            g.setFont(Config::mouseCursorTextSize);
-                            g.drawText(amplitudeText, mouseHandler->getMouseCursorX() + 5, (int)amplitudeY - Config::mouseCursorTextSize, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
-                            // Why: Display the negative amplitude value to provide complete information about the peak-to-peak amplitude.
-                            g.drawText(negativeAmplitudeText, mouseHandler->getMouseCursorX() + 5, (int)bottomAmplitudeY, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
-                
-                
-                            // Draw time text
-                            juce::String timeText = formatTime(mouseHandler->getMouseCursorTime()); // Use ControlPanel's formatTime
-                            g.drawText(timeText, mouseHandler->getMouseCursorX() + 5, mouseHandler->getMouseCursorY() + 5, 100, Config::mouseCursorTextSize, juce::Justification::left, true);
-            }
-            
-                    // Draw the main cursor lines on top
-                    g.setColour (currentLineColor);
-                    g.drawVerticalLine (mouseHandler->getMouseCursorX(), (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
-                    g.drawHorizontalLine (mouseHandler->getMouseCursorY(), (float)waveformBounds.getX(), (float)waveformBounds.getRight());        }
-    if (audioLength > 0.0)
-    {
-        double currentTime = audioPlayer->getTransportSource().getCurrentPosition();
-        double totalTime = audioPlayer->getThumbnail().getTotalLength();
-        double remainingTime = totalTime - currentTime;
-
-        juce::String currentTimeStr = formatTime(currentTime); // Use ControlPanel's formatTime
-        juce::String remainingTimeStr = formatTime(remainingTime); // Use ControlPanel's formatTime
-
-        int textY = bottomRowTopY - Config::playbackTimeTextOffsetY;
-
-        g.setColour(Config::playbackTextColor);
-        g.setFont(Config::playbackTextSize);
-
-        g.drawText(currentTimeStr, playbackLeftTextX, textY, Config::playbackTextWidth, Config::playbackTextHeight, juce::Justification::left, false);
-        g.drawText(totalTimeStaticStr, playbackCenterTextX, textY, Config::playbackTextWidth, 20, juce::Justification::centred, false);
-        g.drawText(remainingTimeStr, playbackRightTextX, textY, Config::playbackTextWidth, 20, juce::Justification::right, false);
-    }
+    if (waveformRenderer != nullptr)
+        waveformRenderer->render(g);
 }
 
 void ControlPanel::updatePlayButtonText(bool isPlaying)
@@ -795,76 +534,6 @@ void ControlPanel::updateComponentStates()
  * @param bounds The current bounds of the control panel.
  * @param rowHeight The calculated height for each button row.
  */
-void ControlPanel::layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHeight)
-{
-    auto topRow = bounds.removeFromTop(rowHeight).reduced(Config::windowBorderMargins);
-    openButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
-    playStopButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
-    autoplayButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
-    loopButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
-    cutButton.setBounds(topRow.removeFromLeft(Config::buttonWidth)); topRow.removeFromLeft(Config::windowBorderMargins);
-    exitButton.setBounds(topRow.removeFromRight(Config::buttonWidth)); topRow.removeFromRight(Config::windowBorderMargins);
-}
-
-/**
- * @brief Lays out the loop and cut control elements.
- * @param bounds The current bounds of the control panel.
- * @param rowHeight The calculated height for each button row.
- */
-void ControlPanel::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int rowHeight)
-{
-    auto loopRow = bounds.removeFromTop(rowHeight).reduced(Config::windowBorderMargins);
-    loopInButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
-    loopInEditor.setBounds(loopRow.removeFromLeft(Config::loopTextWidth)); loopRow.removeFromLeft(Config::windowBorderMargins / 2);
-    clearLoopInButton.setBounds(loopRow.removeFromLeft(Config::clearButtonWidth)); loopRow.removeFromLeft(Config::clearButtonMargin);
-    loopRow.removeFromLeft(Config::windowBorderMargins * 2);
-    loopOutButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
-    loopOutEditor.setBounds(loopRow.removeFromLeft(Config::loopTextWidth)); loopRow.removeFromLeft(Config::windowBorderMargins / 2);
-    clearLoopOutButton.setBounds(loopRow.removeFromLeft(Config::clearButtonWidth)); loopRow.removeFromLeft(Config::clearButtonMargin);
-    loopRow.removeFromLeft(Config::windowBorderMargins * 2);
-    silenceDetector->getInSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(Config::thresholdEditorWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
-    autoCutInButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth)); loopRow.removeFromLeft(Config::windowBorderMargins * 2);
-    silenceDetector->getOutSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(Config::thresholdEditorWidth)); loopRow.removeFromLeft(Config::windowBorderMargins);
-    autoCutOutButton.setBounds(loopRow.removeFromLeft(Config::buttonWidth));
-}
-
-/**
- * @brief Lays out the buttons for the bottom row and the text display area.
- * @param bounds The current bounds of the control panel.
- * @param rowHeight The calculated height for each button row.
- */
-void ControlPanel::layoutBottomRowAndTextDisplay(juce::Rectangle<int>& bounds, int rowHeight)
-{
-    auto bottomRow = bounds.removeFromBottom(rowHeight).reduced(Config::windowBorderMargins);
-    bottomRowTopY = bottomRow.getY();
-    contentAreaBounds = bounds.reduced(Config::windowBorderMargins);
-    qualityButton.setBounds(bottomRow.removeFromRight(Config::buttonWidth)); bottomRow.removeFromRight(Config::windowBorderMargins);
-    channelViewButton.setBounds(bottomRow.removeFromRight(Config::buttonWidth)); bottomRow.removeFromRight(Config::windowBorderMargins);
-    statsButton.setBounds(bottomRow.removeFromRight(Config::buttonWidth)); bottomRow.removeFromRight(Config::windowBorderMargins);
-    modeButton.setBounds(bottomRow.removeFromRight(Config::buttonWidth));
-
-    playbackLeftTextX = getLocalBounds().getX() + Config::windowBorderMargins;
-    playbackCenterTextX = (getLocalBounds().getWidth() / 2) - (Config::playbackTextWidth / 2);
-    playbackRightTextX = getLocalBounds().getRight() - Config::windowBorderMargins - Config::playbackTextWidth;
-}
-
-void ControlPanel::layoutWaveformAndStats(juce::Rectangle<int>& bounds)
-{
-    if (currentMode == AppEnums::ViewMode::Overlay) {
-        waveformBounds = getLocalBounds();
-    } else {
-        waveformBounds = bounds.reduced(Config::windowBorderMargins);
-    }
-
-    if (showStats) {
-        statsBounds = contentAreaBounds.withHeight(100).reduced(10);
-        statsDisplay.setBounds(statsBounds);
-        statsDisplay.setVisible(true);
-        statsDisplay.toFront(true);
-    } else {
-        statsDisplay.setVisible(false);
-    }
-}
 
 void ControlPanel::updateGeneralButtonStates(bool enabled)
 {
@@ -880,7 +549,11 @@ void ControlPanel::updateGeneralButtonStates(bool enabled)
     statsButton.setEnabled(enabled); DBG("  - statsButton enabled: " << (statsButton.isEnabled() ? "true" : "false"));
     channelViewButton.setEnabled(enabled); DBG("  - channelViewButton enabled: " << (channelViewButton.isEnabled() ? "true" : "false"));
     qualityButton.setEnabled(enabled); DBG("  - qualityButton enabled: " << (qualityButton.isEnabled() ? "true" : "false"));
-    statsDisplay.setEnabled(enabled); DBG("  - statsDisplay enabled: " << (statsDisplay.isEnabled() ? "true" : "false"));
+    if (statsPresenter != nullptr)
+    {
+        statsPresenter->setDisplayEnabled(enabled);
+        DBG("  - statsDisplay enabled: " << (statsPresenter->getDisplay().isEnabled() ? "true" : "false"));
+    }
     DBG("ControlPanel::updateGeneralButtonStates() - END");
 }
 
@@ -928,27 +601,6 @@ void ControlPanel::updateQualityButtonText()
         qualityButton.setButtonText(Config::qualityMediumText);
     else
         qualityButton.setButtonText(Config::qualityLowText);
-}
-
-void ControlPanel::drawReducedQualityWaveform(juce::Graphics& g, int channel, int pixelsPerSample)
-{
-    auto* audioPlayer = owner.getAudioPlayer();
-    auto audioLength = audioPlayer->getThumbnail().getTotalLength();
-    if (audioLength <= 0.0) return;
-
-    auto width = waveformBounds.getWidth();
-    auto height = waveformBounds.getHeight();
-    auto centerY = waveformBounds.getCentreY();
-    for (int x = 0; x < width; x += pixelsPerSample)
-    {
-        auto proportion = (double)x / (double)width;
-        auto time = proportion * audioLength;
-        float minVal, maxVal;
-        audioPlayer->getThumbnail().getApproximateMinMax(time, time + (audioLength / width) * pixelsPerSample, channel, minVal, maxVal);
-        auto topY = centerY - (maxVal * height * 0.5f);
-        auto bottomY = centerY - (minVal * height * 0.5f);
-        g.drawVerticalLine(waveformBounds.getX() + x, topY, bottomY);
-    }
 }
 
 void ControlPanel::textEditorTextChanged (juce::TextEditor& editor) {
@@ -1076,7 +728,15 @@ void ControlPanel::textEditorFocusLost (juce::TextEditor& editor) {
 /**
  * @brief Toggles the visibility of the statistics display.
  */
-void ControlPanel::toggleStats() { statsButton.triggerClick(); }
+void ControlPanel::toggleStats()
+{
+    if (statsPresenter == nullptr)
+        return;
+
+    statsPresenter->toggleVisibility();
+    statsButton.setToggleState(statsPresenter->isShowingStats(), juce::dontSendNotification);
+    updateComponentStates();
+}
 
 /**
  * @brief Triggers the quality button's action, cycling through quality settings.
@@ -1125,17 +785,13 @@ double ControlPanel::parseTime(const juce::String& timeString) {
  * @param color The color of the text.
  */
 void ControlPanel::setStatsDisplayText(const juce::String& text, juce::Colour color) {
-    statsDisplay.setText(text, juce::dontSendNotification);
-    statsDisplay.setColour(juce::TextEditor::textColourId, color);
+    if (statsPresenter != nullptr)
+        statsPresenter->setDisplayText(text, color);
 }
 
-/**
- * @brief Updates the stats display with dynamic audio statistics.
- * @param statsText The formatted string containing the dynamic statistics.
- */
-void ControlPanel::updateStatsDisplay(const juce::String& statsText) {
-    statsDisplay.setText(statsText, juce::dontSendNotification);
-    statsDisplay.setColour(juce::TextEditor::textColourId, Config::statsDisplayTextColour);
+void ControlPanel::updateStatsFromAudio() {
+    if (statsPresenter != nullptr)
+        statsPresenter->updateStats();
 }
 void ControlPanel::ensureLoopOrder() {
     if (loopInPosition > loopOutPosition) {
@@ -1144,8 +800,8 @@ void ControlPanel::ensureLoopOrder() {
 }
 
 void ControlPanel::setShouldShowStats(bool shouldShowStatsParam) {
-    showStats = shouldShowStatsParam;
-    resized();
+    if (statsPresenter != nullptr)
+        statsPresenter->setShouldShowStats(shouldShowStatsParam);
 }
 
 void ControlPanel::setTotalTimeStaticString(const juce::String& timeString) {
@@ -1175,7 +831,11 @@ AudioPlayer& ControlPanel::getAudioPlayer() const
     return *owner.getAudioPlayer();
 }
 
-// juce::TextEditor& ControlPanel::getStatsDisplay() { return statsDisplay; } // This was the inline definition
+juce::TextEditor& ControlPanel::getStatsDisplay()
+{
+    jassert(statsPresenter != nullptr);
+    return statsPresenter->getDisplay();
+}
 
 void ControlPanel::setLoopStart(int sampleIndex)
 {
@@ -1242,5 +902,3 @@ void ControlPanel::mouseExit(const juce::MouseEvent& event)
 {
     mouseHandler->mouseExit(event);
 }
-
-

@@ -4,6 +4,7 @@
 #include "AudioPlayer.h"
 #include "ControlPanel.h"
 #include "AppEnums.h"
+#include "Config.h"
 
 KeybindHandler::KeybindHandler(MainComponent& mainComponentIn,
                                AudioPlayer& audioPlayerIn,
@@ -56,7 +57,7 @@ bool KeybindHandler::handlePlaybackKeybinds(const juce::KeyPress& key)
         audioPlayer.togglePlayStop();
         return true;
     }
-    constexpr double seekStepSeconds = 5.0;
+    constexpr double seekStepSeconds = Config::keyboardSkipAmountSeconds;
     if (key.getKeyCode() == juce::KeyPress::leftKey)
     {
         // Why: Provide quick, predictable scrubbing in fixed steps.

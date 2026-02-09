@@ -1,7 +1,6 @@
 #include "MainComponent.h"
 #include "ControlPanel.h"
 #include "Config.h"
-#include <cmath> // For std::abs
 #include "KeybindHandler.h"
 
 MainComponent::MainComponent()
@@ -32,8 +31,7 @@ MainComponent::MainComponent()
             controlPanel->updateComponentStates();
             
             // Calculate and display dynamic statistics
-            juce::String stats = buildStatsString();
-            controlPanel->updateStatsDisplay(stats);
+            controlPanel->updateStatsFromAudio();
             // Further setup for testing can be done via controlPanel
         }
         else
@@ -139,8 +137,7 @@ void MainComponent::openButtonClicked()
                 controlPanel->updateComponentStates();
 
                 // Calculate and display dynamic statistics
-                juce::String stats = buildStatsString();
-                controlPanel->updateStatsDisplay(stats);
+                controlPanel->updateStatsFromAudio();
 
                 if (controlPanel->shouldAutoplay())
                    audioPlayer->togglePlayStop();
@@ -188,42 +185,4 @@ juce::String MainComponent::formatTime(double seconds) {
   int secs = ((int)seconds) % 60;
   int milliseconds = (int)((seconds - (int)seconds) * 1000.0);
   return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, secs, milliseconds);
-}
-
-/**
- * @brief Builds a string containing various audio statistics.
- * @return A juce::String with formatted audio statistics.
- */
-juce::String MainComponent::buildStatsString()
-{
-    juce::String stats;
-    auto* thumbnail = &audioPlayer->getThumbnail();
-    auto* reader = audioPlayer->getAudioFormatReader();
-
-    if (thumbnail && thumbnail->getTotalLength() > 0.0 && reader)
-    {
-        stats << "File: " << audioPlayer->getLoadedFile().getFileName() << "\n";
-        stats << "Samples Loaded: " << reader->lengthInSamples << "\n";
-        stats << "Sample Rate: " << reader->sampleRate << " Hz\n";
-        stats << "Channels: " << thumbnail->getNumChannels() << "\n";
-        stats << "Length: " << formatTime(thumbnail->getTotalLength()) << "\n";
-
-        float minVal = 0.0f, maxVal = 0.0f;
-        thumbnail->getApproximateMinMax(0.0, thumbnail->getTotalLength(), 0, minVal, maxVal); // For channel 0
-        stats << "Approx Peak (Ch 0): " << juce::jmax(std::abs(minVal), std::abs(maxVal)) << "\n";
-        stats << "Min: " << minVal << ", Max: " << maxVal << "\n";
-
-        // If stereo, get stats for channel 1 as well
-        if (thumbnail->getNumChannels() > 1)
-        {
-            thumbnail->getApproximateMinMax(0.0, thumbnail->getTotalLength(), 1, minVal, maxVal); // For channel 1
-            stats << "Approx Peak (Ch 1): " << juce::jmax(std::abs(minVal), std::abs(maxVal)) << "\n";
-            stats << "Min: " << minVal << ", Max: " << maxVal << "\n";
-        }
-    }
-    else
-    {
-        stats << "No file loaded or error reading audio.";
-    }
-    return stats;
 }
