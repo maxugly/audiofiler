@@ -193,13 +193,6 @@ void AudioPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
 
     // Request the next block of audio from the transport source
     transportSource.getNextAudioBlock(bufferToFill);
-
-    // If the stream has finished and looping is enabled, reset position to 0
-    if (transportSource.hasStreamFinished() && isLooping())
-    {
-        transportSource.setPosition(0);
-        // The transportSource will automatically restart playback if it was previously playing.
-    }
 }
 
 /**

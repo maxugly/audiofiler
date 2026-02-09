@@ -96,3 +96,16 @@ userFrustration
 *.pdf
 *.sty
 Doxyfile
+docs/html/clipboard.js
+*.js
+*.html
+*.css
+*.svg
+/latex
+*.log
+
+
+/.vscode
+/docs/latex
+/docs
+/PROGRESS_CHECKLIST.md

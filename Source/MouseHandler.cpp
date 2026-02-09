@@ -213,7 +213,34 @@ void MouseHandler::seekToMousePosition(int x)
     const auto waveformBounds = owner.getWaveformBounds();
     float proportion = (float)(x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
     double time = proportion * audioLength;
-    audioPlayer.getTransportSource().setPosition(time);
+
+    double effectiveLoopIn = owner.getLoopInPosition();
+    if (effectiveLoopIn < 0.0)
+    {
+        effectiveLoopIn = 0.0;
+    }
+
+    double effectiveLoopOut = owner.getLoopOutPosition();
+    if (effectiveLoopOut < 0.0 || effectiveLoopOut > audioLength) // If loopOut is not set or beyond file length, use file length
+    {
+        effectiveLoopOut = audioLength;
+    }
+    
+    // Ensure loopIn is not greater than loopOut
+    if (effectiveLoopIn > effectiveLoopOut) {
+        effectiveLoopIn = 0.0; // Fallback to 0 if invalid
+        effectiveLoopOut = audioLength; // Fallback to full length if invalid
+    }
+
+
+    if (time < effectiveLoopIn || time > effectiveLoopOut)
+    {
+        audioPlayer.getTransportSource().setPosition(effectiveLoopIn);
+    }
+    else
+    {
+        audioPlayer.getTransportSource().setPosition(time);
+    }
 }
 
 void MouseHandler::clearTextEditorFocusIfNeeded(const juce::Point<int>& clickPosition)
