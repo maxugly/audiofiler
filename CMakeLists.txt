@@ -62,6 +62,16 @@ target_sources(Sorta PRIVATE
         Source/AppEnums.h
         Source/SilenceDetector.h
         Source/SilenceDetector.cpp
+        Source/LayoutManager.h
+        Source/LayoutManager.cpp
+        Source/WaveformRenderer.h
+        Source/WaveformRenderer.cpp
+        Source/KeybindHandler.h
+        Source/KeybindHandler.cpp
+        Source/LoopPresenter.h
+        Source/LoopPresenter.cpp
+        Source/StatsPresenter.h
+        Source/StatsPresenter.cpp
         Source/MouseHandler.h
         Source/MouseHandler.cpp
 )

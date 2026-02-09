@@ -14,6 +14,7 @@ class MainComponent; // Forward declaration
 class LayoutManager;
 class WaveformRenderer;
 class StatsPresenter;
+class LoopPresenter;
 
 /**
  * @file ControlPanel.h
@@ -70,8 +71,7 @@ private:
  * `MainComponent` and `AudioPlayer`. It also integrates a `SilenceDetector` for
  * automatic loop point setting.
  */
-class ControlPanel : public juce::Component,
-                     public juce::TextEditor::Listener
+class ControlPanel : public juce::Component
 {
 public:
     //==============================================================================
@@ -181,24 +181,24 @@ public:
     /** @brief Gets the current loop-in position.
      *  @return The loop-in position in seconds.
      */
-    double getLoopInPosition() const { return loopInPosition; }
+    double getLoopInPosition() const;
 
     /** @brief Gets the current loop-out position.
      *  @return The loop-out position in seconds.
      */
-    double getLoopOutPosition() const { return loopOutPosition; }
+    double getLoopOutPosition() const;
 
     /**
      * @brief Sets the loop-in position.
      * @param pos The new loop-in position in seconds.
      */
-    void setLoopInPosition(double pos) { loopInPosition = pos; }
+    void setLoopInPosition(double pos);
 
     /**
      * @brief Sets the loop-out position.
      * @param pos The new loop-out position in seconds.
      */
-    void setLoopOutPosition(double pos) { loopOutPosition = pos; }
+    void setLoopOutPosition(double pos);
 
     /**
      * @brief Ensures that `loopInPosition` is logically before or at `loopOutPosition`.
@@ -457,38 +457,6 @@ private:
      *  @{
      */
 
-    /**
-     * @brief Callback for when a listened-to TextEditor's text changes.
-     *
-     * Used for real-time validation or preview updates as the user types.
-     * @param editor The TextEditor that triggered the event.
-     */
-    void textEditorTextChanged(juce::TextEditor& editor) override;
-
-    /**
-     * @brief Callback for when the return key is pressed in a TextEditor.
-     *
-     * Typically used to finalize input from the user.
-     * @param editor The TextEditor that triggered the event.
-     */
-    void textEditorReturnKeyPressed(juce::TextEditor& editor) override;
-
-    /**
-     * @brief Callback for when the escape key is pressed in a TextEditor.
-     *
-     * Often used to cancel input or revert to a previous value.
-     * @param editor The TextEditor that triggered the event.
-     */
-    void textEditorEscapeKeyPressed(juce::TextEditor& editor) override;
-
-    /**
-     * @brief Callback for when a TextEditor loses focus.
-     *
-     * Typically used to finalize input, similar to the return key being pressed.
-     * @param editor The TextEditor that triggered the event.
-     */
-    void textEditorFocusLost(juce::TextEditor& editor) override;
-
     /** @} */
     //==============================================================================
 
@@ -505,6 +473,7 @@ private:
     std::unique_ptr<LayoutManager> layoutManager;   ///< Extracted helper that owns layout calculations.
     std::unique_ptr<WaveformRenderer> waveformRenderer; ///< Handles waveform and overlay painting.
     std::unique_ptr<StatsPresenter> statsPresenter; ///< Handles stats building, layout, and presentation.
+    std::unique_ptr<LoopPresenter> loopPresenter;   ///< Owns the loop editors and loop position logic.
 
     // --- UI Components ---
     juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton; ///< Standard TextButtons for various actions.
@@ -523,8 +492,6 @@ private:
     AppEnums::ThumbnailQuality currentQuality = AppEnums::ThumbnailQuality::Low; ///< The currently selected waveform thumbnail quality.
     
     bool shouldLoop = false;                    ///< Flag indicating if audio playback should loop.
-    double loopInPosition = -1.0;               ///< The start time of the loop region in seconds (-1.0 means unset).
-    double loopOutPosition = -1.0;              ///< The end time of the loop region in seconds (-1.0 means unset).
 
     int bottomRowTopY = 0;                      ///< Y-coordinate for the top edge of the bottom row of controls.
     int playbackLeftTextX = 0, playbackRightTextX = 0, playbackCenterTextX = 0; ///< X-coordinates for various playback time display positions.
@@ -626,13 +593,6 @@ private:
     /** @name Private Helper Methods - Utilities
      *  @{
      */
-
-    /**
-     * @brief Parses a time string (e.g., "00:01:23.456") into a double representing seconds.
-     * @param timeString The string to parse.
-     * @return The time in seconds, or 0.0 if parsing fails.
-     */
-    double parseTime(const juce::String& timeString);
 
     /** @} */
     //==============================================================================

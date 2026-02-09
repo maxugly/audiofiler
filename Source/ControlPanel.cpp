@@ -4,6 +4,7 @@
 #include "Config.h"
 #include "LayoutManager.h"
 #include "StatsPresenter.h"
+#include "LoopPresenter.h"
 #include "WaveformRenderer.h"
 #include <cmath> // For std::abs
 
@@ -39,6 +40,7 @@ ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent
     initialiseLoopButtons();
     initialiseClearButtons();
     initialiseLoopEditors();
+    loopPresenter = std::make_unique<LoopPresenter>(*this, *silenceDetector, loopInEditor, loopOutEditor);
     finaliseSetup();
 
     setMouseCursor(juce::MouseCursor::CrosshairCursor);
@@ -454,7 +456,6 @@ void ControlPanel::initialiseLoopEditors()
     loopInEditor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
     loopInEditor.setMultiLine(false); // Single line input
     loopInEditor.setReturnKeyStartsNewLine(false); // Enter key applies value
-    loopInEditor.addListener(this); // ControlPanel listens for changes
     loopInEditor.setWantsKeyboardFocus(true); // Can receive keyboard focus
 
     addAndMakeVisible(loopOutEditor);
@@ -465,7 +466,6 @@ void ControlPanel::initialiseLoopEditors()
     loopOutEditor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
     loopOutEditor.setMultiLine(false); // Single line input
     loopOutEditor.setReturnKeyStartsNewLine(false); // Enter key applies value
-    loopOutEditor.addListener(this); // ControlPanel listens for changes
     loopOutEditor.setWantsKeyboardFocus(true); // Can receive keyboard focus
 
     // Add TextEditors managed by SilenceDetector
@@ -512,10 +512,32 @@ void ControlPanel::updatePlayButtonText(bool isPlaying)
     playStopButton.setButtonText(isPlaying ? Config::stopButtonText : Config::playButtonText);
 }
 
+double ControlPanel::getLoopInPosition() const
+{
+    return loopPresenter != nullptr ? loopPresenter->getLoopInPosition() : -1.0;
+}
+
+double ControlPanel::getLoopOutPosition() const
+{
+    return loopPresenter != nullptr ? loopPresenter->getLoopOutPosition() : -1.0;
+}
+
+void ControlPanel::setLoopInPosition(double pos)
+{
+    if (loopPresenter != nullptr)
+        loopPresenter->setLoopInPosition(pos);
+}
+
+void ControlPanel::setLoopOutPosition(double pos)
+{
+    if (loopPresenter != nullptr)
+        loopPresenter->setLoopOutPosition(pos);
+}
+
 void ControlPanel::updateLoopLabels()
 {
-    loopInEditor.setText(formatTime(getLoopInPosition()), juce::dontSendNotification); // Use ControlPanel's formatTime
-    loopOutEditor.setText(formatTime(getLoopOutPosition()), juce::dontSendNotification); // Use ControlPanel's formatTime
+    if (loopPresenter != nullptr)
+        loopPresenter->updateLoopLabels();
 }
 
 void ControlPanel::updateComponentStates()
@@ -603,128 +625,6 @@ void ControlPanel::updateQualityButtonText()
         qualityButton.setButtonText(Config::qualityLowText);
 }
 
-void ControlPanel::textEditorTextChanged (juce::TextEditor& editor) {
-    DBG("Text Editor Text Changed.");
-    // Handles loop editors
-    DBG("  Loop Editor Text Changed: " << editor.getText());
-    double totalLength = owner.getAudioPlayer()->getThumbnail().getTotalLength();
-    double newPosition = parseTime(editor.getText());
-
-    if (newPosition >= 0.0 && newPosition <= totalLength) {
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor); // Valid and in range
-    } else if (newPosition == -1.0) {
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor); // Completely invalid format
-    } else {
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor); // Valid format but out of range
-    }
-}
-
-void ControlPanel::textEditorReturnKeyPressed (juce::TextEditor& editor) {
-    DBG("Text Editor Return Key Pressed.");
-    if (&editor == &loopInEditor) {
-        DBG("  Loop In Editor: Return Key Pressed");
-
-        double newPosition = parseTime(editor.getText());
-        if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
-            if (getLoopOutPosition() > -1.0 && newPosition > getLoopOutPosition()) {
-                            editor.setText(formatTime(getLoopInPosition()), juce::dontSendNotification);
-                            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
-                        } else {
-                            setLoopInPosition(newPosition);
-                            DBG("    Loop In position set to: " << getLoopInPosition());
-                            updateLoopButtonColors();
-                            silenceDetector->setIsAutoCutInActive(false); // User manually set loop in, so auto-cut is no longer active
-                            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-                            repaint();
-                        }
-                    } else {
-                        editor.setText(formatTime(getLoopInPosition()), juce::dontSendNotification);
-                        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
-                    }
-                } else if (&editor == &loopOutEditor) {
-                    DBG("  Loop Out Editor: Return Key Pressed");
-
-                    double newPosition = parseTime(editor.getText());
-                    if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
-                        if (getShouldLoop() && owner.getAudioPlayer()->getTransportSource().getCurrentPosition() >= getLoopOutPosition())
-                        {
-                            owner.getAudioPlayer()->getTransportSource().setPosition(getLoopInPosition());
-                        }
-                        if (getLoopInPosition() > -1.0 && newPosition < getLoopInPosition()) {
-                            editor.setText(formatTime(getLoopOutPosition()), juce::dontSendNotification);
-                            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
-                        } else {
-                            setLoopOutPosition(newPosition);
-                            DBG("    Loop Out position set to: " << getLoopOutPosition());
-                            updateLoopButtonColors();
-                            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-                            repaint();
-                        }
-                    } else {
-                        editor.setText(formatTime(getLoopOutPosition()), juce::dontSendNotification);
-                        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
-                    }
-                }
-    editor.giveAwayKeyboardFocus();
-}
-
-void ControlPanel::textEditorEscapeKeyPressed (juce::TextEditor& editor) {
-    DBG("Text Editor Escape Key Pressed.");
-    if (&editor == &loopInEditor) {
-        DBG("  Loop In Editor: Escape Key Pressed");
-        editor.setText(formatTime(getLoopInPosition()), juce::dontSendNotification);
-    } else if (&editor == &loopOutEditor) {
-        DBG("  Loop Out Editor: Escape Key Pressed");
-        editor.setText(formatTime(getLoopOutPosition()), juce::dontSendNotification);
-    }
-    editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-    editor.giveAwayKeyboardFocus();
-}
-
-void ControlPanel::textEditorFocusLost (juce::TextEditor& editor) {
-    DBG("Text Editor Focus Lost.");
-    if (&editor == &loopInEditor) {
-        DBG("  Loop In Editor: Focus Lost");
-
-        double newPosition = parseTime(editor.getText());
-        if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
-            if (getLoopOutPosition() > -1.0 && newPosition > getLoopOutPosition()) {
-                            editor.setText(formatTime(getLoopInPosition()), juce::dontSendNotification);
-                            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
-                        } else {
-                            setLoopInPosition(newPosition);
-                            DBG("    Loop In position set to: " << getLoopInPosition());
-                            updateLoopButtonColors();
-                            silenceDetector->setIsAutoCutInActive(false); // User manually set loop in, so auto-cut is no longer active
-                            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-                            repaint();
-                        }
-                    } else {
-                        editor.setText(formatTime(getLoopInPosition()), juce::dontSendNotification);
-                        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
-                        repaint();
-                    }
-                } else if (&editor == &loopOutEditor) {
-                    DBG("  Loop Out Editor: Focus Lost");
-
-                    double newPosition = parseTime(editor.getText());
-                    if (newPosition >= 0.0 && newPosition <= owner.getAudioPlayer()->getThumbnail().getTotalLength()) {
-                        if (getLoopInPosition() > -1.0 && newPosition < getLoopInPosition()) {
-                            editor.setText(formatTime(getLoopOutPosition()), juce::dontSendNotification);
-                            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
-                        } else {
-                            setLoopOutPosition(newPosition);
-                            DBG("    Loop Out position set to: " << getLoopOutPosition());
-                            updateLoopButtonColors();
-                            editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-                            repaint();
-                        }
-                    } else {
-                        editor.setText(formatTime(getLoopOutPosition()), juce::dontSendNotification);
-                        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
-                    }
-                }
-}
 /**
  * @brief Toggles the visibility of the statistics display.
  */
@@ -773,12 +673,6 @@ void ControlPanel::clearLoopOut() { clearLoopOutButton.triggerClick(); }
  * @param timeString The time string to parse.
  * @return The time in seconds, or -1.0 if parsing fails.
  */
-double ControlPanel::parseTime(const juce::String& timeString) {
-    auto parts = juce::StringArray::fromTokens(timeString, ":", "");
-    if (parts.size() != 4) return -1.0;
-    return parts[0].getIntValue() * 3600.0 + parts[1].getIntValue() * 60.0 + parts[2].getIntValue() + parts[3].getIntValue() / 1000.0;
-}
-
 /**
  * @brief Sets the text in the stats display box.
  * @param text The text to display.
@@ -794,9 +688,8 @@ void ControlPanel::updateStatsFromAudio() {
         statsPresenter->updateStats();
 }
 void ControlPanel::ensureLoopOrder() {
-    if (loopInPosition > loopOutPosition) {
-        std::swap(loopInPosition, loopOutPosition);
-    }
+    if (loopPresenter != nullptr)
+        loopPresenter->ensureLoopOrder();
 }
 
 void ControlPanel::setShouldShowStats(bool shouldShowStatsParam) {
@@ -839,28 +732,14 @@ juce::TextEditor& ControlPanel::getStatsDisplay()
 
 void ControlPanel::setLoopStart(int sampleIndex)
 {
-    AudioPlayer& audioPlayer = *owner.getAudioPlayer();
-    if (audioPlayer.getAudioFormatReader() != nullptr)
-    {
-        double sampleRate = audioPlayer.getAudioFormatReader()->sampleRate;
-        setLoopInPosition((double)sampleIndex / sampleRate);
-        ensureLoopOrder();
-        updateLoopLabels();
-        repaint();
-    }
+    if (loopPresenter != nullptr)
+        loopPresenter->setLoopStartFromSample(sampleIndex);
 }
 
 void ControlPanel::setLoopEnd(int sampleIndex)
 {
-    AudioPlayer& audioPlayer = *owner.getAudioPlayer();
-    if (audioPlayer.getAudioFormatReader() != nullptr)
-    {
-        double sampleRate = audioPlayer.getAudioFormatReader()->sampleRate;
-        setLoopOutPosition((double)sampleIndex / sampleRate);
-        ensureLoopOrder();
-        updateLoopLabels();
-        repaint();
-    }
+    if (loopPresenter != nullptr)
+        loopPresenter->setLoopEndFromSample(sampleIndex);
 }
 
 juce::String ControlPanel::formatTime(double seconds) const
