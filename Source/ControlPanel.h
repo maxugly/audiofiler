@@ -15,6 +15,7 @@ class LayoutManager;
 class WaveformRenderer;
 class StatsPresenter;
 class LoopPresenter;
+class ControlStatePresenter;
 
 /**
  * @file ControlPanel.h
@@ -450,6 +451,7 @@ public:
 
 private:
     friend class LayoutManager;
+    friend class ControlStatePresenter;
 
     //==============================================================================
     /** @name juce::TextEditor::Listener Overrides (Private)
@@ -474,6 +476,7 @@ private:
     std::unique_ptr<WaveformRenderer> waveformRenderer; ///< Handles waveform and overlay painting.
     std::unique_ptr<StatsPresenter> statsPresenter; ///< Handles stats building, layout, and presentation.
     std::unique_ptr<LoopPresenter> loopPresenter;   ///< Owns the loop editors and loop position logic.
+    std::unique_ptr<ControlStatePresenter> controlStatePresenter; ///< Centralises component enable/visibility logic.
 
     // --- UI Components ---
     juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton; ///< Standard TextButtons for various actions.
@@ -561,19 +564,6 @@ private:
     /** @name Private Helper Methods - State Updates
      *  @{
      */
-
-    /**
-     * @brief Updates the enabled state of general buttons based on global conditions (e.g., audio loaded).
-     * @param enabled True to enable the buttons, false to disable.
-     */
-    void updateGeneralButtonStates(bool enabled);
-
-    /**
-     * @brief Updates the enabled and visible states of controls related to "Cut Mode".
-     * @param isCutModeActive True if cut mode is active.
-     * @param enabled True to enable the buttons, false to disable.
-     */
-    void updateCutModeControlStates(bool isCutModeActive, bool enabled);
 
     /** @brief Updates the text displayed on the quality button based on the `currentQuality` setting. */
     void updateQualityButtonText();

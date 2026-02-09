@@ -5,6 +5,7 @@
 #include "LayoutManager.h"
 #include "StatsPresenter.h"
 #include "LoopPresenter.h"
+#include "ControlStatePresenter.h"
 #include "WaveformRenderer.h"
 #include <cmath> // For std::abs
 
@@ -41,6 +42,7 @@ ControlPanel::ControlPanel(MainComponent& ownerComponent) : owner(ownerComponent
     initialiseClearButtons();
     initialiseLoopEditors();
     loopPresenter = std::make_unique<LoopPresenter>(*this, *silenceDetector, loopInEditor, loopOutEditor);
+    controlStatePresenter = std::make_unique<ControlStatePresenter>(*this);
     finaliseSetup();
 
     setMouseCursor(juce::MouseCursor::CrosshairCursor);
@@ -542,13 +544,8 @@ void ControlPanel::updateLoopLabels()
 
 void ControlPanel::updateComponentStates()
 {
-    DBG("ControlPanel::updateComponentStates() - START");
-    const bool enabled = owner.getAudioPlayer()->getThumbnail().getTotalLength() > 0.0;
-    DBG("  - enabled (file loaded): " << (enabled ? "true" : "false"));
-    DBG("  - m_isCutModeActive: " << (m_isCutModeActive ? "true" : "false")); // Use m_isCutModeActive
-    updateGeneralButtonStates(enabled);
-    updateCutModeControlStates(m_isCutModeActive, enabled); // Use SilenceDetector's states
-    DBG("ControlPanel::updateComponentStates() - END");
+    if (controlStatePresenter != nullptr)
+        controlStatePresenter->refreshStates();
 }
 
 /**
@@ -556,64 +553,6 @@ void ControlPanel::updateComponentStates()
  * @param bounds The current bounds of the control panel.
  * @param rowHeight The calculated height for each button row.
  */
-
-void ControlPanel::updateGeneralButtonStates(bool enabled)
-{
-    DBG("ControlPanel::updateGeneralButtonStates() - START (parent enabled: " << (enabled ? "true" : "false") << ")");
-    openButton.setEnabled(true); DBG("  - openButton enabled: " << (openButton.isEnabled() ? "true" : "false"));
-    exitButton.setEnabled(true); DBG("  - exitButton enabled: " << (exitButton.isEnabled() ? "true" : "false"));
-    loopButton.setEnabled(true); DBG("  - loopButton enabled: " << (loopButton.isEnabled() ? "true" : "false"));
-    autoplayButton.setEnabled(true); DBG("  - autoplayButton enabled: " << (autoplayButton.isEnabled() ? "true" : "false"));
-    cutButton.setEnabled(true); DBG("  - cutButton enabled: " << (cutButton.isEnabled() ? "true" : "false"));
-
-    playStopButton.setEnabled(enabled); DBG("  - playStopButton enabled: " << (playStopButton.isEnabled() ? "true" : "false"));
-    modeButton.setEnabled(enabled); DBG("  - modeButton enabled: " << (modeButton.isEnabled() ? "true" : "false"));
-    statsButton.setEnabled(enabled); DBG("  - statsButton enabled: " << (statsButton.isEnabled() ? "true" : "false"));
-    channelViewButton.setEnabled(enabled); DBG("  - channelViewButton enabled: " << (channelViewButton.isEnabled() ? "true" : "false"));
-    qualityButton.setEnabled(enabled); DBG("  - qualityButton enabled: " << (qualityButton.isEnabled() ? "true" : "false"));
-    if (statsPresenter != nullptr)
-    {
-        statsPresenter->setDisplayEnabled(enabled);
-        DBG("  - statsDisplay enabled: " << (statsPresenter->getDisplay().isEnabled() ? "true" : "false"));
-    }
-    DBG("ControlPanel::updateGeneralButtonStates() - END");
-}
-
-void ControlPanel::updateCutModeControlStates(bool isCutModeActive, bool enabled)
-{
-    // The parameter isCutModeActive is now correct, as it's passed from updateComponentStates where m_isCutModeActive is used.
-    DBG("ControlPanel::updateCutModeControlStates() - START (isCutModeActive parameter: " << (isCutModeActive ? "true" : "false") << ", parent enabled: " << (enabled ? "true" : "false") << ")");
-    // Manual Loop In controls (now always enabled if cut mode is active)
-    loopInButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutInActive()); DBG("  - loopInButton enabled: " << (loopInButton.isEnabled() ? "true" : "false"));
-    loopInEditor.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutInActive()); DBG("  - loopInEditor enabled: " << (loopInEditor.isEnabled() ? "true" : "false"));
-    clearLoopInButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutInActive()); DBG("  - clearLoopInButton enabled: " << (clearLoopInButton.isEnabled() ? "true" : "false"));
-
-    // Manual Loop Out controls (now always enabled if cut mode is active)
-    loopOutButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutOutActive()); DBG("  - loopOutButton enabled: " << (loopOutButton.isEnabled() ? "true" : "false"));
-    loopOutEditor.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutOutActive()); DBG("  - loopOutEditor enabled: " << (loopOutEditor.isEnabled() ? "true" : "false"));
-    clearLoopOutButton.setEnabled(enabled && isCutModeActive && !silenceDetector->getIsAutoCutOutActive()); DBG("  - clearLoopOutButton enabled: " << (clearLoopOutButton.isEnabled() ? "true" : "false"));
-
-    // Auto Cut In/Out Buttons (now always enabled if cut mode is active)
-    autoCutInButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutInButton enabled: " << (autoCutInButton.isEnabled() ? "true" : "false"));
-    autoCutOutButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutOutOutton enabled: " << (autoCutOutButton.isEnabled() ? "true" : "false"));
-
-    // Threshold Editors (now always enabled if cut mode is active)
-    silenceDetector->getInSilenceThresholdEditor().setEnabled(true); DBG("  - inSilenceThresholdEditor enabled: true");
-    silenceDetector->getOutSilenceThresholdEditor().setEnabled(true); DBG("  - outSilenceThresholdEditor enabled: true");
-
-    // Visibility remains the same
-    loopInButton.setVisible(isCutModeActive); DBG("  - loopInButton visible: " << (loopInButton.isVisible() ? "true" : "false"));
-    loopOutButton.setVisible(isCutModeActive); DBG("  - loopOutButton visible: " << (loopOutButton.isVisible() ? "true" : "false"));
-    loopInEditor.setVisible(isCutModeActive); DBG("  - loopInEditor visible: " << (loopInEditor.isVisible() ? "true" : "false"));
-    loopOutEditor.setVisible(isCutModeActive); DBG("  - loopOutEditor visible: " << (loopOutEditor.isVisible() ? "true" : "false"));
-    clearLoopInButton.setVisible(isCutModeActive); DBG("  - clearLoopInButton visible: " << (clearLoopInButton.isVisible() ? "true" : "false"));
-    clearLoopOutButton.setVisible(isCutModeActive); DBG("  - clearLoopOutButton visible: " << (clearLoopOutButton.isEnabled() ? "true" : "false")); // Fixed typo: was isVisible()
-    silenceDetector->getInSilenceThresholdEditor().setVisible(isCutModeActive); DBG("  - inSilenceThresholdEditor visible: " << (silenceDetector->getInSilenceThresholdEditor().isVisible() ? "true" : "false"));
-    silenceDetector->getOutSilenceThresholdEditor().setVisible(isCutModeActive); DBG("  - outSilenceThresholdEditor visible: " << (silenceDetector->getOutSilenceThresholdEditor().isVisible() ? "true" : "false"));
-    autoCutInButton.setVisible(isCutModeActive); DBG("  - autoCutInButton visible: " << (autoCutInButton.isVisible() ? "true" : "false"));
-    autoCutOutButton.setVisible(isCutModeActive); DBG("  - autoCutOutButton visible: " << (autoCutOutButton.isVisible() ? "true" : "false"));
-    DBG("ControlPanel::updateCutModeControlStates() - END");
-}
 
 void ControlPanel::updateQualityButtonText()
 {
