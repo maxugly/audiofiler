@@ -48,6 +48,9 @@ void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float thre
             {
                 ownerPanel.setLoopStart(sample);
                 SilenceDetectionLogger::logLoopStartSet(ownerPanel, sample, reader->sampleRate);
+                // Move playhead to the new loop-in position in cut mode
+                if (ownerPanel.isCutModeActive())
+                    audioPlayer.getTransportSource().setPosition(ownerPanel.getLoopInPosition());
                 resumeIfNeeded(audioPlayer, wasPlaying);
                 return;
             }
