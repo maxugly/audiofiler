@@ -62,14 +62,15 @@ bool KeybindHandler::handlePlaybackKeybinds(const juce::KeyPress& key)
     {
         // Why: Provide quick, predictable scrubbing in fixed steps.
         const double current = audioPlayer.getTransportSource().getCurrentPosition();
-        audioPlayer.getTransportSource().setPosition(juce::jmax(0.0, current - seekStepSeconds));
+        const double loopIn = controlPanel.getLoopInPosition();
+        audioPlayer.getTransportSource().setPosition(juce::jmax(loopIn, current - seekStepSeconds));
         return true;
     }
     if (key.getKeyCode() == juce::KeyPress::rightKey)
     {
         const double current = audioPlayer.getTransportSource().getCurrentPosition();
-        const double maxLength = audioPlayer.getThumbnail().getTotalLength();
-        audioPlayer.getTransportSource().setPosition(juce::jlimit(0.0, maxLength, current + seekStepSeconds));
+        const double loopOut = controlPanel.getLoopOutPosition();
+        audioPlayer.getTransportSource().setPosition(juce::jlimit(0.0, loopOut, current + seekStepSeconds));
         return true;
     }
     return false;
