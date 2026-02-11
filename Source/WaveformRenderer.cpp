@@ -437,9 +437,34 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
     g.setColour(juce::Colours::black);
     g.fillRect(popupBounds);
 
-    // Draw zoomed waveform
+    // --- Draw zoomed waveform based on channel mode ---
     g.setColour(Config::waveformColor);
-    audioPlayer.getThumbnail().drawChannels(g, popupBounds, startTime, endTime, 1.0f);
+    const auto channelMode = controlPanel.getChannelViewMode();
+    const int numChannels = audioPlayer.getThumbnail().getNumChannels();
+
+    if (channelMode == AppEnums::ChannelViewMode::Mono || numChannels == 1)
+    {
+        // Mono: Use full height
+        audioPlayer.getThumbnail().drawChannel(g, popupBounds, startTime, endTime, 0, 1.0f);
+        
+        // Zero Line
+        g.setColour(juce::Colours::grey.withAlpha(0.3f));
+        g.drawHorizontalLine(popupBounds.getCentreY(), (float)popupBounds.getX(), (float)popupBounds.getRight());
+    }
+    else
+    {
+        // Stereo: Split height
+        auto topBounds = popupBounds.withHeight(popupBounds.getHeight() / 2);
+        auto bottomBounds = popupBounds.withTop(topBounds.getBottom()).withHeight(popupBounds.getHeight() / 2);
+        
+        audioPlayer.getThumbnail().drawChannel(g, topBounds, startTime, endTime, 0, 1.0f);
+        audioPlayer.getThumbnail().drawChannel(g, bottomBounds, startTime, endTime, 1, 1.0f);
+
+        // Zero Lines
+        g.setColour(juce::Colours::grey.withAlpha(0.3f));
+        g.drawHorizontalLine(topBounds.getCentreY(), (float)topBounds.getX(), (float)topBounds.getRight());
+        g.drawHorizontalLine(bottomBounds.getCentreY(), (float)bottomBounds.getX(), (float)bottomBounds.getRight());
+    }
 
     // --- Boundary Shadows ---
     auto drawShadow = [&](double startT, double endT, juce::Colour color) {
