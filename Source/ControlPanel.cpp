@@ -147,6 +147,29 @@ void ControlPanel::updatePlayButtonText(bool isPlaying)
     playStopButton.setButtonText(isPlaying ? ControlPanelCopy::stopButtonText() : ControlPanelCopy::playButtonText());
 }
 
+void ControlPanel::setZKeyDown(bool isDown)
+{
+    if (m_isZKeyDown == isDown)
+        return;
+
+    m_isZKeyDown = isDown;
+    
+    if (m_isZKeyDown)
+    {
+        // If not already zooming something, default to LoopIn
+        if (m_activeZoomPoint == ActiveZoomPoint::None)
+            m_activeZoomPoint = ActiveZoomPoint::In;
+    }
+    else
+    {
+        // On release, we only stop zooming if we aren't hovering/focusing a loop editor
+        // But for now, let's keep it simple: release 'z' -> no zoom unless we want to keep it on hover.
+        // The user said 'z' is a momentary switch, so let's prioritise that.
+        m_activeZoomPoint = ActiveZoomPoint::None;
+    }
+    repaint();
+}
+
 double ControlPanel::getLoopInPosition() const
 {
     return loopPresenter != nullptr ? loopPresenter->getLoopInPosition() : -1.0;

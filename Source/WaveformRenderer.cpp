@@ -399,11 +399,14 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
                                 ? controlPanel.getLoopInPosition() 
                                 : controlPanel.getLoopOutPosition();
 
-    // Calculate time range for 10x zoom
-    // 10x zoom means the popup shows 1/10th of the full audio length
-    const double timeRange = audioLength / (double)Config::zoomFactor;
+    // Calculate time range for dynamic zoom
+    const double timeRange = audioLength / (double)controlPanel.getZoomFactor();
     const double startTime = currentTime - (timeRange / 2.0);
     const double endTime = startTime + timeRange;
+
+    // Cache for MouseHandler
+    controlPanel.setZoomPopupBounds(popupBounds);
+    controlPanel.setZoomTimeRange(startTime, endTime);
 
     // Draw background
     g.setColour(juce::Colours::black.withAlpha(0.9f));

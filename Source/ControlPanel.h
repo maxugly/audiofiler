@@ -115,6 +115,18 @@ public:
     enum class ActiveZoomPoint { None, In, Out };
     ActiveZoomPoint getActiveZoomPoint() const { return m_activeZoomPoint; }
     void setActiveZoomPoint(ActiveZoomPoint point) { m_activeZoomPoint = point; repaint(); }
+
+    float getZoomFactor() const { return m_zoomFactor; }
+    void setZoomFactor(float factor) { m_zoomFactor = juce::jlimit(1.0f, 100.0f, factor); repaint(); }
+
+    bool isZKeyDown() const { return m_isZKeyDown; }
+    void setZKeyDown(bool isDown);
+
+    juce::Rectangle<int> getZoomPopupBounds() const { return m_zoomPopupBounds; }
+    void setZoomPopupBounds(juce::Rectangle<int> bounds) { m_zoomPopupBounds = bounds; }
+
+    std::pair<double, double> getZoomTimeRange() const { return m_zoomTimeRange; }
+    void setZoomTimeRange(double start, double end) { m_zoomTimeRange = {start, end}; }
     /** @} */
 
     //==============================================================================
@@ -527,6 +539,10 @@ private:
     float glowAlpha = 0.0f;                     ///< Alpha value for animation effects (e.g., pulsing lines).
     bool m_isCutModeActive = false;             ///< Flag indicating if Cut Mode is currently active.
     ActiveZoomPoint m_activeZoomPoint = ActiveZoomPoint::None; ///< Currently zoomed loop point.
+    float m_zoomFactor = 10.0f;                 ///< Dynamic zoom factor.
+    bool m_isZKeyDown = false;                  ///< State of the 'z' key.
+    juce::Rectangle<int> m_zoomPopupBounds;     ///< Cached bounds of the zoom popup.
+    std::pair<double, double> m_zoomTimeRange;  ///< Cached time range of the zoom popup.
 
     /** @} */
     //==============================================================================

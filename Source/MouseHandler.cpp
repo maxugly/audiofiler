@@ -81,6 +81,52 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
     // Why: Clicking on the waveform should defocus text fields so transport shortcuts keep working.
     clearTextEditorFocusIfNeeded(event.getPosition());
 
+    // --- ZOOM POPUP INTERACTION ---
+    if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
+    {
+        auto zoomBounds = owner.getZoomPopupBounds();
+        if (zoomBounds.contains(event.getPosition()))
+        {
+            auto timeRange = owner.getZoomTimeRange();
+            float proportion = (float)(event.x - zoomBounds.getX()) / (float)zoomBounds.getWidth();
+            double zoomedTime = timeRange.first + (proportion * (timeRange.second - timeRange.first));
+            
+            if (event.mods.isLeftButtonDown())
+            {
+                if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
+                {
+                    owner.setLoopInPosition(zoomedTime);
+                    owner.getSilenceDetector().setIsAutoCutInActive(false);
+                    owner.updateComponentStates();
+                }
+                else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
+                {
+                    owner.setLoopOutPosition(zoomedTime);
+                    owner.getSilenceDetector().setIsAutoCutOutActive(false);
+                    owner.updateComponentStates();
+                }
+                else
+                {
+                    // Dragging in zoom popup
+                    draggedHandle = (owner.getActiveZoomPoint() == ControlPanel::ActiveZoomPoint::In) 
+                                     ? LoopMarkerHandle::In : LoopMarkerHandle::Out;
+                    
+                    if (draggedHandle == LoopMarkerHandle::In)
+                        owner.setLoopInPosition(zoomedTime);
+                    else
+                        owner.setLoopOutPosition(zoomedTime);
+                        
+                    auto& silenceDetector = owner.getSilenceDetector();
+                    if (draggedHandle == LoopMarkerHandle::In) silenceDetector.setIsAutoCutInActive(false);
+                    else silenceDetector.setIsAutoCutOutActive(false);
+                    owner.updateComponentStates();
+                }
+                owner.repaint();
+                return;
+            }
+        }
+    }
+
     const auto waveformBounds = owner.getWaveformBounds();
     if (! waveformBounds.contains(event.getPosition()))
         return;
@@ -177,6 +223,28 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
         }
     }
 
+    // --- ZOOM POPUP DRAG ---
+    if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None && draggedHandle != LoopMarkerHandle::None)
+    {
+        auto zoomBounds = owner.getZoomPopupBounds();
+        if (zoomBounds.contains(event.getPosition()) || draggedHandle != LoopMarkerHandle::None)
+        {
+            auto timeRange = owner.getZoomTimeRange();
+            int clampedX = juce::jlimit(zoomBounds.getX(), zoomBounds.getRight(), event.x);
+            float proportion = (float)(clampedX - zoomBounds.getX()) / (float)zoomBounds.getWidth();
+            double zoomedTime = timeRange.first + (proportion * (timeRange.second - timeRange.first));
+
+            if (draggedHandle == LoopMarkerHandle::In)
+                owner.setLoopInPosition(zoomedTime);
+            else if (draggedHandle == LoopMarkerHandle::Out)
+                owner.setLoopOutPosition(zoomedTime);
+
+            owner.updateLoopLabels();
+            owner.repaint();
+            return;
+        }
+    }
+
     if (draggedHandle != LoopMarkerHandle::None)
     {
         AudioPlayer& audioPlayer = owner.getAudioPlayer();
@@ -241,6 +309,23 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
  */
 void MouseHandler::mouseUp(const juce::MouseEvent& event)
 {
+    // --- ZOOM POPUP UP ---
+    if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None && (isDragging || draggedHandle != LoopMarkerHandle::None || currentPlacementMode != AppEnums::PlacementMode::None))
+    {
+        if (currentPlacementMode != AppEnums::PlacementMode::None)
+        {
+            currentPlacementMode = AppEnums::PlacementMode::None;
+            owner.updateLoopButtonColors();
+        }
+        isDragging = false;
+        draggedHandle = LoopMarkerHandle::None;
+        owner.repaint();
+        // We don't return here yet because we might want to let the regular logic run too, 
+        // but for zoom popup interaction, it's usually enough.
+        // Actually, if we were interacting with zoom, we should consume this.
+        return;
+    }
+
     isDragging = false;
     draggedHandle = LoopMarkerHandle::None;
     

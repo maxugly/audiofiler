@@ -241,6 +241,10 @@ void LoopPresenter::syncEditorToPosition(juce::TextEditor& editor, double positi
 
 void LoopPresenter::mouseEnter(const juce::MouseEvent& event)
 {
+    // Don't switch if 'z' key is already holding a zoom point
+    if (owner.isZKeyDown())
+        return;
+
     if (event.eventComponent == &loopInEditor)
         owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
     else if (event.eventComponent == &loopOutEditor)
@@ -261,6 +265,15 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
 {
     if (wheel.deltaY == 0.0f)
         return;
+
+    // If zoomed in, mouse wheel controls zoom level
+    if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
+    {
+        float currentZoom = owner.getZoomFactor();
+        float zoomDelta = wheel.deltaY > 0 ? 1.1f : 0.9f;
+        owner.setZoomFactor(currentZoom * zoomDelta);
+        return;
+    }
 
     auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
     if (editor == nullptr)

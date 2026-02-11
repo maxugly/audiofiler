@@ -92,6 +92,10 @@ void MainComponent::timerCallback()
     if (playbackLoopController != nullptr)
         playbackLoopController->tick();
     
+    // Handle momentary 'z' zoom key
+    const bool isZDown = juce::KeyPress::isKeyCurrentlyDown('z') || juce::KeyPress::isKeyCurrentlyDown('Z');
+    controlPanel->setZKeyDown(isZDown);
+
     // We repaint continuously for animations and playback cursor
     controlPanel->repaint();
 }
