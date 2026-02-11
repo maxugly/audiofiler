@@ -394,8 +394,25 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
         popupHeight
     );
 
-    // Determine current time point for zoom
-    const double currentTime = (activePoint == ControlPanel::ActiveZoomPoint::In) 
+    const auto& mouseHandler = controlPanel.getMouseHandler();
+    
+    // Determine the center time for the zoom window
+    double zoomCenterTime = 0.0;
+    if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::In)
+    {
+        zoomCenterTime = controlPanel.getLoopInPosition();
+    }
+    else if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out)
+    {
+        zoomCenterTime = controlPanel.getLoopOutPosition();
+    }
+    else
+    {
+        zoomCenterTime = audioPlayer.getTransportSource().getCurrentPosition();
+    }
+
+    // Determine current time point for the indicator (the setting being adjusted)
+    const double indicatorTime = (activePoint == ControlPanel::ActiveZoomPoint::In) 
                                 ? controlPanel.getLoopInPosition() 
                                 : controlPanel.getLoopOutPosition();
 
@@ -405,7 +422,7 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
     // Clamp time range to not exceed audio length
     timeRange = juce::jmin(timeRange, audioLength);
 
-    double startTime = currentTime - (timeRange / 2.0);
+    double startTime = zoomCenterTime - (timeRange / 2.0);
     double endTime = startTime + timeRange;
 
     // Shift the window if it goes out of bounds
@@ -432,11 +449,11 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
     g.setColour(Config::waveformColor);
     audioPlayer.getThumbnail().drawChannels(g, popupBounds, startTime, endTime, 1.0f);
 
-    // Calculate indicator position (it might not be centered if we shifted the window)
+    // Calculate indicator position
     float indicatorX = popupBounds.getX();
     if (timeRange > 0.0)
     {
-        float proportion = (float)((currentTime - startTime) / timeRange);
+        float proportion = (float)((indicatorTime - startTime) / timeRange);
         indicatorX += proportion * (float)popupBounds.getWidth();
     }
     else
