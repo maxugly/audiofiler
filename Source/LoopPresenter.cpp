@@ -145,6 +145,17 @@ void LoopPresenter::textEditorFocusLost(juce::TextEditor& editor)
     {
         applyLoopOutFromEditor(newPosition, editor);
     }
+    
+    // Clear zoom on focus lost
+    owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::None);
+}
+
+void LoopPresenter::textEditorFocusGained(juce::TextEditor& editor)
+{
+    if (&editor == &loopInEditor)
+        owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
+    else if (&editor == &loopOutEditor)
+        owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
 }
 
 double LoopPresenter::parseTime(const juce::String& timeString) const
@@ -226,6 +237,24 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition, juce::TextEditor&
 void LoopPresenter::syncEditorToPosition(juce::TextEditor& editor, double positionSeconds)
 {
     editor.setText(owner.formatTime(positionSeconds), juce::dontSendNotification);
+}
+
+void LoopPresenter::mouseEnter(const juce::MouseEvent& event)
+{
+    if (event.eventComponent == &loopInEditor)
+        owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
+    else if (event.eventComponent == &loopOutEditor)
+        owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
+}
+
+void LoopPresenter::mouseExit(const juce::MouseEvent& event)
+{
+    // Only clear if the editor doesn't have focus
+    auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
+    if (editor != nullptr && !editor->hasKeyboardFocus(false))
+    {
+        owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::None);
+    }
 }
 
 void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)

@@ -292,6 +292,20 @@ namespace Config {
     /// Divisor used to center marker lines.
     constexpr float loopMarkerCenterDivisor = 2.0f;
 
+    // --- Zoom Popup Settings ---
+    /// Zoom factor for the popup view (e.g., 10x).
+    constexpr float zoomFactor = 10.0f;
+    /// Scale of the popup relative to the full waveform area (80%).
+    constexpr float zoomPopupScale = 0.8f;
+    /// Color for the zoom popup border.
+    const juce::Colour zoomPopupBorderColor = juce::Colours::blue;
+    /// Color for the thin indicator in the zoom popup.
+    const juce::Colour zoomPopupIndicatorColor = juce::Colours::white;
+    /// Thickness of the zoom popup border.
+    constexpr float zoomPopupBorderThickness = 2.0f;
+    /// Thickness of the indicator line in the zoom popup.
+    constexpr float zoomPopupIndicatorThickness = 1.0f;
+
     // --- Animation Parameters ---
     /// Controls the speed of the pulsing glow animation on the loop lines.
     constexpr float pulseSpeedFactor = 0.002f;           

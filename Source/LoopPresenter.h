@@ -86,9 +86,12 @@ private:
     void textEditorReturnKeyPressed(juce::TextEditor& editor) override;
     void textEditorEscapeKeyPressed(juce::TextEditor& editor) override;
     void textEditorFocusLost(juce::TextEditor& editor) override;
+    void textEditorFocusGained(juce::TextEditor& editor);
 
     // juce::MouseListener overrides
     void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
+    void mouseEnter(const juce::MouseEvent& event) override;
+    void mouseExit(const juce::MouseEvent& event) override;
 
     double parseTime(const juce::String& timeString) const;
     double getAudioTotalLength() const;

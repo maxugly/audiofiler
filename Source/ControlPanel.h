@@ -109,6 +109,15 @@ public:
     //==============================================================================
 
     //==============================================================================
+    /** @name Zoom Popup State
+     *  @{
+     */
+    enum class ActiveZoomPoint { None, In, Out };
+    ActiveZoomPoint getActiveZoomPoint() const { return m_activeZoomPoint; }
+    void setActiveZoomPoint(ActiveZoomPoint point) { m_activeZoomPoint = point; repaint(); }
+    /** @} */
+
+    //==============================================================================
     /** @name juce::Component Overrides
      *  Methods for handling GUI drawing and layout.
      *  @{
@@ -517,6 +526,7 @@ private:
     bool m_shouldAutoplay = false;              ///< Flag indicating if autoplay is currently enabled.
     float glowAlpha = 0.0f;                     ///< Alpha value for animation effects (e.g., pulsing lines).
     bool m_isCutModeActive = false;             ///< Flag indicating if Cut Mode is currently active.
+    ActiveZoomPoint m_activeZoomPoint = ActiveZoomPoint::None; ///< Currently zoomed loop point.
 
     /** @} */
     //==============================================================================

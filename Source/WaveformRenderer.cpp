@@ -27,6 +27,7 @@ void WaveformRenderer::render(juce::Graphics& g)
     }
 
     drawMouseCursorOverlays(g, audioPlayer, audioLength);
+    drawZoomPopup(g);
 }
 
 void WaveformRenderer::drawWaveform(juce::Graphics& g, AudioPlayer& audioPlayer) const
@@ -368,4 +369,55 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
     g.setColour(currentLineColor);
     g.drawVerticalLine(mouseHandler.getMouseCursorX(), (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
     g.drawHorizontalLine(mouseHandler.getMouseCursorY(), (float)waveformBounds.getX(), (float)waveformBounds.getRight());
+}
+
+void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
+{
+    const auto activePoint = controlPanel.getActiveZoomPoint();
+    if (activePoint == ControlPanel::ActiveZoomPoint::None)
+        return;
+
+    AudioPlayer& audioPlayer = controlPanel.getAudioPlayer();
+    const double audioLength = audioPlayer.getThumbnail().getTotalLength();
+    if (audioLength <= 0.0)
+        return;
+
+    const auto waveformBounds = controlPanel.getWaveformBounds();
+    
+    // Calculate popup bounds: 80% of waveform area, centered
+    const int popupWidth = juce::roundToInt((float)waveformBounds.getWidth() * Config::zoomPopupScale);
+    const int popupHeight = juce::roundToInt((float)waveformBounds.getHeight() * Config::zoomPopupScale);
+    const juce::Rectangle<int> popupBounds(
+        waveformBounds.getCentreX() - popupWidth / 2,
+        waveformBounds.getCentreY() - popupHeight / 2,
+        popupWidth,
+        popupHeight
+    );
+
+    // Determine current time point for zoom
+    const double currentTime = (activePoint == ControlPanel::ActiveZoomPoint::In) 
+                                ? controlPanel.getLoopInPosition() 
+                                : controlPanel.getLoopOutPosition();
+
+    // Calculate time range for 10x zoom
+    // 10x zoom means the popup shows 1/10th of the full audio length
+    const double timeRange = audioLength / (double)Config::zoomFactor;
+    const double startTime = currentTime - (timeRange / 2.0);
+    const double endTime = startTime + timeRange;
+
+    // Draw background
+    g.setColour(juce::Colours::black.withAlpha(0.9f));
+    g.fillRect(popupBounds);
+
+    // Draw zoomed waveform
+    g.setColour(Config::waveformColor);
+    audioPlayer.getThumbnail().drawChannels(g, popupBounds, startTime, endTime, 1.0f);
+
+    // Draw centered indicator (thin vertical line)
+    g.setColour(Config::zoomPopupIndicatorColor);
+    g.drawVerticalLine(popupBounds.getCentreX(), (float)popupBounds.getY(), (float)popupBounds.getBottom());
+
+    // Draw blue border
+    g.setColour(Config::zoomPopupBorderColor);
+    g.drawRect(popupBounds.toFloat(), Config::zoomPopupBorderThickness);
 }

@@ -33,6 +33,7 @@ private:
     void drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
     void drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
     void drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
+    void drawZoomPopup(juce::Graphics& g) const;
 
     ControlPanel& controlPanel;
 };
