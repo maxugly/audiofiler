@@ -114,6 +114,8 @@ void ControlPanel::invokeOwnerOpenDialog()
 
 void ControlPanel::finaliseSetup()
 {
+    if (playbackTextPresenter != nullptr)
+        playbackTextPresenter->initialiseEditors();
     updateLoopLabels();
     updateComponentStates();
 }
@@ -131,6 +133,9 @@ void ControlPanel::resized()
 {
     if (layoutManager != nullptr)
         layoutManager->performLayout();
+
+    if (playbackTextPresenter != nullptr)
+        playbackTextPresenter->layoutEditors();
 }
 
 void ControlPanel::paint(juce::Graphics& g)
@@ -214,6 +219,9 @@ void ControlPanel::updateLoopLabels()
 {
     if (loopPresenter != nullptr)
         loopPresenter->updateLoopLabels();
+
+    if (playbackTextPresenter != nullptr)
+        playbackTextPresenter->updateEditors();
 }
 
 void ControlPanel::updateComponentStates()

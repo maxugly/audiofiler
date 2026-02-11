@@ -37,6 +37,12 @@ void ControlStatePresenter::updateGeneralButtonStates(bool enabled)
     owner.statsButton.setEnabled(enabled); DBG("  - statsButton enabled: " << (owner.statsButton.isEnabled() ? "true" : "false"));
     owner.channelViewButton.setEnabled(enabled); DBG("  - channelViewButton enabled: " << (owner.channelViewButton.isEnabled() ? "true" : "false"));
     owner.qualityButton.setEnabled(enabled); DBG("  - qualityButton enabled: " << (owner.qualityButton.isEnabled() ? "true" : "false"));
+
+    owner.elapsedTimeEditor.setEnabled(enabled);
+    owner.remainingTimeEditor.setEnabled(enabled);
+    owner.elapsedTimeEditor.setVisible(enabled);
+    owner.remainingTimeEditor.setVisible(enabled);
+
     if (owner.statsPresenter != nullptr)
     {
         owner.statsPresenter->setDisplayEnabled(enabled);
@@ -55,6 +61,9 @@ void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, boo
     owner.loopOutButton.setEnabled(enabled && isCutModeActive); DBG("  - loopOutButton enabled: " << (owner.loopOutButton.isEnabled() ? "true" : "false"));
     owner.loopOutEditor.setEnabled(enabled && isCutModeActive); DBG("  - loopOutEditor enabled: " << (owner.loopOutEditor.isEnabled() ? "true" : "false"));
     owner.clearLoopOutButton.setEnabled(enabled && isCutModeActive); DBG("  - clearLoopOutButton enabled: " << (owner.clearLoopOutButton.isEnabled() ? "true" : "false"));
+
+    owner.loopLengthEditor.setEnabled(enabled && isCutModeActive);
+    owner.loopLengthEditor.setVisible(isCutModeActive);
 
     owner.autoCutInButton.setEnabled(isCutModeActive); DBG("  - autoCutInButton enabled: " << (owner.autoCutInButton.isEnabled() ? "true" : "false"));
     owner.autoCutOutButton.setEnabled(isCutModeActive); DBG("  - autoCutOutOutton enabled: " << (owner.autoCutOutButton.isEnabled() ? "true" : "false"));

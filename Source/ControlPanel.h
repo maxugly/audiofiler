@@ -495,6 +495,7 @@ private:
     friend class LoopEditorPresenter;
     friend class LoopButtonPresenter;
     friend class LoopResetPresenter;
+    friend class PlaybackTextPresenter;
 
     //==============================================================================
     /** @name juce::TextEditor::Listener Overrides (Private)
@@ -532,6 +533,7 @@ private:
     juce::TextButton openButton, playStopButton, modeButton, exitButton, statsButton, loopButton, channelViewButton, qualityButton; ///< Standard TextButtons for various actions.
     juce::TextButton clearLoopInButton, clearLoopOutButton;                                                                      ///< Small buttons to clear specific loop points.
     juce::TextEditor loopInEditor, loopOutEditor;                                                                                ///< TextEditors for displaying statistics and editing loop points.
+    juce::TextEditor elapsedTimeEditor, remainingTimeEditor, loopLengthEditor;                                                   ///< Editors for playback and loop length.
     LoopButton loopInButton, loopOutButton;                                                                                       ///< Custom buttons for 'in' and 'out' loop point setting, with distinct left/right click behavior.
     juce::TextButton autoplayButton, autoCutInButton, autoCutOutButton, cutButton;                                                ///< Buttons for automation features.
 

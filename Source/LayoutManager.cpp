@@ -4,6 +4,7 @@
 #include "Config.h"
 #include "SilenceDetector.h"
 #include "StatsPresenter.h"
+#include "PlaybackTextPresenter.h"
 
 LayoutManager::LayoutManager(ControlPanel& controlPanelIn)
     : controlPanel(controlPanelIn)
@@ -77,6 +78,9 @@ void LayoutManager::layoutBottomRowAndTextDisplay(juce::Rectangle<int>& bounds, 
     controlPanel.layoutCache.playbackLeftTextX = controlPanel.getLocalBounds().getX() + Config::windowBorderMargins;
     controlPanel.layoutCache.playbackCenterTextX = (controlPanel.getLocalBounds().getWidth() / 2) - (Config::playbackTextWidth / 2);
     controlPanel.layoutCache.playbackRightTextX = controlPanel.getLocalBounds().getRight() - Config::windowBorderMargins - Config::playbackTextWidth;
+
+    if (controlPanel.playbackTextPresenter != nullptr)
+        controlPanel.playbackTextPresenter->layoutEditors();
 }
 
 void LayoutManager::layoutWaveformAndStats(juce::Rectangle<int>& bounds)

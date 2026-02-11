@@ -96,6 +96,9 @@ void MainComponent::timerCallback()
     const bool isZDown = juce::KeyPress::isKeyCurrentlyDown('z') || juce::KeyPress::isKeyCurrentlyDown('Z');
     controlPanel->setZKeyDown(isZDown);
 
+    // Keep editors in sync
+    controlPanel->updateLoopLabels();
+
     // We repaint continuously for animations and playback cursor
     controlPanel->repaint();
 }

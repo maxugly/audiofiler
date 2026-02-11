@@ -394,18 +394,20 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
     
     // Determine the center time for the zoom window
     double zoomCenterTime = 0.0;
+    
+    // Priority 1: Dragging a handle
     if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::In)
-    {
         zoomCenterTime = controlPanel.getLoopInPosition();
-    }
     else if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out)
-    {
         zoomCenterTime = controlPanel.getLoopOutPosition();
-    }
+    // Priority 2: Hovering/Focusing an editor (activeZoomPoint)
+    else if (activePoint == ControlPanel::ActiveZoomPoint::In)
+        zoomCenterTime = controlPanel.getLoopInPosition();
+    else if (activePoint == ControlPanel::ActiveZoomPoint::Out)
+        zoomCenterTime = controlPanel.getLoopOutPosition();
+    // Priority 3: Playback position
     else
-    {
         zoomCenterTime = audioPlayer.getTransportSource().getCurrentPosition();
-    }
 
     // Determine current time point for the indicator (the setting being adjusted)
     const double indicatorTime = (activePoint == ControlPanel::ActiveZoomPoint::In) 
