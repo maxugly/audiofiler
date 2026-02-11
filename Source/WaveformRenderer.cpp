@@ -143,42 +143,38 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
     const juce::Rectangle<float> leftRegion((float)waveformBounds.getX(), (float)waveformBounds.getY(), inX - (float)waveformBounds.getX(), (float)waveformBounds.getHeight());
     if (leftRegion.getWidth() > 0.0f)
     {
+        const float actualFade = juce::jmin(fadeLength, leftRegion.getWidth());
+        
         // 1. Black out the area beyond the fade
-        juce::Rectangle<float> solidBlackLeft = leftRegion.withWidth(juce::jmax(0.0f, leftRegion.getWidth() - fadeLength));
+        juce::Rectangle<float> solidBlackLeft = leftRegion.withWidth(leftRegion.getWidth() - actualFade);
         g.setColour(juce::Colours::black);
         g.fillRect(solidBlackLeft);
 
-        // 2. Fade to transparent black at the loop boundary
-        juce::Rectangle<float> fadeAreaLeft(inX - fadeLength, (float)waveformBounds.getY(), fadeLength, (float)waveformBounds.getHeight());
-        juce::ColourGradient leftFadeGradient(juce::Colours::transparentBlack, inX, leftRegion.getCentreY(),
-                                              juce::Colours::black, inX - fadeLength, leftRegion.getCentreY(), false);
+        // 2. Fade from blue loop color to black
+        juce::Rectangle<float> fadeAreaLeft(inX - actualFade, (float)waveformBounds.getY(), actualFade, (float)waveformBounds.getHeight());
+        juce::ColourGradient leftFadeGradient(Config::loopRegionColor, inX, leftRegion.getCentreY(),
+                                              juce::Colours::black, inX - actualFade, leftRegion.getCentreY(), false);
         g.setGradientFill(leftFadeGradient);
         g.fillRect(fadeAreaLeft);
-        
-        // 3. Draw the legacy loop region color overlay
-        g.setColour(Config::loopRegionColor);
-        g.fillRect(leftRegion);
     }
 
     const juce::Rectangle<float> rightRegion(outX, (float)waveformBounds.getY(), (float)waveformBounds.getRight() - outX, (float)waveformBounds.getHeight());
     if (rightRegion.getWidth() > 0.0f)
     {
+        const float actualFade = juce::jmin(fadeLength, rightRegion.getWidth());
+
         // 1. Black out the area beyond the fade
-        float solidBlackStart = outX + fadeLength;
+        float solidBlackStart = outX + actualFade;
         juce::Rectangle<float> solidBlackRight(solidBlackStart, (float)waveformBounds.getY(), (float)waveformBounds.getRight() - solidBlackStart, (float)waveformBounds.getHeight());
         g.setColour(juce::Colours::black);
         g.fillRect(solidBlackRight);
 
-        // 2. Fade from transparent black at the loop boundary
-        juce::Rectangle<float> fadeAreaRight(outX, (float)waveformBounds.getY(), fadeLength, (float)waveformBounds.getHeight());
-        juce::ColourGradient rightFadeGradient(juce::Colours::transparentBlack, outX, rightRegion.getCentreY(),
-                                               juce::Colours::black, outX + fadeLength, rightRegion.getCentreY(), false);
+        // 2. Fade from blue loop color to black
+        juce::Rectangle<float> fadeAreaRight(outX, (float)waveformBounds.getY(), actualFade, (float)waveformBounds.getHeight());
+        juce::ColourGradient rightFadeGradient(Config::loopRegionColor, outX, rightRegion.getCentreY(),
+                                               juce::Colours::black, outX + actualFade, rightRegion.getCentreY(), false);
         g.setGradientFill(rightFadeGradient);
         g.fillRect(fadeAreaRight);
-
-        // 3. Draw the legacy loop region color overlay
-        g.setColour(Config::loopRegionColor);
-        g.fillRect(rightRegion);
     }
 
     const juce::Colour glowColor = Config::loopLineColor.withAlpha(Config::loopLineColor.getFloatAlpha() * (1.0f - controlPanel.getGlowAlpha()));
