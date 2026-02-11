@@ -262,7 +262,7 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
         double newPos = juce::jlimit(0.0, totalLength, loopInPosition + delta);
         if (newPos != loopInPosition)
         {
-            loopInPosition = newPos;
+            setLoopInPosition(newPos);
             silenceDetector.setIsAutoCutInActive(false);
             ensureLoopOrder();
             updateLoopLabels();
@@ -274,7 +274,7 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
         double newPos = juce::jlimit(0.0, totalLength, loopOutPosition + delta);
         if (newPos != loopOutPosition)
         {
-            loopOutPosition = newPos;
+            setLoopOutPosition(newPos);
             ensureLoopOrder();
             updateLoopLabels();
             owner.repaint();
