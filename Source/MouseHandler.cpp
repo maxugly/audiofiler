@@ -200,6 +200,10 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
                 
                 owner.setLoopInPosition(newIn);
                 owner.setLoopOutPosition(newOut);
+
+                // Ensure cursor stays in the moving loop
+                audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
+                                                   newIn, newOut);
             }
 
             owner.updateLoopLabels();

@@ -32,11 +32,21 @@ LoopPresenter::~LoopPresenter()
 void LoopPresenter::setLoopInPosition(double positionSeconds)
 {
     loopInPosition = positionSeconds;
+    
+    // Constrain playback head if it's outside new loopIn
+    auto& audioPlayer = owner.getAudioPlayer();
+    audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
+                                       loopInPosition, loopOutPosition);
 }
 
 void LoopPresenter::setLoopOutPosition(double positionSeconds)
 {
     loopOutPosition = positionSeconds;
+
+    // Constrain playback head if it's outside new loopOut
+    auto& audioPlayer = owner.getAudioPlayer();
+    audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
+                                       loopInPosition, loopOutPosition);
 }
 
 void LoopPresenter::ensureLoopOrder()
