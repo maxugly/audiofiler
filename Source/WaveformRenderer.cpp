@@ -213,19 +213,29 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
 
     const auto& mouseHandler = controlPanel.getMouseHandler();
     juce::Colour hollowColor = Config::loopLineColor;
+    float thickness = Config::loopBoxOutlineThickness;
+
     if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Full)
+    {
         hollowColor = Config::loopMarkerDragColor;
+        thickness = Config::loopBoxOutlineThicknessInteracting;
+    }
     else if (mouseHandler.getHoveredHandle() == MouseHandler::LoopMarkerHandle::Full)
+    {
         hollowColor = Config::loopMarkerHoverColor;
+        thickness = Config::loopBoxOutlineThicknessInteracting;
+    }
 
     g.setColour(hollowColor);
     int hollowHeight = Config::loopMarkerCapHeight / Config::loopHollowHeightDivisor;
     
-    g.drawHorizontalLine(waveformBounds.getY(), (int)inX, (int)outX);
-    g.drawHorizontalLine(waveformBounds.getY() + hollowHeight, (int)inX, (int)outX);
+    // Draw top box horizontal lines
+    g.drawLine(inX, (float)waveformBounds.getY(), outX, (float)waveformBounds.getY(), thickness);
+    g.drawLine(inX, (float)waveformBounds.getY() + hollowHeight, outX, (float)waveformBounds.getY() + hollowHeight, thickness);
     
-    g.drawHorizontalLine(waveformBounds.getBottom() - 1, (int)inX, (int)outX);
-    g.drawHorizontalLine(waveformBounds.getBottom() - hollowHeight, (int)inX, (int)outX);
+    // Draw bottom box horizontal lines
+    g.drawLine(inX, (float)waveformBounds.getBottom() - 1, outX, (float)waveformBounds.getBottom() - 1, thickness);
+    g.drawLine(inX, (float)waveformBounds.getBottom() - hollowHeight, outX, (float)waveformBounds.getBottom() - hollowHeight, thickness);
 }
 
 void WaveformRenderer::drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const

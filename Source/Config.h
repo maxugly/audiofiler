@@ -52,7 +52,7 @@ namespace Config {
     constexpr int buttonWidth = 80;
 
     /// The width of the main playback time and sample position display.
-    constexpr int playbackTextWidth = 260; 
+    constexpr int playbackTextWidth = 520; 
     /// The height of the playback time display, chosen to prevent text from being cut off.
     constexpr int playbackTextHeight = 30; 
 
@@ -277,8 +277,12 @@ namespace Config {
     constexpr float thresholdGlowThickness = 3.0f;       
     /// The thickness of the glow effect for the vertical loop start/end lines.
     constexpr float loopLineGlowThickness = 3.0f;        
-    /// Thickness of the main vertical loop marker line (thin part).
+    /// Thickness of the vertical loop marker line (thin part).
     constexpr float loopMarkerWidthThin = 1.0f;
+    /// Thickness of the loop box hollow outline.
+    constexpr float loopBoxOutlineThickness = 1.5f;
+    /// Thickness of the loop box hollow outline when hovered or dragged.
+    constexpr float loopBoxOutlineThicknessInteracting = 3.0f;
     /// Thickness of the top/bottom caps of the loop marker line.
     constexpr float loopMarkerWidthThick = 10.0f;
     /// Height of the thick top/bottom caps.
