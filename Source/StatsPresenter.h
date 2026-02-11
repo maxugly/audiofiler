@@ -6,6 +6,55 @@
 class ControlPanel;
 
 /**
+ * @class StatsOverlay
+ * @brief A component that contains the stats display and a resize handle.
+ */
+class StatsOverlay : public juce::Component
+{
+public:
+    StatsOverlay()
+        : resizer (this, &constrainer, juce::ResizableEdgeComponent::bottomEdge)
+    {
+        addAndMakeVisible(statsDisplay);
+        addAndMakeVisible(resizer);
+        
+        constrainer.setMinimumHeight(Config::statsMinHeight);
+        constrainer.setMaximumHeight(Config::statsMaxHeight);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.setColour(Config::statsDisplayBackgroundColour);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), Config::statsCornerRadius);
+
+        // Draw a subtle resize handle at the bottom
+        auto handleArea = getLocalBounds().removeFromBottom(Config::statsHandleAreaHeight);
+        g.setColour(juce::Colours::white.withAlpha(Config::statsHandleAlpha));
+        
+        g.fillRect(handleArea.withSizeKeepingCentre(Config::statsHandleWidth, Config::statsHandleLineHeight).translated(0, -1));
+        g.fillRect(handleArea.withSizeKeepingCentre(Config::statsHandleWidth, Config::statsHandleLineHeight).translated(0, 2));
+    }
+
+    void resized() override
+    {
+        auto b = getLocalBounds();
+        auto handleArea = b.removeFromBottom(Config::statsHandleAreaHeight);
+        statsDisplay.setBounds(b.reduced(Config::statsInternalPadding));
+        resizer.setBounds(handleArea);
+        if (onHeightChanged)
+            onHeightChanged(getHeight());
+    }
+
+    std::function<void(int)> onHeightChanged;
+    juce::TextEditor statsDisplay;
+    juce::ResizableEdgeComponent resizer;
+
+private:
+    juce::ComponentBoundsConstrainer constrainer;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(StatsOverlay)
+};
+
+/**
  * @class StatsPresenter
  * @brief Encapsulates the stats TextEditor along with the logic for building and updating its content.
  *
@@ -86,7 +135,7 @@ private:
     void updateVisibility();
 
     ControlPanel& owner;
-    juce::TextEditor statsDisplay;
+    StatsOverlay statsOverlay;
     bool showStats { false };
-    juce::Rectangle<int> statsBounds;
+    int currentHeight { Config::initialStatsDisplayHeight };
 };

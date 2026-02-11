@@ -7,13 +7,19 @@
 StatsPresenter::StatsPresenter(ControlPanel& ownerIn)
     : owner(ownerIn)
 {
-    owner.addAndMakeVisible(statsDisplay);
+    owner.addAndMakeVisible(statsOverlay);
+    auto& statsDisplay = statsOverlay.statsDisplay;
     statsDisplay.setReadOnly(true);
     statsDisplay.setMultiLine(true);
     statsDisplay.setWantsKeyboardFocus(false);
-    statsDisplay.setColour(juce::TextEditor::backgroundColourId, Config::statsDisplayBackgroundColour);
+    statsDisplay.setColour(juce::TextEditor::backgroundColourId, juce::Colours::transparentBlack);
+    statsDisplay.setColour(juce::TextEditor::outlineColourId, juce::Colours::transparentBlack);
     statsDisplay.setColour(juce::TextEditor::textColourId, Config::statsDisplayTextColour);
-    statsDisplay.setVisible(false);
+    statsOverlay.setVisible(false);
+
+    statsOverlay.onHeightChanged = [this](int newHeight) {
+        currentHeight = newHeight;
+    };
 }
 
 void StatsPresenter::updateStats()
@@ -35,34 +41,36 @@ void StatsPresenter::setShouldShowStats(bool shouldShowStats)
 
 juce::String StatsPresenter::getStatsText() const
 {
-    return statsDisplay.getText();
+    return statsOverlay.statsDisplay.getText();
 }
 
 void StatsPresenter::layoutWithin(const juce::Rectangle<int>& contentAreaBounds)
 {
-    statsBounds = contentAreaBounds.withHeight(100).reduced(10);
+    auto statsBounds = contentAreaBounds.withHeight(currentHeight)
+                                        .reduced(Config::statsOverlaySideMargin, 0)
+                                        .translated(0, Config::statsOverlayTopMargin);
     if (showStats)
     {
-        statsDisplay.setBounds(statsBounds);
-        statsDisplay.toFront(true);
+        statsOverlay.setBounds(statsBounds);
+        statsOverlay.toFront(true);
     }
     updateVisibility();
 }
 
 void StatsPresenter::setDisplayText(const juce::String& text, juce::Colour color)
 {
-    statsDisplay.setText(text, juce::dontSendNotification);
-    statsDisplay.setColour(juce::TextEditor::textColourId, color);
+    statsOverlay.statsDisplay.setText(text, juce::dontSendNotification);
+    statsOverlay.statsDisplay.setColour(juce::TextEditor::textColourId, color);
 }
 
 juce::TextEditor& StatsPresenter::getDisplay()
 {
-    return statsDisplay;
+    return statsOverlay.statsDisplay;
 }
 
 void StatsPresenter::setDisplayEnabled(bool shouldEnable)
 {
-    statsDisplay.setEnabled(shouldEnable);
+    statsOverlay.statsDisplay.setEnabled(shouldEnable);
 }
 
 juce::String StatsPresenter::buildStatsString() const
@@ -103,7 +111,7 @@ juce::String StatsPresenter::buildStatsString() const
 
 void StatsPresenter::updateVisibility()
 {
-    statsDisplay.setVisible(showStats);
+    statsOverlay.setVisible(showStats);
     if (showStats)
-        statsDisplay.toFront(true);
+        statsOverlay.toFront(true);
 }

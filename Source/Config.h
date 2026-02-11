@@ -187,6 +187,31 @@ namespace Config {
     /// The color for error messages shown in the statistics display.
     const juce::Colour errorTextColour = juce::Colours::red;
 
+    /// The initial height of the statistics overlay in pixels.
+    constexpr int initialStatsDisplayHeight = 150;
+    /// Minimum allowed height for the stats overlay.
+    constexpr int statsMinHeight = 50;
+    /// Maximum allowed height for the stats overlay.
+    constexpr int statsMaxHeight = 600;
+    
+    /// Corner radius for the stats overlay background.
+    constexpr float statsCornerRadius = 4.0f;
+    /// Height of the area reserved for the resize handle at the bottom.
+    constexpr int statsHandleAreaHeight = 12;
+    /// Width of the visual resize handle lines.
+    constexpr int statsHandleWidth = 40;
+    /// Height/thickness of the visual resize handle lines.
+    constexpr int statsHandleLineHeight = 2;
+    /// Opacity of the resize handle.
+    constexpr float statsHandleAlpha = 0.3f;
+    
+    /// Padding between the overlay border and the text editor.
+    constexpr int statsInternalPadding = 2;
+    /// Horizontal margin from the content area edges.
+    constexpr int statsOverlaySideMargin = 10;
+    /// Vertical offset from the top of the content area.
+    constexpr int statsOverlayTopMargin = 10;
+
     //==============================================================================
     // Animation, Glow, and Style Settings
     //==============================================================================
