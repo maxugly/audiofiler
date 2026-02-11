@@ -265,6 +265,8 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
                 else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
                 {
                     owner.setLoopOutPosition(time);
+                    owner.getSilenceDetector().setIsAutoCutOutActive(false);
+                    owner.updateComponentStates();
                 }
                 owner.ensureLoopOrder();
                 owner.updateLoopLabels();
@@ -321,11 +323,14 @@ void MouseHandler::handleRightClickForLoopPlacement(int x)
     if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
     {
         owner.setLoopInPosition(time);
+        owner.getSilenceDetector().setIsAutoCutInActive(false);
     }
     else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
     {
         owner.setLoopOutPosition(time);
+        owner.getSilenceDetector().setIsAutoCutOutActive(false);
     }
+    owner.updateComponentStates();
     owner.ensureLoopOrder();
     owner.updateLoopButtonColors();
     owner.updateLoopLabels();

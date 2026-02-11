@@ -48,13 +48,13 @@ void ControlStatePresenter::updateGeneralButtonStates(bool enabled)
 void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, bool enabled)
 {
     DBG("ControlPanel::updateCutModeControlStates() - START (isCutModeActive parameter: " << (isCutModeActive ? "true" : "false") << ", parent enabled: " << (enabled ? "true" : "false") << ")");
-    owner.loopInButton.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutInActive()); DBG("  - loopInButton enabled: " << (owner.loopInButton.isEnabled() ? "true" : "false"));
-    owner.loopInEditor.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutInActive()); DBG("  - loopInEditor enabled: " << (owner.loopInEditor.isEnabled() ? "true" : "false"));
-    owner.clearLoopInButton.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutInActive()); DBG("  - clearLoopInButton enabled: " << (owner.clearLoopInButton.isEnabled() ? "true" : "false"));
+    owner.loopInButton.setEnabled(enabled && isCutModeActive); DBG("  - loopInButton enabled: " << (owner.loopInButton.isEnabled() ? "true" : "false"));
+    owner.loopInEditor.setEnabled(enabled && isCutModeActive); DBG("  - loopInEditor enabled: " << (owner.loopInEditor.isEnabled() ? "true" : "false"));
+    owner.clearLoopInButton.setEnabled(enabled && isCutModeActive); DBG("  - clearLoopInButton enabled: " << (owner.clearLoopInButton.isEnabled() ? "true" : "false"));
 
-    owner.loopOutButton.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutOutActive()); DBG("  - loopOutButton enabled: " << (owner.loopOutButton.isEnabled() ? "true" : "false"));
-    owner.loopOutEditor.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutOutActive()); DBG("  - loopOutEditor enabled: " << (owner.loopOutEditor.isEnabled() ? "true" : "false"));
-    owner.clearLoopOutButton.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutOutActive()); DBG("  - clearLoopOutButton enabled: " << (owner.clearLoopOutButton.isEnabled() ? "true" : "false"));
+    owner.loopOutButton.setEnabled(enabled && isCutModeActive); DBG("  - loopOutButton enabled: " << (owner.loopOutButton.isEnabled() ? "true" : "false"));
+    owner.loopOutEditor.setEnabled(enabled && isCutModeActive); DBG("  - loopOutEditor enabled: " << (owner.loopOutEditor.isEnabled() ? "true" : "false"));
+    owner.clearLoopOutButton.setEnabled(enabled && isCutModeActive); DBG("  - clearLoopOutButton enabled: " << (owner.clearLoopOutButton.isEnabled() ? "true" : "false"));
 
     owner.autoCutInButton.setEnabled(isCutModeActive); DBG("  - autoCutInButton enabled: " << (owner.autoCutInButton.isEnabled() ? "true" : "false"));
     owner.autoCutOutButton.setEnabled(isCutModeActive); DBG("  - autoCutOutOutton enabled: " << (owner.autoCutOutButton.isEnabled() ? "true" : "false"));

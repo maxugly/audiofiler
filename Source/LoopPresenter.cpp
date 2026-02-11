@@ -179,6 +179,7 @@ bool LoopPresenter::applyLoopInFromEditor(double newPosition, juce::TextEditor& 
         setLoopInPosition(newPosition);
         owner.updateLoopButtonColors();
         silenceDetector.setIsAutoCutInActive(false);
+        owner.updateComponentStates();
         editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
         owner.repaint();
         return true;
@@ -209,6 +210,8 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition, juce::TextEditor&
 
         setLoopOutPosition(newPosition);
         owner.updateLoopButtonColors();
+        silenceDetector.setIsAutoCutOutActive(false);
+        owner.updateComponentStates();
         editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
         owner.repaint();
         return true;
@@ -264,6 +267,7 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
         {
             setLoopInPosition(newPos);
             silenceDetector.setIsAutoCutInActive(false);
+            owner.updateComponentStates();
             ensureLoopOrder();
             updateLoopLabels();
             owner.repaint();
@@ -275,6 +279,8 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
         if (newPos != loopOutPosition)
         {
             setLoopOutPosition(newPos);
+            silenceDetector.setIsAutoCutOutActive(false);
+            owner.updateComponentStates();
             ensureLoopOrder();
             updateLoopLabels();
             owner.repaint();
