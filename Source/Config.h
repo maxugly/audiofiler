@@ -249,6 +249,14 @@ namespace Config {
     constexpr float thresholdGlowThickness = 3.0f;       
     /// The thickness of the glow effect for the vertical loop start/end lines.
     constexpr float loopLineGlowThickness = 3.0f;        
+    /// Thickness of the main vertical loop marker line (thin part).
+    constexpr float loopMarkerWidthThin = 1.0f;
+    /// Thickness of the top/bottom caps of the loop marker line.
+    constexpr float loopMarkerWidthThick = 10.0f;
+    /// Height of the thick top/bottom caps.
+    constexpr int loopMarkerCapHeight = 20;
+    /// Divisor used to center marker lines.
+    constexpr float loopMarkerCenterDivisor = 2.0f;
 
     // --- Animation Parameters ---
     /// Controls the speed of the pulsing glow animation on the loop lines.

@@ -162,6 +162,22 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
     g.fillRect(outX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
 
     g.setColour(Config::loopLineColor);
+    auto drawLoopMarker = [&](float x) {
+        // Draw the thin middle part
+        g.fillRect(x - Config::loopMarkerWidthThin / Config::loopMarkerCenterDivisor, (float)waveformBounds.getY(), Config::loopMarkerWidthThin, (float)waveformBounds.getHeight());
+        
+        // Draw the thick top cap
+        g.fillRect(x - Config::loopMarkerWidthThick / Config::loopMarkerCenterDivisor, (float)waveformBounds.getY(), 
+                   Config::loopMarkerWidthThick, (float)Config::loopMarkerCapHeight);
+        
+        // Draw the thick bottom cap
+        g.fillRect(x - Config::loopMarkerWidthThick / Config::loopMarkerCenterDivisor, (float)waveformBounds.getBottom() - Config::loopMarkerCapHeight, 
+                   Config::loopMarkerWidthThick, (float)Config::loopMarkerCapHeight);
+    };
+
+    drawLoopMarker(inX);
+    drawLoopMarker(outX);
+
     g.drawHorizontalLine(waveformBounds.getY(), (int)inX, (int)outX);
     g.drawHorizontalLine(waveformBounds.getBottom() - 1, (int)inX, (int)outX);
 }
@@ -266,6 +282,18 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
     }
 
     g.setColour(currentLineColor);
-    g.drawVerticalLine(mouseHandler.getMouseCursorX(), (float)waveformBounds.getY(), (float)waveformBounds.getBottom());
+    
+    // Draw vertical line with thick caps
+    float mouseX = (float)mouseHandler.getMouseCursorX();
+    // Thin middle
+    g.fillRect(mouseX - Config::loopMarkerWidthThin / Config::loopMarkerCenterDivisor, (float)waveformBounds.getY(), 
+               Config::loopMarkerWidthThin, (float)waveformBounds.getHeight());
+    // Top cap
+    g.fillRect(mouseX - Config::loopMarkerWidthThick / Config::loopMarkerCenterDivisor, (float)waveformBounds.getY(), 
+               Config::loopMarkerWidthThick, (float)Config::loopMarkerCapHeight);
+    // Bottom cap
+    g.fillRect(mouseX - Config::loopMarkerWidthThick / Config::loopMarkerCenterDivisor, (float)waveformBounds.getBottom() - Config::loopMarkerCapHeight, 
+               Config::loopMarkerWidthThick, (float)Config::loopMarkerCapHeight);
+
     g.drawHorizontalLine(mouseHandler.getMouseCursorY(), (float)waveformBounds.getX(), (float)waveformBounds.getRight());
 }
