@@ -37,9 +37,9 @@ void WaveformRenderer::drawWaveform(juce::Graphics& g, AudioPlayer& audioPlayer)
 
     int pixelsPerSample = 1;
     if (controlPanel.getCurrentQualitySetting() == AppEnums::ThumbnailQuality::Low)
-        pixelsPerSample = 4;
+        pixelsPerSample = Config::pixelsPerSampleLow;
     else if (controlPanel.getCurrentQualitySetting() == AppEnums::ThumbnailQuality::Medium)
-        pixelsPerSample = 2;
+        pixelsPerSample = Config::pixelsPerSampleMedium;
 
     g.setColour(Config::waveformColor);
     if (controlPanel.getChannelViewMode() == AppEnums::ChannelViewMode::Mono || numChannels == 1)
@@ -78,8 +78,8 @@ void WaveformRenderer::drawReducedQualityWaveform(juce::Graphics& g, AudioPlayer
         const double time = proportion * audioLength;
         float minVal = 0.0f, maxVal = 0.0f;
         audioPlayer.getThumbnail().getApproximateMinMax(time, time + (audioLength / width) * pixelsPerSample, channel, minVal, maxVal);
-        const auto topY = (float)centerY - (maxVal * height * 0.5f);
-        const auto bottomY = (float)centerY - (minVal * height * 0.5f);
+        const auto topY = (float)centerY - (maxVal * height * Config::waveformHeightScale);
+        const auto bottomY = (float)centerY - (minVal * height * Config::waveformHeightScale);
         g.drawVerticalLine(waveformBounds.getX() + x, topY, bottomY);
     }
 }
@@ -120,8 +120,8 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
         {
             const juce::Colour glowColor = Config::thresholdLineColor.withAlpha(Config::thresholdLineColor.getFloatAlpha() * controlPanel.getGlowAlpha());
             g.setColour(glowColor);
-            g.fillRect(lineStartX, topThresholdY - (Config::thresholdGlowThickness / 2.0f - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
-            g.fillRect(lineStartX, bottomThresholdY - (Config::thresholdGlowThickness / 2.0f - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
+            g.fillRect(lineStartX, topThresholdY - (Config::thresholdGlowThickness * Config::glowOffsetFactor - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
+            g.fillRect(lineStartX, bottomThresholdY - (Config::thresholdGlowThickness * Config::glowOffsetFactor - 0.5f), currentLineWidth, Config::thresholdGlowThickness);
         }
 
         g.setColour(Config::thresholdLineColor);
@@ -181,8 +181,8 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
 
     const juce::Colour glowColor = Config::loopLineColor.withAlpha(Config::loopLineColor.getFloatAlpha() * (1.0f - controlPanel.getGlowAlpha()));
     g.setColour(glowColor);
-    g.fillRect(inX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
-    g.fillRect(outX - (Config::loopLineGlowThickness / 2.0f - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
+    g.fillRect(inX - (Config::loopLineGlowThickness * Config::glowOffsetFactor - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
+    g.fillRect(outX - (Config::loopLineGlowThickness * Config::glowOffsetFactor - 0.5f), (float)waveformBounds.getY(), Config::loopLineGlowThickness, (float)waveformBounds.getHeight());
 
     g.setColour(Config::loopLineColor);
     auto drawLoopMarker = [&](float x, MouseHandler::LoopMarkerHandle handleType) {
@@ -219,7 +219,7 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
         hollowColor = Config::loopMarkerHoverColor;
 
     g.setColour(hollowColor);
-    int hollowHeight = Config::loopMarkerCapHeight / 3;
+    int hollowHeight = Config::loopMarkerCapHeight / Config::loopHollowHeightDivisor;
     
     g.drawHorizontalLine(waveformBounds.getY(), (int)inX, (int)outX);
     g.drawHorizontalLine(waveformBounds.getY() + hollowHeight, (int)inX, (int)outX);
@@ -258,11 +258,11 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
         currentGlowColor = Config::placementModeGlowColor;
         currentGlowThickness = Config::placementModeGlowThickness;
 
-        g.setColour(currentGlowColor.withAlpha(0.3f));
-        g.fillRect(mouseHandler.getMouseCursorX() - (int)(currentGlowThickness / 2) - 1, waveformBounds.getY(),
-                   (int)currentGlowThickness + 2, waveformBounds.getHeight());
-        g.fillRect(waveformBounds.getX(), mouseHandler.getMouseCursorY() - (int)(currentGlowThickness / 2) - 1,
-                   waveformBounds.getWidth(), (int)currentGlowThickness + 2);
+        g.setColour(currentGlowColor.withAlpha(Config::mouseGlowAlpha));
+        g.fillRect(mouseHandler.getMouseCursorX() - (int)(currentGlowThickness * Config::glowOffsetFactor) - 1, waveformBounds.getY(),
+                   (int)currentGlowThickness + Config::mouseGlowPadding, waveformBounds.getHeight());
+        g.fillRect(waveformBounds.getX(), mouseHandler.getMouseCursorY() - (int)(currentGlowThickness * Config::glowOffsetFactor) - 1,
+                   waveformBounds.getWidth(), (int)currentGlowThickness + Config::mouseGlowPadding);
     }
     else
     {
@@ -272,8 +272,8 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
     }
 
     g.setColour(currentHighlightColor);
-    g.fillRect(mouseHandler.getMouseCursorX() - 2, waveformBounds.getY(), 5, waveformBounds.getHeight());
-    g.fillRect(waveformBounds.getX(), mouseHandler.getMouseCursorY() - 2, waveformBounds.getWidth(), 5);
+    g.fillRect(mouseHandler.getMouseCursorX() - Config::mouseHighlightOffset, waveformBounds.getY(), Config::mouseHighlightSize, waveformBounds.getHeight());
+    g.fillRect(waveformBounds.getX(), mouseHandler.getMouseCursorY() - Config::mouseHighlightOffset, waveformBounds.getWidth(), Config::mouseHighlightSize);
 
     if (audioLength > 0.0f)
     {
@@ -295,21 +295,21 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
         }
 
         const float centerY = (float)waveformBounds.getCentreY();
-        const float amplitudeY = centerY - (amplitude * waveformBounds.getHeight() * 0.5f);
-        const float bottomAmplitudeY = centerY + (amplitude * waveformBounds.getHeight() * 0.5f);
+        const float amplitudeY = centerY - (amplitude * waveformBounds.getHeight() * Config::waveformHeightScale);
+        const float bottomAmplitudeY = centerY + (amplitude * waveformBounds.getHeight() * Config::waveformHeightScale);
 
         juce::ColourGradient amplitudeGlowGradient(currentGlowColor.withAlpha(0.0f), (float)mouseHandler.getMouseCursorX(), amplitudeY,
-                                                   currentGlowColor.withAlpha(0.7f), (float)mouseHandler.getMouseCursorX(), centerY, true);
+                                                   currentGlowColor.withAlpha(Config::mouseAmplitudeGlowAlpha), (float)mouseHandler.getMouseCursorX(), centerY, true);
         g.setGradientFill(amplitudeGlowGradient);
-        g.fillRect(juce::Rectangle<float>((float)mouseHandler.getMouseCursorX() - Config::mouseAmplitudeGlowThickness / 2, amplitudeY,
+        g.fillRect(juce::Rectangle<float>((float)mouseHandler.getMouseCursorX() - Config::mouseAmplitudeGlowThickness * Config::glowOffsetFactor, amplitudeY,
                                           Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
-        g.fillRect(juce::Rectangle<float>((float)mouseHandler.getMouseCursorX() - Config::mouseAmplitudeGlowThickness / 2, centerY,
+        g.fillRect(juce::Rectangle<float>((float)mouseHandler.getMouseCursorX() - Config::mouseAmplitudeGlowThickness * Config::glowOffsetFactor, centerY,
                                           Config::mouseAmplitudeGlowThickness, centerY - amplitudeY));
 
         g.setColour(Config::mouseAmplitudeLineColor);
         g.drawVerticalLine(mouseHandler.getMouseCursorX(), amplitudeY, bottomAmplitudeY);
 
-        const float halfLineLength = Config::mouseAmplitudeLineLength / 2.0f;
+        const float halfLineLength = Config::mouseAmplitudeLineLength * Config::glowOffsetFactor;
         const float leftExtent = (float)mouseHandler.getMouseCursorX() - halfLineLength;
         const float rightExtent = (float)mouseHandler.getMouseCursorX() + halfLineLength;
         g.drawHorizontalLine(juce::roundToInt(amplitudeY), leftExtent, rightExtent);
@@ -317,13 +317,13 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
 
         g.setColour(Config::playbackTextColor);
         g.setFont(Config::mouseCursorTextSize);
-        g.drawText(juce::String(amplitude, 2), mouseHandler.getMouseCursorX() + 5, (int)amplitudeY - Config::mouseCursorTextSize,
+        g.drawText(juce::String(amplitude, 2), mouseHandler.getMouseCursorX() + Config::mouseTextOffset, (int)amplitudeY - Config::mouseCursorTextSize,
                    100, Config::mouseCursorTextSize, juce::Justification::left, true);
-        g.drawText(juce::String(-amplitude, 2), mouseHandler.getMouseCursorX() + 5, (int)bottomAmplitudeY,
+        g.drawText(juce::String(-amplitude, 2), mouseHandler.getMouseCursorX() + Config::mouseTextOffset, (int)bottomAmplitudeY,
                    100, Config::mouseCursorTextSize, juce::Justification::left, true);
 
         const juce::String timeText = controlPanel.formatTime(mouseHandler.getMouseCursorTime());
-        g.drawText(timeText, mouseHandler.getMouseCursorX() + 5, mouseHandler.getMouseCursorY() + 5, 100,
+        g.drawText(timeText, mouseHandler.getMouseCursorX() + Config::mouseTextOffset, mouseHandler.getMouseCursorY() + Config::mouseTextOffset, 100,
                    Config::mouseCursorTextSize, juce::Justification::left, true);
     }
 

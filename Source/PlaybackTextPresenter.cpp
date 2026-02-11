@@ -17,8 +17,15 @@ void PlaybackTextPresenter::render(juce::Graphics& g) const
     g.setColour(Config::playbackTextColor);
     g.setFont(Config::playbackTextSize);
     g.drawText(buildCurrentTime(), leftX, textY, Config::playbackTextWidth, Config::playbackTextHeight, juce::Justification::left, false);
-    g.drawText(getTotalTimeStaticString(), centreX, textY, Config::playbackTextWidth, 20, juce::Justification::centred, false);
-    g.drawText(buildRemainingTime(), rightX, textY, Config::playbackTextWidth, 20, juce::Justification::right, false);
+    
+    juce::String centerText = getTotalTimeStaticString();
+    if (owner.isCutModeActive())
+    {
+        centerText = buildCutLengthText() + " " + centerText;
+    }
+    
+    g.drawText(centerText, centreX, textY, Config::playbackTextWidth, Config::playbackTextHeight, juce::Justification::centred, false);
+    g.drawText(buildRemainingTime(), rightX, textY, Config::playbackTextWidth, Config::playbackTextHeight, juce::Justification::right, false);
 }
 
 juce::String PlaybackTextPresenter::buildCurrentTime() const
@@ -31,4 +38,12 @@ juce::String PlaybackTextPresenter::buildRemainingTime() const
     const auto total = owner.getAudioPlayer().getThumbnail().getTotalLength();
     const auto remaining = juce::jmax(0.0, total - owner.getAudioPlayer().getTransportSource().getCurrentPosition());
     return "-" + owner.formatTime(remaining);
+}
+
+juce::String PlaybackTextPresenter::buildCutLengthText() const
+{
+    double loopIn = owner.getLoopInPosition();
+    double loopOut = owner.getLoopOutPosition();
+    double length = std::abs(loopOut - loopIn);
+    return "(" + owner.formatTime(length) + ")";
 }

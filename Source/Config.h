@@ -236,8 +236,25 @@ namespace Config {
     /// A darkness multiplier applied to buttons when they are clicked.
     constexpr float buttonPressedDarknessFactor = 0.1f;   
 
-    /// The thickness of the outline drawn around text editors.
+    /// Thickness of the outline drawn around text editors.
     constexpr int textEditorOutlineThickness = 1;
+
+    // --- Waveform Rendering ---
+    constexpr int pixelsPerSampleLow = 4;
+    constexpr int pixelsPerSampleMedium = 2;
+    constexpr float waveformHeightScale = 0.5f;
+
+    // --- Glow and Overlays ---
+    constexpr float glowOffsetFactor = 0.5f;
+    constexpr int loopHollowHeightDivisor = 3;
+    
+    // --- Mouse Cursor Overlays ---
+    constexpr float mouseGlowAlpha = 0.3f;
+    constexpr int mouseGlowPadding = 2;
+    constexpr int mouseHighlightOffset = 2;
+    constexpr int mouseHighlightSize = 5;
+    constexpr float mouseAmplitudeGlowAlpha = 0.7f;
+    constexpr int mouseTextOffset = 5;
 
     // --- Glow Effects ---
     /// The start color for the gradient glow around the playback cursor (fully transparent).

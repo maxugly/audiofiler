@@ -20,6 +20,7 @@ public:
 private:
     juce::String buildCurrentTime() const;
     juce::String buildRemainingTime() const;
+    juce::String buildCutLengthText() const;
 
     ControlPanel& owner;
     juce::String totalTimeStaticStr;
