@@ -156,9 +156,14 @@ void ControlPanel::setZKeyDown(bool isDown)
     
     if (m_isZKeyDown)
     {
-        // If not already zooming something, default to LoopIn
-        if (m_activeZoomPoint == ActiveZoomPoint::None)
+        // If we are dragging a handle, zoom to that handle
+        auto dragged = mouseHandler->getDraggedHandle();
+        if (dragged == MouseHandler::LoopMarkerHandle::In)
             m_activeZoomPoint = ActiveZoomPoint::In;
+        else if (dragged == MouseHandler::LoopMarkerHandle::Out)
+            m_activeZoomPoint = ActiveZoomPoint::Out;
+        else if (m_activeZoomPoint == ActiveZoomPoint::None)
+            m_activeZoomPoint = ActiveZoomPoint::In; // Default
     }
     else
     {

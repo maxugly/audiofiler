@@ -87,6 +87,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
         auto zoomBounds = owner.getZoomPopupBounds();
         if (zoomBounds.contains(event.getPosition()))
         {
+            interactionStartedInZoom = true;
             auto timeRange = owner.getZoomTimeRange();
             float proportion = (float)(event.x - zoomBounds.getX()) / (float)zoomBounds.getWidth();
             double zoomedTime = timeRange.first + (proportion * (timeRange.second - timeRange.first));
@@ -149,6 +150,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
         }
     }
 
+    interactionStartedInZoom = false;
     const auto waveformBounds = owner.getWaveformBounds();
     if (! waveformBounds.contains(event.getPosition()))
         return;
@@ -246,7 +248,7 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
     }
 
     // --- ZOOM POPUP DRAG ---
-    if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None && (draggedHandle != LoopMarkerHandle::None || isDragging))
+    if (interactionStartedInZoom && owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None && (draggedHandle != LoopMarkerHandle::None || isDragging))
     {
         auto zoomBounds = owner.getZoomPopupBounds();
         if (zoomBounds.contains(event.getPosition()) || draggedHandle != LoopMarkerHandle::None || isDragging)

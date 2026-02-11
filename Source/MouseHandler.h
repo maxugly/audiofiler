@@ -157,6 +157,7 @@ private:
     LoopMarkerHandle draggedHandle = LoopMarkerHandle::None;
     double dragStartLoopLength = 0.0;
     double dragStartMouseOffset = 0.0;
+    bool interactionStartedInZoom = false;
 
     /** @} */
     //==============================================================================
