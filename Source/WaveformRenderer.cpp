@@ -418,52 +418,72 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
 
     // Calculate time range for dynamic zoom
     double timeRange = audioLength / (double)controlPanel.getZoomFactor();
-    
-    // Clamp time range to not exceed audio length
     timeRange = juce::jmin(timeRange, audioLength);
 
-    double startTime = zoomCenterTime - (timeRange / 2.0);
-    double endTime = startTime + timeRange;
-
-    // Shift the window if it goes out of bounds
-    if (startTime < 0.0)
-    {
-        endTime -= startTime; // Shift forward
-        startTime = 0.0;
-    }
-    else if (endTime > audioLength)
-    {
-        startTime -= (endTime - audioLength); // Shift backward
-        endTime = audioLength;
-    }
+    const double startTime = zoomCenterTime - (timeRange / 2.0);
+    const double endTime = startTime + timeRange;
 
     // Cache for MouseHandler
     controlPanel.setZoomPopupBounds(popupBounds);
     controlPanel.setZoomTimeRange(startTime, endTime);
 
     // Draw background
-    g.setColour(juce::Colours::black.withAlpha(0.9f));
+    g.setColour(juce::Colours::black);
     g.fillRect(popupBounds);
 
     // Draw zoomed waveform
     g.setColour(Config::waveformColor);
     audioPlayer.getThumbnail().drawChannels(g, popupBounds, startTime, endTime, 1.0f);
 
-    // Calculate indicator position
-    float indicatorX = popupBounds.getX();
-    if (timeRange > 0.0)
-    {
-        float proportion = (float)((indicatorTime - startTime) / timeRange);
-        indicatorX += proportion * (float)popupBounds.getWidth();
-    }
-    else
-    {
-        indicatorX += (float)popupBounds.getWidth() / 2.0f;
-    }
+    // --- Boundary Shadows ---
+    auto drawShadow = [&](double startT, double endT, juce::Colour color) {
+        if (endT <= startTime || startT >= endTime) return;
+        double vStart = juce::jmax(startT, startTime);
+        double vEnd = juce::jmin(endT, endTime);
+        float x1 = (float)popupBounds.getX() + (float)popupBounds.getWidth() * (float)((vStart - startTime) / timeRange);
+        float x2 = (float)popupBounds.getX() + (float)popupBounds.getWidth() * (float)((vEnd - startTime) / timeRange);
+        g.setColour(color);
+        g.fillRect(x1, (float)popupBounds.getY(), x2 - x1, (float)popupBounds.getHeight());
+    };
 
-    // Draw indicator (thin vertical line)
-    g.setColour(Config::zoomPopupIndicatorColor);
-    g.drawVerticalLine(juce::roundToInt(indicatorX), (float)popupBounds.getY(), (float)popupBounds.getBottom());
+    const double loopIn = controlPanel.getLoopInPosition();
+    const double loopOut = controlPanel.getLoopOutPosition();
+
+    // Shadow regions outside the loop
+    drawShadow(startTime, loopIn, juce::Colours::black.withAlpha(0.5f));
+    drawShadow(loopOut, endTime, juce::Colours::black.withAlpha(0.5f));
+
+    // Shadow regions outside the file (solid black)
+    if (startTime < 0.0)
+        drawShadow(startTime, 0.0, juce::Colours::black);
+    if (endTime > audioLength)
+        drawShadow(audioLength, endTime, juce::Colours::black);
+
+    // --- Tracking Lines ---
+    auto drawFineLine = [&](double time, juce::Colour color, float thickness) {
+        if (time >= startTime && time <= endTime) {
+            float proportion = (float)((time - startTime) / timeRange);
+            float x = (float)popupBounds.getX() + proportion * (float)popupBounds.getWidth();
+            g.setColour(color);
+            g.drawLine(x, (float)popupBounds.getY(), x, (float)popupBounds.getBottom(), thickness);
+        }
+    };
+
+    bool isDraggingIn = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::In;
+    bool isDraggingOut = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out;
+
+    // Draw Loop Lines (Fine)
+    drawFineLine(loopIn, Config::loopLineColor, 1.0f);
+    drawFineLine(loopOut, Config::loopLineColor, 1.0f);
+    
+    // Draw Playback Cursor (Fine)
+    drawFineLine(audioPlayer.getTransportSource().getCurrentPosition(), Config::playbackCursorColor, 1.0f);
+
+    // Draw the "Tracking" line (the one we are centered on) with more prominence
+    if (isDraggingIn || isDraggingOut)
+        drawFineLine(isDraggingIn ? loopIn : loopOut, juce::Colours::dodgerblue, 2.0f); // Blue tracking
+    else
+        drawFineLine(audioPlayer.getTransportSource().getCurrentPosition(), juce::Colours::lime, 2.0f); // Green tracking
 
     // Draw blue border
     g.setColour(Config::zoomPopupBorderColor);

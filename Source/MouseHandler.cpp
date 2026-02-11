@@ -133,8 +133,12 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                     }
                     else
                     {
-                        // Seek playback in zoom popup
-                        owner.getAudioPlayer().getTransportSource().setPosition(zoomedTime);
+                        // Seek playback in zoom popup - CONSTRAINED TO LOOP
+                        double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
+                        double effectiveLoopOut = owner.getLoopOutPosition();
+                        double constrainedTime = juce::jlimit(effectiveLoopIn, effectiveLoopOut, zoomedTime);
+
+                        owner.getAudioPlayer().getTransportSource().setPosition(constrainedTime);
                         isDragging = true;
                         mouseDragStartX = event.x;
                     }
@@ -264,7 +268,11 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
             }
             else if (isDragging)
             {
-                owner.getAudioPlayer().getTransportSource().setPosition(zoomedTime);
+                double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
+                double effectiveLoopOut = owner.getLoopOutPosition();
+                double constrainedTime = juce::jlimit(effectiveLoopIn, effectiveLoopOut, zoomedTime);
+                
+                owner.getAudioPlayer().getTransportSource().setPosition(constrainedTime);
             }
 
             owner.updateLoopLabels();
