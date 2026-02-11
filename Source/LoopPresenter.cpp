@@ -32,8 +32,26 @@ LoopPresenter::~LoopPresenter()
 void LoopPresenter::setLoopInPosition(double positionSeconds)
 {
     const double totalLength = getAudioTotalLength();
-    loopInPosition = juce::jlimit(0.0, totalLength, positionSeconds);
+    const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
+
+    // Crossing Logic: If we manually move In past an Auto-Out, turn off Auto-Out
+    if (!silenceDetector.getIsAutoCutInActive() && newPos >= loopOutPosition && silenceDetector.getIsAutoCutOutActive())
+    {
+        silenceDetector.setIsAutoCutOutActive(false);
+        owner.updateComponentStates();
+    }
     
+    loopInPosition = newPos;
+    
+    // Push Logic: If In crosses Out and AC In is active
+    if (silenceDetector.getIsAutoCutInActive() && loopInPosition >= loopOutPosition)
+    {
+        // Push Out to the end, then re-detect if AC Out is active
+        setLoopOutPosition(totalLength);
+        if (silenceDetector.getIsAutoCutOutActive())
+            silenceDetector.detectOutSilence();
+    }
+
     // Constrain playback head if it's outside new loopIn
     auto& audioPlayer = owner.getAudioPlayer();
     audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
@@ -43,7 +61,25 @@ void LoopPresenter::setLoopInPosition(double positionSeconds)
 void LoopPresenter::setLoopOutPosition(double positionSeconds)
 {
     const double totalLength = getAudioTotalLength();
-    loopOutPosition = juce::jlimit(0.0, totalLength, positionSeconds);
+    const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
+
+    // Crossing Logic: If we manually move Out past an Auto-In, turn off Auto-In
+    if (!silenceDetector.getIsAutoCutOutActive() && newPos <= loopInPosition && silenceDetector.getIsAutoCutInActive())
+    {
+        silenceDetector.setIsAutoCutInActive(false);
+        owner.updateComponentStates();
+    }
+
+    loopOutPosition = newPos;
+
+    // Pull Logic: If Out crosses In and AC Out is active
+    if (silenceDetector.getIsAutoCutOutActive() && loopOutPosition <= loopInPosition)
+    {
+        // Pull In to the start, then re-detect if AC In is active
+        setLoopInPosition(0.0);
+        if (silenceDetector.getIsAutoCutInActive())
+            silenceDetector.detectInSilence();
+    }
 
     // Constrain playback head if it's outside new loopOut
     auto& audioPlayer = owner.getAudioPlayer();
@@ -54,7 +90,18 @@ void LoopPresenter::setLoopOutPosition(double positionSeconds)
 void LoopPresenter::ensureLoopOrder()
 {
     if (loopInPosition > loopOutPosition)
+    {
         std::swap(loopInPosition, loopOutPosition);
+        
+        // Swap Auto-Cut states as well so the "Auto" property follows the detected value
+        bool acIn = silenceDetector.getIsAutoCutInActive();
+        bool acOut = silenceDetector.getIsAutoCutOutActive();
+        silenceDetector.setIsAutoCutInActive(acOut);
+        silenceDetector.setIsAutoCutOutActive(acIn);
+        
+        // Ensure UI buttons reflect the swapped auto states
+        owner.updateComponentStates();
+    }
 }
 
 void LoopPresenter::updateLoopLabels()
