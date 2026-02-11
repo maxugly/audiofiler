@@ -31,7 +31,8 @@ LoopPresenter::~LoopPresenter()
 
 void LoopPresenter::setLoopInPosition(double positionSeconds)
 {
-    loopInPosition = positionSeconds;
+    const double totalLength = getAudioTotalLength();
+    loopInPosition = juce::jlimit(0.0, totalLength, positionSeconds);
     
     // Constrain playback head if it's outside new loopIn
     auto& audioPlayer = owner.getAudioPlayer();
@@ -41,7 +42,8 @@ void LoopPresenter::setLoopInPosition(double positionSeconds)
 
 void LoopPresenter::setLoopOutPosition(double positionSeconds)
 {
-    loopOutPosition = positionSeconds;
+    const double totalLength = getAudioTotalLength();
+    loopOutPosition = juce::jlimit(0.0, totalLength, positionSeconds);
 
     // Constrain playback head if it's outside new loopOut
     auto& audioPlayer = owner.getAudioPlayer();

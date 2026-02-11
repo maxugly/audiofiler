@@ -400,9 +400,25 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
                                 : controlPanel.getLoopOutPosition();
 
     // Calculate time range for dynamic zoom
-    const double timeRange = audioLength / (double)controlPanel.getZoomFactor();
-    const double startTime = currentTime - (timeRange / 2.0);
-    const double endTime = startTime + timeRange;
+    double timeRange = audioLength / (double)controlPanel.getZoomFactor();
+    
+    // Clamp time range to not exceed audio length
+    timeRange = juce::jmin(timeRange, audioLength);
+
+    double startTime = currentTime - (timeRange / 2.0);
+    double endTime = startTime + timeRange;
+
+    // Shift the window if it goes out of bounds
+    if (startTime < 0.0)
+    {
+        endTime -= startTime; // Shift forward
+        startTime = 0.0;
+    }
+    else if (endTime > audioLength)
+    {
+        startTime -= (endTime - audioLength); // Shift backward
+        endTime = audioLength;
+    }
 
     // Cache for MouseHandler
     controlPanel.setZoomPopupBounds(popupBounds);
@@ -416,9 +432,21 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
     g.setColour(Config::waveformColor);
     audioPlayer.getThumbnail().drawChannels(g, popupBounds, startTime, endTime, 1.0f);
 
-    // Draw centered indicator (thin vertical line)
+    // Calculate indicator position (it might not be centered if we shifted the window)
+    float indicatorX = popupBounds.getX();
+    if (timeRange > 0.0)
+    {
+        float proportion = (float)((currentTime - startTime) / timeRange);
+        indicatorX += proportion * (float)popupBounds.getWidth();
+    }
+    else
+    {
+        indicatorX += (float)popupBounds.getWidth() / 2.0f;
+    }
+
+    // Draw indicator (thin vertical line)
     g.setColour(Config::zoomPopupIndicatorColor);
-    g.drawVerticalLine(popupBounds.getCentreX(), (float)popupBounds.getY(), (float)popupBounds.getBottom());
+    g.drawVerticalLine(juce::roundToInt(indicatorX), (float)popupBounds.getY(), (float)popupBounds.getBottom());
 
     // Draw blue border
     g.setColour(Config::zoomPopupBorderColor);
