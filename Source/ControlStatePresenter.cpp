@@ -56,8 +56,8 @@ void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, boo
     owner.loopOutEditor.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutOutActive()); DBG("  - loopOutEditor enabled: " << (owner.loopOutEditor.isEnabled() ? "true" : "false"));
     owner.clearLoopOutButton.setEnabled(enabled && isCutModeActive && !owner.silenceDetector->getIsAutoCutOutActive()); DBG("  - clearLoopOutButton enabled: " << (owner.clearLoopOutButton.isEnabled() ? "true" : "false"));
 
-    owner.autoCutInButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutInButton enabled: " << (owner.autoCutInButton.isEnabled() ? "true" : "false"));
-    owner.autoCutOutButton.setEnabled(enabled && isCutModeActive); DBG("  - autoCutOutOutton enabled: " << (owner.autoCutOutButton.isEnabled() ? "true" : "false"));
+    owner.autoCutInButton.setEnabled(isCutModeActive); DBG("  - autoCutInButton enabled: " << (owner.autoCutInButton.isEnabled() ? "true" : "false"));
+    owner.autoCutOutButton.setEnabled(isCutModeActive); DBG("  - autoCutOutOutton enabled: " << (owner.autoCutOutButton.isEnabled() ? "true" : "false"));
 
     owner.autoCutInButton.setToggleState(owner.silenceDetector->getIsAutoCutInActive(), juce::dontSendNotification);
     owner.autoCutOutButton.setToggleState(owner.silenceDetector->getIsAutoCutOutActive(), juce::dontSendNotification);
