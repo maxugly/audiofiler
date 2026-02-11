@@ -92,8 +92,22 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
         {
             draggedHandle = LoopMarkerHandle::None;
         }
-
-        if (draggedHandle == LoopMarkerHandle::None)
+        
+        // Special case: Full loop drag initialization
+        if (draggedHandle == LoopMarkerHandle::Full)
+        {
+            dragStartLoopLength = std::abs(owner.getLoopOutPosition() - owner.getLoopInPosition());
+            
+            const auto waveformBounds = owner.getWaveformBounds();
+            AudioPlayer& audioPlayer = owner.getAudioPlayer();
+            auto audioLength = audioPlayer.getThumbnail().getTotalLength();
+            float proportion = (float)(event.x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
+            double mouseTime = proportion * audioLength;
+            
+            dragStartMouseOffset = mouseTime - owner.getLoopInPosition();
+            owner.repaint();
+        }
+        else if (draggedHandle == LoopMarkerHandle::None)
         {
             isDragging = true;
             mouseDragStartX = event.x;
@@ -132,12 +146,32 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
         {
             int clampedX = juce::jlimit(waveformBounds.getX(), waveformBounds.getRight(), event.x);
             float proportion = (float)(clampedX - waveformBounds.getX()) / (float)waveformBounds.getWidth();
-            double time = proportion * audioLength;
+            double mouseTime = proportion * audioLength;
 
             if (draggedHandle == LoopMarkerHandle::In)
-                owner.setLoopInPosition(time);
+                owner.setLoopInPosition(mouseTime);
             else if (draggedHandle == LoopMarkerHandle::Out)
-                owner.setLoopOutPosition(time);
+                owner.setLoopOutPosition(mouseTime);
+            else if (draggedHandle == LoopMarkerHandle::Full)
+            {
+                double newIn = mouseTime - dragStartMouseOffset;
+                double newOut = newIn + dragStartLoopLength;
+                
+                // Clamp to bounds while preserving length
+                if (newIn < 0.0)
+                {
+                    newIn = 0.0;
+                    newOut = dragStartLoopLength;
+                }
+                else if (newOut > audioLength)
+                {
+                    newOut = audioLength;
+                    newIn = audioLength - dragStartLoopLength;
+                }
+                
+                owner.setLoopInPosition(newIn);
+                owner.setLoopOutPosition(newOut);
+            }
 
             owner.updateLoopLabels();
             owner.repaint();
@@ -339,6 +373,23 @@ MouseHandler::LoopMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int
 
     if (checkHandle(owner.getLoopInPosition())) return LoopMarkerHandle::In;
     if (checkHandle(owner.getLoopOutPosition())) return LoopMarkerHandle::Out;
+
+    // Check for Full loop handle (top/bottom 1/3 of the cap area between markers)
+    const double loopIn = owner.getLoopInPosition();
+    const double loopOut = owner.getLoopOutPosition();
+    const double actualIn = juce::jmin(loopIn, loopOut);
+    const double actualOut = juce::jmax(loopIn, loopOut);
+    
+    float inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (float)(actualIn / audioLength);
+    float outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (float)(actualOut / audioLength);
+    
+    int hollowHeight = Config::loopMarkerCapHeight / 3;
+    
+    juce::Rectangle<int> topHollow((int)inX, waveformBounds.getY(), (int)(outX - inX), hollowHeight);
+    juce::Rectangle<int> bottomHollow((int)inX, waveformBounds.getBottom() - hollowHeight, (int)(outX - inX), hollowHeight);
+    
+    if (topHollow.contains(pos) || bottomHollow.contains(pos))
+        return LoopMarkerHandle::Full;
 
     return LoopMarkerHandle::None;
 }

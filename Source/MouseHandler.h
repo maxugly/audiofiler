@@ -129,7 +129,8 @@ public:
     enum class LoopMarkerHandle {
         None,
         In,
-        Out
+        Out,
+        Full
     };
 
     /** @brief Gets the handle currently under the mouse. */
@@ -154,6 +155,8 @@ private:
 
     LoopMarkerHandle hoveredHandle = LoopMarkerHandle::None;
     LoopMarkerHandle draggedHandle = LoopMarkerHandle::None;
+    double dragStartLoopLength = 0.0;
+    double dragStartMouseOffset = 0.0;
 
     /** @} */
     //==============================================================================

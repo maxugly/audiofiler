@@ -211,8 +211,21 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
     drawLoopMarker(inX, MouseHandler::LoopMarkerHandle::In);
     drawLoopMarker(outX, MouseHandler::LoopMarkerHandle::Out);
 
+    const auto& mouseHandler = controlPanel.getMouseHandler();
+    juce::Colour hollowColor = Config::loopLineColor;
+    if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Full)
+        hollowColor = Config::loopMarkerDragColor;
+    else if (mouseHandler.getHoveredHandle() == MouseHandler::LoopMarkerHandle::Full)
+        hollowColor = Config::loopMarkerHoverColor;
+
+    g.setColour(hollowColor);
+    int hollowHeight = Config::loopMarkerCapHeight / 3;
+    
     g.drawHorizontalLine(waveformBounds.getY(), (int)inX, (int)outX);
+    g.drawHorizontalLine(waveformBounds.getY() + hollowHeight, (int)inX, (int)outX);
+    
     g.drawHorizontalLine(waveformBounds.getBottom() - 1, (int)inX, (int)outX);
+    g.drawHorizontalLine(waveformBounds.getBottom() - hollowHeight, (int)inX, (int)outX);
 }
 
 void WaveformRenderer::drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const
