@@ -12,14 +12,14 @@ if (UNIX AND NOT APPLE)
             #/usr/include/webkitgtk-4.1
             #/usr/include/libsoup-3.0
             ${GTK3_INCLUDE_DIRS}
-            /usr/include/gtk-3.0
-            /usr/include/gtk-3.0
-            /usr/lib/glib-2.0/include
-            /usr/include/pango-1.0
-            /usr/include/harfbuzz
-            /usr/include/cairo
-            /usr/include/gdk-pixbuf-2.0
-            /usr/include/atk-1.0
+            #/usr/include/gtk-3.0
+            #/usr/include/gtk-3.0
+            #/usr/lib/glib-2.0/include
+            #/usr/include/pango-1.0
+            #/usr/include/harfbuzz
+            #/usr/include/cairo
+            #/usr/include/gdk-pixbuf-2.0
+            #/usr/include/atk-1.0
     )
 
     link_directories(${GTK3_LIBRARY_DIRS})
