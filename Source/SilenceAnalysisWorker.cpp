@@ -3,6 +3,7 @@
 #include "ControlPanel.h"
 #include "AudioPlayer.h"
 #include "SilenceDetectionLogger.h"
+#include <limits>
 
 namespace
 {
@@ -33,6 +34,13 @@ void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float thre
     if (lengthInSamples == 0)
     {
         SilenceDetectionLogger::logZeroLength(ownerPanel);
+        resumeIfNeeded(audioPlayer, wasPlaying);
+        return;
+    }
+
+    if (lengthInSamples > std::numeric_limits<int>::max())
+    {
+        SilenceDetectionLogger::logAudioTooLarge(ownerPanel);
         resumeIfNeeded(audioPlayer, wasPlaying);
         return;
     }
@@ -85,6 +93,13 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
         return;
     }
 
+    if (lengthInSamples > std::numeric_limits<int>::max())
+    {
+        SilenceDetectionLogger::logAudioTooLarge(ownerPanel);
+        resumeIfNeeded(audioPlayer, wasPlaying);
+        return;
+    }
+
     auto buffer = std::make_unique<juce::AudioBuffer<float>>(reader->numChannels, (int) lengthInSamples);
     reader->read(buffer.get(), 0, (int) lengthInSamples, 0, true, true);
 
@@ -94,8 +109,10 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
         {
             if (std::abs(buffer->getSample(channel, sample)) > threshold)
             {
-                int endPoint = sample + (int) (reader->sampleRate * 0.05); // 50ms tail
-                endPoint = juce::jmin(endPoint, buffer->getNumSamples());
+                const juce::int64 tailSamples = (juce::int64) (reader->sampleRate * 0.05); // 50ms tail
+                const juce::int64 endPoint64 = (juce::int64) sample + tailSamples;
+                const int endPoint = (int) juce::jmin (endPoint64, (juce::int64) buffer->getNumSamples());
+
                 ownerPanel.setLoopEnd(endPoint);
                 SilenceDetectionLogger::logLoopEndSet(ownerPanel, endPoint, reader->sampleRate);
                 resumeIfNeeded(audioPlayer, wasPlaying);

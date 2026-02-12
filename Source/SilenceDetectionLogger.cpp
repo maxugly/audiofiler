@@ -39,3 +39,8 @@ void SilenceDetectionLogger::logNoSoundFound(ControlPanel& panel, const juce::St
 {
     panel.getStatsDisplay().insertTextAtCaret("Could not detect any sound at " + boundaryDescription + ".\n");
 }
+
+void SilenceDetectionLogger::logAudioTooLarge(ControlPanel& panel)
+{
+    panel.getStatsDisplay().insertTextAtCaret("SilenceDetector: Audio file is too large for automated silence detection.\n");
+}

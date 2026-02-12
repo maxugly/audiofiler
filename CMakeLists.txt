@@ -91,6 +91,8 @@ target_sources(Sorta PRIVATE
         Source/LoopButtonPresenter.cpp
         Source/LoopResetPresenter.h
         Source/LoopResetPresenter.cpp
+        Source/LoopButton.h
+        Source/LoopButton.cpp
         Source/PlaybackLoopController.h
         Source/PlaybackLoopController.cpp
         Source/PlaybackTextPresenter.h

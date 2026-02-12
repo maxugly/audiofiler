@@ -10,6 +10,7 @@
 #include "SilenceDetector.h" // Include the new SilenceDetector class
 #include "MouseHandler.h" // Include the new MouseHandler class
 #include "ControlPanelLayoutCache.h"
+#include "LoopButton.h"
 
 class MainComponent; // Forward declaration
 class LayoutManager;
@@ -27,47 +28,8 @@ class PlaybackTextPresenter;
 
 /**
  * @file ControlPanel.h
- * @brief Defines the ControlPanel class, which manages the application's UI controls, and the custom LoopButton.
+ * @brief Defines the ControlPanel class, which manages the application's UI controls.
  */
-
-/**
- * @class LoopButton
- * @brief A custom button class designed to differentiate between left and right mouse clicks.
- *
- * This button is specifically used for the "Loop In" and "Loop Out" functionalities,
- * allowing a left-click to directly set a point and a right-click to enter a
- * placement mode for more precise interaction. It exposes `onLeftClick` and
- * `onRightClick` function objects for flexible callback assignment.
- */
-class LoopButton : public juce::TextButton {
-public:
-    std::function<void()> onLeftClick;  ///< Function to call when the left mouse button is released over the button.
-    std::function<void()> onRightClick; ///< Function to call when the right mouse button is released over the button.
-
-    /**
-     * @brief Constructs a LoopButton.
-     * @param name The text to display on the button.
-     */
-    LoopButton (const juce::String& name = {}) : juce::TextButton (name) {}
-
-private:
-    /**
-     * @brief Overrides `mouseUp` to detect left vs. right clicks and trigger custom callbacks.
-     * @param event The mouse event details.
-     */
-    void mouseUp (const juce::MouseEvent& event) override {
-        if (isEnabled()) {
-            if (event.mods.isRightButtonDown()) {
-                if (onRightClick) onRightClick();
-            } else if (event.mods.isLeftButtonDown()) {
-                if (onLeftClick) onLeftClick();
-            }
-        }
-        juce::TextButton::mouseUp(event); // Call base class method
-    }
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LoopButton)
-};
 
 /**
  * @class ControlPanel

@@ -17,4 +17,5 @@ public:
     static void logLoopStartSet(ControlPanel& panel, int sampleIndex, double sampleRate);
     static void logLoopEndSet(ControlPanel& panel, int sampleIndex, double sampleRate);
     static void logNoSoundFound(ControlPanel& panel, const juce::String& boundaryDescription);
+    static void logAudioTooLarge(ControlPanel& panel);
 };
