@@ -56,6 +56,7 @@ void LoopPresenter::setLoopInPosition(double positionSeconds)
     auto& audioPlayer = owner.getAudioPlayer();
     audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
                                        loopInPosition, loopOutPosition);
+    ensureLoopOrder();
 }
 
 void LoopPresenter::setLoopOutPosition(double positionSeconds)
@@ -85,6 +86,7 @@ void LoopPresenter::setLoopOutPosition(double positionSeconds)
     auto& audioPlayer = owner.getAudioPlayer();
     audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
                                        loopInPosition, loopOutPosition);
+    ensureLoopOrder();
 }
 
 void LoopPresenter::ensureLoopOrder()
@@ -230,12 +232,7 @@ bool LoopPresenter::applyLoopInFromEditor(double newPosition, juce::TextEditor& 
     const double totalLength = getAudioTotalLength();
     if (newPosition >= 0.0 && newPosition <= totalLength)
     {
-        if (loopOutPosition > -1.0 && newPosition > loopOutPosition)
-        {
-            syncEditorToPosition(editor, loopInPosition);
-            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
-            return false;
-        }
+
 
         setLoopInPosition(newPosition);
         owner.updateLoopButtonColors();
@@ -247,6 +244,7 @@ bool LoopPresenter::applyLoopInFromEditor(double newPosition, juce::TextEditor& 
 
         editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
         owner.repaint();
+        updateLoopLabels();
         return true;
     }
 
@@ -266,12 +264,7 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition, juce::TextEditor&
         if (owner.getShouldLoop() && transport.getCurrentPosition() >= loopOutPosition)
             transport.setPosition(loopInPosition);
 
-        if (loopInPosition > -1.0 && newPosition < loopInPosition)
-        {
-            syncEditorToPosition(editor, loopOutPosition);
-            editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
-            return false;
-        }
+
 
         setLoopOutPosition(newPosition);
         owner.updateLoopButtonColors();
@@ -283,6 +276,7 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition, juce::TextEditor&
 
         editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
         owner.repaint();
+        updateLoopLabels();
         return true;
     }
 
