@@ -70,19 +70,32 @@ void WaveformRenderer::drawReducedQualityWaveform(juce::Graphics& g, AudioPlayer
 
     const auto waveformBounds = controlPanel.getWaveformBounds();
     const int width = waveformBounds.getWidth();
-    const int height = waveformBounds.getHeight();
-    const int centerY = waveformBounds.getCentreY();
+    if (width <= 0)
+        return;
+
+    const float height = (float)waveformBounds.getHeight();
+    const float centerY = (float)waveformBounds.getCentreY();
+    const float halfHeightScale = height * Config::waveformHeightScale;
+    const double timePerPixel = audioLength / (double)width;
+    const double timeDelta = timePerPixel * pixelsPerSample;
+    const int offsetX = waveformBounds.getX();
+
+    juce::RectangleList<float> waveformRects;
 
     for (int x = 0; x < width; x += pixelsPerSample)
     {
-        const double proportion = (double)x / (double)width;
-        const double time = proportion * audioLength;
+        const double time = (double)x * timePerPixel;
         float minVal = 0.0f, maxVal = 0.0f;
-        audioPlayer.getThumbnail().getApproximateMinMax(time, time + (audioLength / width) * pixelsPerSample, channel, minVal, maxVal);
-        const auto topY = (float)centerY - (maxVal * height * Config::waveformHeightScale);
-        const auto bottomY = (float)centerY - (minVal * height * Config::waveformHeightScale);
-        g.drawVerticalLine(waveformBounds.getX() + x, topY, bottomY);
+        audioPlayer.getThumbnail().getApproximateMinMax(time, time + timeDelta, channel, minVal, maxVal);
+
+        const float topY = centerY - (maxVal * halfHeightScale);
+        const float bottomY = centerY - (minVal * halfHeightScale);
+
+        const float xPos = (float)(offsetX + x);
+        waveformRects.addWithoutMerging({ xPos, topY, 1.0f, bottomY - topY });
     }
+
+    g.fillRectList(waveformRects);
 }
 
 void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const
