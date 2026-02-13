@@ -108,8 +108,10 @@ void LoopPresenter::ensureLoopOrder()
 
 void LoopPresenter::updateLoopLabels()
 {
-    syncEditorToPosition(loopInEditor, loopInPosition);
-    syncEditorToPosition(loopOutEditor, loopOutPosition);
+    if (!loopInEditor.hasKeyboardFocus(false))
+        syncEditorToPosition(loopInEditor, loopInPosition);
+    if (!loopOutEditor.hasKeyboardFocus(false))
+        syncEditorToPosition(loopOutEditor, loopOutPosition);
 }
 
 void LoopPresenter::setLoopStartFromSample(int sampleIndex)
@@ -312,6 +314,39 @@ void LoopPresenter::mouseExit(const juce::MouseEvent& event)
         owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::None);
         owner.performDelayedJumpIfNeeded();
     }
+}
+
+void LoopPresenter::mouseUp(const juce::MouseEvent& event)
+{
+    auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
+    if (editor == nullptr)
+        return;
+
+    // Only apply smart highlight if the user hasn't made a manual selection
+    if (editor->getHighlightedRegion().getLength() > 0)
+        return;
+
+    int charIndex = editor->getTextIndexAt(event.getPosition());
+    if (charIndex < 0) return;
+
+    // Time format: HH:MM:SS:mmm
+    // Indices:
+    // HH: 0-1 (2 chars)
+    // :   2
+    // MM: 3-4 (2 chars)
+    // :   5
+    // SS: 6-7 (2 chars)
+    // :   8
+    // mmm: 9-11 (3 chars)
+
+    if (charIndex <= 1)
+        editor->setHighlightedRegion(juce::Range<int>(0, 2)); // HH
+    else if (charIndex >= 3 && charIndex <= 4)
+        editor->setHighlightedRegion(juce::Range<int>(3, 5)); // MM
+    else if (charIndex >= 6 && charIndex <= 7)
+        editor->setHighlightedRegion(juce::Range<int>(6, 8)); // SS
+    else if (charIndex >= 9 && charIndex <= 11)
+        editor->setHighlightedRegion(juce::Range<int>(9, 12)); // mmm
 }
 
 void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)

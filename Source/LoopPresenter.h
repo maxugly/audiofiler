@@ -93,6 +93,7 @@ private:
     void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
     void mouseEnter(const juce::MouseEvent& event) override;
     void mouseExit(const juce::MouseEvent& event) override;
+    void mouseUp(const juce::MouseEvent& event) override;
 
     double parseTime(const juce::String& timeString) const;
     double getAudioTotalLength() const;
