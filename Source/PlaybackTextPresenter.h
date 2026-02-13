@@ -34,6 +34,7 @@ private:
 
     // juce::MouseListener overrides
     void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
+    void mouseUp(const juce::MouseEvent& event) override;
 
     void applyTimeEdit(juce::TextEditor& editor);
     double parseTime(const juce::String& timeString) const;

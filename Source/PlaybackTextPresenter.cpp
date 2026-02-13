@@ -3,6 +3,7 @@
 #include "ControlPanel.h"
 #include "Config.h"
 #include "AudioPlayer.h"
+#include <cmath>
 
 PlaybackTextPresenter::PlaybackTextPresenter(ControlPanel& ownerPanel)
     : owner(ownerPanel)
@@ -137,7 +138,25 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor& editor)
     else if (&editor == &owner.loopLengthEditor)
     {
         // Adjust loop out based on loop in
-        owner.setLoopOutPosition(owner.getLoopInPosition() + newTime);
+        double currentIn = owner.getLoopInPosition();
+
+        // Clamp length to total length to prevent issues if loopIn is 0
+        newTime = juce::jlimit(0.0, totalLength, newTime);
+
+        double proposedOut = currentIn + newTime;
+
+        if (proposedOut > totalLength)
+        {
+             // Shift In backwards so that [In, Out] has length newTime and Out <= totalLength
+             double newIn = totalLength - newTime;
+             owner.setLoopInPosition(newIn);
+             owner.setLoopOutPosition(totalLength);
+        }
+        else
+        {
+             owner.setLoopOutPosition(proposedOut);
+        }
+
         owner.ensureLoopOrder();
         owner.updateLoopLabels();
     }
@@ -165,6 +184,44 @@ void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor& editor, doubl
     juce::String text = owner.formatTime(positionSeconds);
     if (isRemaining) text = "-" + text;
     editor.setText(text, juce::dontSendNotification);
+}
+
+void PlaybackTextPresenter::mouseUp(const juce::MouseEvent& event)
+{
+    auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
+    if (editor == nullptr) return;
+
+    // Only apply smart highlight if the user hasn't made a manual selection
+    if (editor->getHighlightedRegion().getLength() > 0)
+        return;
+
+    // Check if it's remaining time (starts with '-')
+    bool isNegative = (editor == &owner.remainingTimeEditor) || editor->getText().startsWith("-");
+    int offset = isNegative ? 1 : 0;
+
+    int charIndex = editor->getTextIndexAt(event.getPosition());
+    if (charIndex < 0) return;
+
+    int effectiveIndex = charIndex - offset;
+
+    // Time format: [opt -]HH:MM:SS:mmm
+    // Indices (with offset):
+    // HH: 0-1 (2 chars)
+    // :   2
+    // MM: 3-4 (2 chars)
+    // :   5
+    // SS: 6-7 (2 chars)
+    // :   8
+    // mmm: 9-11 (3 chars)
+
+    if (effectiveIndex <= 1)
+        editor->setHighlightedRegion(juce::Range<int>(0 + offset, 2 + offset)); // HH
+    else if (effectiveIndex >= 3 && effectiveIndex <= 4)
+        editor->setHighlightedRegion(juce::Range<int>(3 + offset, 5 + offset)); // MM
+    else if (effectiveIndex >= 6 && effectiveIndex <= 7)
+        editor->setHighlightedRegion(juce::Range<int>(6 + offset, 8 + offset)); // SS
+    else if (effectiveIndex >= 9 && effectiveIndex <= 11)
+        editor->setHighlightedRegion(juce::Range<int>(9 + offset, 12 + offset)); // mmm
 }
 
 void PlaybackTextPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)
