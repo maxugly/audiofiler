@@ -1,113 +1,36 @@
-# CMake generated files and directories
+# --- Build & Binary Output ---
 build/
-build-release/
-CMakeLists.txt.user*
-
-# Compiled Object files, libraries, and executables
+build-artifacts/
+cmake-build-*/
+bin/
+obj/
 *.o
 *.obj
-*.lo
-*.la
-*.so
-*.a
-*.dll
-*.lib
 *.exe
 *.out
 *.app
-*.ipa
-*.ap_
+audiofiler
 
-# Editor and IDE files
+# --- IDE & System ---
 .idea/
+.vscode/
+.aider*/
 *.swp
-*~
-*#
-.#*
-*.bak
-*.orig
-*.rej
-*.user
-*.suo
-*.ncb
-*.aps
-*.dsp
-*.dsw
-*.plg
-*.vcproj
-*.vcxproj*
-*.sln
-*.filters
-*.opendbl
-*.xcodeproj
-*.xcworkspace
-*.xcscheme
-*.DS_Store
+*.kate-swp
+*.bak*
+.DS_Store
 Thumbs.db
-*.bin
 
-# Dependency directories
-bin/
-obj/
-pkg/
+# --- Project Specifics ---
+CMakeLists.txt.user*
+/docs/
+/html/
+/latex/
 
-# Logs and temporary files
+# --- Temp & Scratch Files ---
 *.log
 *.tmp
 temp/
 tmp/
-audiofiler
-Source/.Main.cpp.kate-swp
-Source/.MainComponent.cpp.kate-swp
-Source/.MainComponent.h.kate-swp
-Source/MainComponent.cpp.bak2
-Source/MainComponent.cpp.bak3
-chatgpt
-Source/counter.py
-NEXT_TASK.md
-build_log.txt
-deepseek
-deepseek2
-deepseek3
-grok
-.aider.tags.cache.v4/84/3d/771041cc5d0824902f5cde1c6ea0.val
-.aider.tags.cache.v4/cache.db
-.aider.tags.cache.v4/cache.db-shm
-.aider.tags.cache.v4/cache.db-wal
-.aider.chat.history.md
-.aider.input.history
-prompt
-t.mp3
-grok1
-a
-bug_report_for_next_session.md
-grokky
-o
-p
-pr
-project_handover_prompt.md
-prompty
-q
-userFrustration
-/html
-*.md5
-*.txt
-*.tex
-*.pdf
-*.sty
-Doxyfile
-docs/html/clipboard.js
-*.js
-*.html
-*.css
-*.svg
-/latex
-*.log
-
-
-/.vscode
-/docs/latex
-/docs
-/PROGRESS_CHECKLIST.md
-/lastGuy
-/resumePrompt.md
+*.mp3
+/Source/counter.py
