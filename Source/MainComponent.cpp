@@ -6,19 +6,30 @@
 
 MainComponent::MainComponent()
 {
+    // 1. Initialize logic and engines
     audioPlayer = std::make_unique<AudioPlayer>();
     audioPlayer->addChangeListener(this);
     
+    // 2. Initialize UI components
     controlPanel = std::make_unique<ControlPanel>(*this);
     addAndMakeVisible(controlPanel.get());
+    
+    // 3. Initialize controllers that bridge UI and Logic
     keybindHandler = std::make_unique<KeybindHandler>(*this, *audioPlayer, *controlPanel);
     playbackLoopController = std::make_unique<PlaybackLoopController>(*audioPlayer, *controlPanel);
 
-    setSize(Config::initialWindowWidth, Config::initialWindowHeight);
+    // 4. Set Audio Channels (Important to do before some UI sizing if they depend on audio state)
     setAudioChannels(0, 2);
+
+    // 5. Set Window Size - This triggers resized() and lays out the ControlPanel
+    setSize(Config::initialWindowWidth, Config::initialWindowHeight);
+    
+    // 6. Start the UI Refresh Timer
     startTimerHz(60);
+
+    // 7. Focus Setup - We allow the component to receive focus, 
+    // but we no longer "grab" it here to avoid Peer assertion crashes.
     setWantsKeyboardFocus(true);
-    grabKeyboardFocus();
 
 #if TESTING_MODE
     juce::File audioFile(TEST_FILE_PATH);
@@ -34,7 +45,6 @@ MainComponent::MainComponent()
             
             // Calculate and display dynamic statistics
             controlPanel->updateStatsFromAudio();
-            // Further setup for testing can be done via controlPanel
         }
         else
         {
@@ -51,6 +61,7 @@ MainComponent::~MainComponent()
     stopTimer();
 }
 
+//==============================================================================
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     audioPlayer->prepareToPlay(samplesPerBlockExpected, sampleRate);
@@ -66,24 +77,28 @@ void MainComponent::releaseResources()
     audioPlayer->releaseResources();
 }
 
+//==============================================================================
 void MainComponent::paint(juce::Graphics& g)
 {
-    // The ControlPanel now handles all painting of controls and waveforms.
-    // MainComponent's paint is now only for things drawn outside of ControlPanel.
-    // We can leave this empty if ControlPanel covers the whole area.
+    // ControlPanel handles the bulk of the UI painting.
+    // Fill the background to prevent "ghosting" artifacts.
+    g.fillAll(juce::Colours::black);
 }
 
 void MainComponent::resized()
 {
-    controlPanel->setBounds(getLocalBounds());
+    // Ensure the control panel fills the entire available space
+    if (controlPanel != nullptr)
+        controlPanel->setBounds(getLocalBounds());
 }
 
+//==============================================================================
 void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == audioPlayer.get())
     {
         controlPanel->updatePlayButtonText(audioPlayer->isPlaying());
-        repaint(); // Repaint to update playback cursor etc.
+        repaint(); 
     }
 }
 
@@ -99,19 +114,17 @@ void MainComponent::timerCallback()
     // Keep editors in sync
     controlPanel->updateLoopLabels();
 
-    // We repaint continuously for animations and playback cursor
+    // Redraw the control panel (includes waveform and cursor)
     controlPanel->repaint();
 }
 
-/**
- * @brief Handles the click event for the open file button.
- *        Opens a file chooser dialog and loads the selected audio file.
- */
+//==============================================================================
 void MainComponent::openButtonClicked()
 {
     chooser = std::make_unique<juce::FileChooser>("Select Audio...",
         juce::File::getSpecialLocation(juce::File::userHomeDirectory),
         audioPlayer->getFormatManager().getWildcardForAllFormats());
+    
     auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
 
     chooser->launchAsync(flags, [this](const juce::FileChooser& fc) {
@@ -126,11 +139,8 @@ void MainComponent::openButtonClicked()
                 controlPanel->setLoopOutPosition(audioPlayer->getThumbnail().getTotalLength());
                 controlPanel->updateLoopLabels();
                 controlPanel->updateComponentStates();
-
-                // Calculate and display dynamic statistics
                 controlPanel->updateStatsFromAudio();
 
-                // Run autocut detection if enabled
                 auto& sd = controlPanel->getSilenceDetector();
                 if (sd.getIsAutoCutInActive()) sd.detectInSilence();
                 if (sd.getIsAutoCutOutActive()) sd.detectOutSilence();
@@ -143,14 +153,11 @@ void MainComponent::openButtonClicked()
                 controlPanel->setStatsDisplayText(result.getErrorMessage(), juce::Colours::red);
             }
         }
+        // Safely request focus after a UI interaction
         grabKeyboardFocus();
     });
 }
 
-/**
- * @brief Seeks the audio playback position based on an X-coordinate in the waveform.
- * @param x The X-coordinate in pixels relative to the MainComponent.
- */
 void MainComponent::seekToPosition(int x)
 {
     if (audioPlayer->getThumbnail().getTotalLength() > 0.0)
@@ -158,6 +165,7 @@ void MainComponent::seekToPosition(int x)
         auto relativeX = (double)(x - controlPanel->getWaveformBounds().getX());
         auto proportion = relativeX / (double)controlPanel->getWaveformBounds().getWidth();
         auto newPosition = juce::jlimit(0.0, 1.0, proportion) * audioPlayer->getThumbnail().getTotalLength();
+        
         audioPlayer->setPositionConstrained(newPosition,
                                            controlPanel->getLoopInPosition(),
                                            controlPanel->getLoopOutPosition());
@@ -171,11 +179,6 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     return false;
 }
 
-/**
- * @brief Formats a time in seconds into a human-readable string (HH:MM:SS:mmm).
- * @param seconds The time in seconds.
- * @return A formatted juce::String.
- */
 juce::String MainComponent::formatTime(double seconds) {
   if (seconds < 0) seconds = 0;
   int hours = (int)(seconds / 3600.0);
