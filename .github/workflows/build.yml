@@ -21,7 +21,7 @@ jobs:
             libgtk-3-dev libasound2-dev libjack-jackd2-dev \
             libx11-dev libxcomposite-dev libxcursor-dev \
             libxext-dev libxinerama-dev libxrandr-dev \
-            libxrender-dev libwebkit2gtk-4.0-dev \
+            libxrender-dev libwebkit2gtk-4.1-dev \
             libglu1-mesa-dev mesa-common-dev freeglut3-dev
 
       - name: Cache build
@@ -40,22 +40,19 @@ jobs:
           fi
 
       - name: Configure CMake
-        # Using g++-12 and Ninja as per your original setup
         run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=g++-12 .
 
       - name: Build with Ninja
         run: ninja -C build
 
       - name: List build directory
-        # Updated to check for audiofiler instead of Sorta
         run: ls -Rlh build | grep -i audiofiler || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofiler-build
-          # Matches 'audiofiler' or 'Audiofiler' anywhere in the build tree
+          # Matches strictly lowercase 'audiofiler' 
           path: |
             build/**/audiofiler*
-            build/**/Audiofiler*
           if-no-files-found: error
