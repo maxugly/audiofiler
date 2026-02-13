@@ -19,8 +19,8 @@
  * to playback state changes (e.g., reaching the end of the file).
  */
 AudioPlayer::AudioPlayer()
-    : thumbnailCache(Config::thumbnailCacheSize), // Initialize thumbnail cache with a configured size
-      thumbnail(Config::thumbnailSizePixels, formatManager, thumbnailCache) // Initialize thumbnail with configured size
+    : thumbnailCache(Config::Audio::thumbnailCacheSize), // Initialize thumbnail cache with a configured size
+      thumbnail(Config::Audio::thumbnailSizePixels, formatManager, thumbnailCache) // Initialize thumbnail with configured size
 {
     formatManager.registerBasicFormats(); // Register standard audio file formats
     transportSource.addChangeListener(this); // Listen to transportSource for changes (e.g., playback finished)

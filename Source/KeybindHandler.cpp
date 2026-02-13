@@ -57,7 +57,7 @@ bool KeybindHandler::handlePlaybackKeybinds(const juce::KeyPress& key)
         audioPlayer.togglePlayStop();
         return true;
     }
-    constexpr double seekStepSeconds = Config::keyboardSkipAmountSeconds;
+    constexpr double seekStepSeconds = Config::Audio::keyboardSkipSeconds;
     if (key.getKeyCode() == juce::KeyPress::leftKey)
     {
         // Why: Provide quick, predictable scrubbing in fixed steps, constrained by loop points.
