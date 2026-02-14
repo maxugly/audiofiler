@@ -95,7 +95,6 @@ private:
     void mouseExit(const juce::MouseEvent& event) override;
     void mouseUp(const juce::MouseEvent& event) override;
 
-    double parseTime(const juce::String& timeString) const;
     double getAudioTotalLength() const;
     bool applyLoopInFromEditor(double newPosition, juce::TextEditor& editor);
     bool applyLoopOutFromEditor(double newPosition, juce::TextEditor& editor);

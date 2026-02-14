@@ -1,11 +1,10 @@
 #include "LoopPresenter.h"
-#include "FocusManager.h"
-
 #include "ControlPanel.h"
 #include "SilenceDetector.h"
-#include "AudioPlayer.h"
+#include "FocusManager.h"
 #include "Config.h"
-#include <utility>
+#include "AudioPlayer.h"
+#include "TimeUtils.h"
 
 LoopPresenter::LoopPresenter(ControlPanel& ownerPanel,
                              SilenceDetector& detector,
@@ -16,78 +15,40 @@ LoopPresenter::LoopPresenter(ControlPanel& ownerPanel,
       loopInEditor(loopIn),
       loopOutEditor(loopOut)
 {
-    loopInEditor.addListener(this);
-    loopOutEditor.addListener(this);
-    loopInEditor.addMouseListener(this, false);
-    loopOutEditor.addMouseListener(this, false);
+    auto configure = [this](juce::TextEditor& ed) {
+        ed.setJustification(juce::Justification::centred);
+        ed.setColour(juce::TextEditor::backgroundColourId, Config::Colors::textEditorBackground);
+        ed.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+        ed.setColour(juce::TextEditor::outlineColourId, Config::Colors::playbackText.withAlpha(0.5f));
+        ed.setColour(juce::TextEditor::focusedOutlineColourId, Config::Colors::playbackText);
+        ed.setFont(juce::Font(juce::FontOptions((float)Config::Layout::Text::playbackSize)));
+        ed.applyFontToAllText(ed.getFont());
+        ed.setMultiLine(false);
+        ed.setReturnKeyStartsNewLine(false);
+        ed.addListener(this);
+        ed.addMouseListener(this, false);
+    };
+
+    configure(loopInEditor);
+    configure(loopOutEditor);
 }
 
 LoopPresenter::~LoopPresenter()
 {
     loopInEditor.removeListener(this);
     loopOutEditor.removeListener(this);
-    loopInEditor.removeMouseListener(this);
-    loopOutEditor.removeMouseListener(this);
 }
 
 void LoopPresenter::setLoopInPosition(double positionSeconds)
 {
-    const double totalLength = getAudioTotalLength();
-    const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
-
-    // Crossing Logic: If we manually move In past an Auto-Out, turn off Auto-Out
-    if (!silenceDetector.getIsAutoCutInActive() && newPos >= loopOutPosition && silenceDetector.getIsAutoCutOutActive())
-    {
-        silenceDetector.setIsAutoCutOutActive(false);
-        owner.updateComponentStates();
-    }
-    
-    loopInPosition = newPos;
-    
-    // Push Logic: If In crosses Out and AC In is active
-    if (silenceDetector.getIsAutoCutInActive() && loopInPosition >= loopOutPosition)
-    {
-        // Push Out to the end, then re-detect if AC Out is active
-        setLoopOutPosition(totalLength);
-        if (silenceDetector.getIsAutoCutOutActive())
-            silenceDetector.detectOutSilence();
-    }
-
-    // Constrain playback head if it's outside new loopIn
-    auto& audioPlayer = owner.getAudioPlayer();
-    audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
-                                       loopInPosition, loopOutPosition);
-    ensureLoopOrder();
+    loopInPosition = positionSeconds;
+    // Don't update labels immediately to allow smooth typing/updates
+    // Labels are updated via updateLoopLabels() called explicitly or by repaint
 }
 
 void LoopPresenter::setLoopOutPosition(double positionSeconds)
 {
-    const double totalLength = getAudioTotalLength();
-    const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
-
-    // Crossing Logic: If we manually move Out past an Auto-In, turn off Auto-In
-    if (!silenceDetector.getIsAutoCutOutActive() && newPos <= loopInPosition && silenceDetector.getIsAutoCutInActive())
-    {
-        silenceDetector.setIsAutoCutInActive(false);
-        owner.updateComponentStates();
-    }
-
-    loopOutPosition = newPos;
-
-    // Pull Logic: If Out crosses In and AC Out is active
-    if (silenceDetector.getIsAutoCutOutActive() && loopOutPosition <= loopInPosition)
-    {
-        // Pull In to the start, then re-detect if AC In is active
-        setLoopInPosition(0.0);
-        if (silenceDetector.getIsAutoCutInActive())
-            silenceDetector.detectInSilence();
-    }
-
-    // Constrain playback head if it's outside new loopOut
-    auto& audioPlayer = owner.getAudioPlayer();
-    audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
-                                       loopInPosition, loopOutPosition);
-    ensureLoopOrder();
+    loopOutPosition = positionSeconds;
 }
 
 void LoopPresenter::ensureLoopOrder()
@@ -95,24 +56,22 @@ void LoopPresenter::ensureLoopOrder()
     if (loopInPosition > loopOutPosition)
     {
         std::swap(loopInPosition, loopOutPosition);
-        
-        // Swap Auto-Cut states as well so the "Auto" property follows the detected value
-        bool acIn = silenceDetector.getIsAutoCutInActive();
-        bool acOut = silenceDetector.getIsAutoCutOutActive();
-        silenceDetector.setIsAutoCutInActive(acOut);
-        silenceDetector.setIsAutoCutOutActive(acIn);
-        
-        // Ensure UI buttons reflect the swapped auto states
-        owner.updateComponentStates();
     }
 }
 
 void LoopPresenter::updateLoopLabels()
 {
     if (!loopInEditor.hasKeyboardFocus(false))
+    {
         syncEditorToPosition(loopInEditor, loopInPosition);
+        loopInEditor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+    }
+
     if (!loopOutEditor.hasKeyboardFocus(false))
+    {
         syncEditorToPosition(loopOutEditor, loopOutPosition);
+        loopOutEditor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+    }
 }
 
 void LoopPresenter::setLoopStartFromSample(int sampleIndex)
@@ -144,7 +103,7 @@ void LoopPresenter::setLoopEndFromSample(int sampleIndex)
 void LoopPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
     const double totalLength = getAudioTotalLength();
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
 
     if (newPosition >= 0.0 && newPosition <= totalLength)
     {
@@ -162,7 +121,7 @@ void LoopPresenter::textEditorTextChanged(juce::TextEditor& editor)
 
 void LoopPresenter::textEditorReturnKeyPressed(juce::TextEditor& editor)
 {
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
     if (&editor == &loopInEditor)
     {
         applyLoopInFromEditor(newPosition, editor);
@@ -190,7 +149,7 @@ void LoopPresenter::textEditorEscapeKeyPressed(juce::TextEditor& editor)
 
 void LoopPresenter::textEditorFocusLost(juce::TextEditor& editor)
 {
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
     if (&editor == &loopInEditor)
     {
         applyLoopInFromEditor(newPosition, editor);
@@ -211,18 +170,6 @@ void LoopPresenter::textEditorFocusGained(juce::TextEditor& editor)
         owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
     else if (&editor == &loopOutEditor)
         owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
-}
-
-double LoopPresenter::parseTime(const juce::String& timeString) const
-{
-    auto parts = juce::StringArray::fromTokens(timeString, ":", "");
-    if (parts.size() != 4)
-        return -1.0;
-
-    return parts[0].getIntValue() * 3600.0
-         + parts[1].getIntValue() * 60.0
-         + parts[2].getIntValue()
-         + parts[3].getIntValue() / 1000.0;
 }
 
 double LoopPresenter::getAudioTotalLength() const
@@ -369,25 +316,21 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
     const double totalLength = getAudioTotalLength();
     if (totalLength <= 0.0)
         return;
-    // Determine character index under the mouse to set step size contextually
-    // Format is HH:MM:SS:mmm (012345678901)
+
     int charIndex = editor->getTextIndexAt(event.getPosition());
     
-    double baseStep = Config::Audio::loopStepMilliseconds;
-    if (charIndex >= 0 && charIndex <= 1)      // HH
-        baseStep = Config::Audio::loopStepHours;
-    else if (charIndex >= 3 && charIndex <= 4) // MM
-        baseStep = Config::Audio::loopStepMinutes;
-    else if (charIndex >= 6 && charIndex <= 7) // SS
-        baseStep = Config::Audio::loopStepSeconds;
-    // else mmm (default baseStep)
+    // Get sample rate
+    double sampleRate = 0.0;
+    if (auto* reader = owner.getAudioPlayer().getAudioFormatReader())
+    {
+        sampleRate = reader->sampleRate;
+    }
 
-    double multiplier = FocusManager::getStepMultiplier(event.mods.isShiftDown(), event.mods.isCtrlDown());
-    double step = baseStep * multiplier;
-
-    // Alt is a x10 multiplier
-    if (event.mods.isAltDown())
-        step *= 10.0;
+    double step = TimeUtils::getStepSize(charIndex,
+                                         event.mods.isShiftDown(),
+                                         event.mods.isCtrlDown(),
+                                         event.mods.isAltDown(),
+                                         sampleRate);
 
     const double direction = (wheel.deltaY > 0) ? 1.0 : -1.0;
     const double delta = direction * step;

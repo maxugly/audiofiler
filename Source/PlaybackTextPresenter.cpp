@@ -3,6 +3,7 @@
 #include "ControlPanel.h"
 #include "Config.h"
 #include "AudioPlayer.h"
+#include "TimeUtils.h"
 #include <cmath>
 
 PlaybackTextPresenter::PlaybackTextPresenter(ControlPanel& ownerPanel)
@@ -19,13 +20,12 @@ PlaybackTextPresenter::~PlaybackTextPresenter()
 
 void PlaybackTextPresenter::initialiseEditors()
 {
-    auto configure = [&](juce::TextEditor& ed, juce::Justification just) {
-        owner.addAndMakeVisible(ed);
-        ed.setReadOnly(false);
-        ed.setJustification(just);
-        ed.setColour(juce::TextEditor::backgroundColourId, juce::Colours::transparentBlack);
-        ed.setColour(juce::TextEditor::outlineColourId, juce::Colours::transparentBlack);
+    auto configure = [this](juce::TextEditor& ed, juce::Justification justification) {
+        ed.setJustification(justification);
+        ed.setColour(juce::TextEditor::backgroundColourId, Config::Colors::textEditorBackground);
         ed.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+        ed.setColour(juce::TextEditor::outlineColourId, Config::Colors::playbackText.withAlpha(0.5f));
+        ed.setColour(juce::TextEditor::focusedOutlineColourId, Config::Colors::playbackText);
         ed.setFont(juce::Font(juce::FontOptions((float)Config::Layout::Text::playbackSize)));
         ed.applyFontToAllText(ed.getFont());
         ed.setMultiLine(false);
@@ -96,7 +96,7 @@ void PlaybackTextPresenter::render(juce::Graphics& g) const
 void PlaybackTextPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
     const double totalLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
 
     if (newPosition >= 0.0 && newPosition <= totalLength)
     {
@@ -135,7 +135,7 @@ void PlaybackTextPresenter::textEditorFocusGained(juce::TextEditor&)
 
 void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor& editor)
 {
-    double newTime = parseTime(editor.getText());
+    double newTime = TimeUtils::parseTime(editor.getText());
     if (newTime < 0.0) return;
 
     auto& transport = owner.getAudioPlayer().getTransportSource();
@@ -176,21 +176,6 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor& editor)
     }
     
     updateEditors();
-}
-
-double PlaybackTextPresenter::parseTime(const juce::String& timeString) const
-{
-    // Remove leading '-' if present for remaining time
-    juce::String cleanTime = timeString.startsWithChar('-') ? timeString.substring(1) : timeString;
-    
-    auto parts = juce::StringArray::fromTokens(cleanTime, ":", "");
-    if (parts.size() != 4)
-        return -1.0;
-
-    return parts[0].getIntValue() * 3600.0
-         + parts[1].getIntValue() * 60.0
-         + parts[2].getIntValue()
-         + parts[3].getIntValue() / 1000.0;
 }
 
 void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor& editor, double positionSeconds, bool isRemaining)
@@ -245,31 +230,26 @@ void PlaybackTextPresenter::mouseWheelMove(const juce::MouseEvent& event, const 
     auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
     if (editor == nullptr) return;
 
-    double currentVal = parseTime(editor->getText());
+    double currentVal = TimeUtils::parseTime(editor->getText());
     if (currentVal < 0.0) currentVal = 0.0;
 
-    // Determine step size (matching LoopPresenter logic)
+    // Determine character index, accounting for possible negative sign offset
+    bool isNegative = (editor == &owner.remainingTimeEditor) || editor->getText().startsWith("-");
+    int offset = isNegative ? 1 : 0;
     int charIndex = editor->getTextIndexAt(event.getPosition());
-    double step = Config::Audio::loopStepMilliseconds;
-    
-    if (charIndex >= 0 && charIndex <= 1)      step = Config::Audio::loopStepHours;
-    else if (charIndex >= 3 && charIndex <= 4) step = Config::Audio::loopStepMinutes;
-    else if (charIndex >= 6 && charIndex <= 7) step = Config::Audio::loopStepSeconds;
-    else if (charIndex >= 9) 
+    int effectiveIndex = charIndex - offset;
+
+    double sampleRate = 0.0;
+    if (auto* reader = owner.getAudioPlayer().getAudioFormatReader())
     {
-        if (event.mods.isCtrlDown() && event.mods.isShiftDown())
-        {
-            auto& audioPlayer = owner.getAudioPlayer();
-            if (auto* reader = audioPlayer.getAudioFormatReader())
-                step = 1.0 / reader->sampleRate;
-            else
-                step = 0.0001;
-        }
-        else if (event.mods.isShiftDown()) step = Config::Audio::loopStepMillisecondsFine;
-        else step = Config::Audio::loopStepMilliseconds;
+        sampleRate = reader->sampleRate;
     }
 
-    if (event.mods.isAltDown()) step *= 10.0;
+    double step = TimeUtils::getStepSize(effectiveIndex,
+                                         event.mods.isShiftDown(),
+                                         event.mods.isCtrlDown(),
+                                         event.mods.isAltDown(),
+                                         sampleRate);
 
     double direction = (wheel.deltaY > 0) ? 1.0 : -1.0;
     double newVal = juce::jmax(0.0, currentVal + (direction * step));
