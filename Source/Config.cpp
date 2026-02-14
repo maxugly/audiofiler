@@ -39,8 +39,6 @@ namespace Config {
         const juce::Colour statsErrorText = juce::Colours::red;
 
         // Animation/Glow
-        const juce::Colour playbackCursorGlowStart = juce::Colours::lime.withAlpha(0.0f);
-        const juce::Colour playbackCursorGlowEnd = juce::Colours::lime.withAlpha(0.5f);
         const juce::Colour mouseAmplitudeGlow = juce::Colours::yellow;
         const juce::Colour placementModeGlow = juce::Colours::red.withAlpha(0.7f);
 

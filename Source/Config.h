@@ -57,8 +57,6 @@ namespace Config {
         extern const juce::Colour statsErrorText;
 
         // Animation/Glow
-        extern const juce::Colour playbackCursorGlowStart;
-        extern const juce::Colour playbackCursorGlowEnd;
         extern const juce::Colour mouseAmplitudeGlow;
         extern const juce::Colour placementModeGlow;
 
@@ -160,9 +158,6 @@ namespace Config {
              static constexpr int loopMarkerBoxHeight = 30;
              static constexpr float loopMarkerCenterDivisor = 2.0f;
 
-             // Playback Cursor
-             static constexpr float cursorGlowRadius = 5.0f;
-             static constexpr float cursorGlowLineThickness = 2.0f;
         };
 
         // Zoom Popup

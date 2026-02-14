@@ -94,8 +94,6 @@ if (NOT BUILD_TESTS_ONLY)
             Source/PlaybackLoopController.cpp
             Source/PlaybackTextPresenter.h
             Source/PlaybackTextPresenter.cpp
-            Source/PlaybackCursorGlow.h
-            Source/PlaybackCursorGlow.cpp
             Source/StatsPresenter.h
             Source/StatsPresenter.cpp
             Source/MouseHandler.h
