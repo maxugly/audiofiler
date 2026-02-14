@@ -84,7 +84,7 @@ void MainComponent::paint(juce::Graphics& g)
 {
     // ControlPanel handles the bulk of the UI painting.
     // Fill the background to prevent "ghosting" artifacts.
-    g.fillAll(Config::Colors::background);
+    g.fillAll(Config::Colors::Window::background);
 }
 
 void MainComponent::resized()
