@@ -3,6 +3,7 @@
 
 #include "ControlPanel.h"
 #include "Config.h"
+#include "TimeEntryHelpers.h"
 #include "TimeUtils.h"
 #include "AudioPlayer.h"
 #include <cmath>
@@ -98,20 +99,7 @@ void PlaybackTextPresenter::render(juce::Graphics& g) const
 void PlaybackTextPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
     const double totalLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
-    const double newPosition = TimeUtils::parseTime(editor.getText());
-
-    if (newPosition >= 0.0 && newPosition <= totalLength)
-    {
-        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
-    }
-    else if (newPosition == -1.0)
-    {
-        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
-    }
-    else
-    {
-        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
-    }
+    TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }
 
 void PlaybackTextPresenter::textEditorReturnKeyPressed(juce::TextEditor& editor)

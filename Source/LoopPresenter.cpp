@@ -2,6 +2,7 @@
 #include "TimeUtils.h"
 #include "FocusManager.h"
 
+#include "TimeEntryHelpers.h"
 #include "ControlPanel.h"
 #include "SilenceDetector.h"
 #include "AudioPlayer.h"
@@ -146,20 +147,7 @@ void LoopPresenter::setLoopEndFromSample(int sampleIndex)
 void LoopPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
     const double totalLength = getAudioTotalLength();
-    const double newPosition = TimeUtils::parseTime(editor.getText());
-
-    if (newPosition >= 0.0 && newPosition <= totalLength)
-    {
-        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
-    }
-    else if (newPosition == -1.0)
-    {
-        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
-    }
-    else
-    {
-        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
-    }
+    TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }
 
 void LoopPresenter::textEditorReturnKeyPressed(juce::TextEditor& editor)

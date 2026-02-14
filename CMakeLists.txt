@@ -98,6 +98,8 @@ if (NOT BUILD_TESTS_ONLY)
             Source/PlaybackLoopController.cpp
             Source/PlaybackTextPresenter.h
             Source/PlaybackTextPresenter.cpp
+            Source/TimeEntryHelpers.h
+            Source/TimeEntryHelpers.cpp
             Source/StatsPresenter.h
             Source/StatsPresenter.cpp
             Source/MouseHandler.h
