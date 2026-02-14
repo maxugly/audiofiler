@@ -187,13 +187,6 @@ public:
    */
 
   /**
-   * @brief Formats a time in seconds into a human-readable string (HH:MM:SS:mmm).
-   * @param seconds The time value in seconds to format.
-   * @return A `juce::String` containing the formatted time.
-   */
-  juce::String formatTime(double seconds);
-  
-  /**
    * @brief Gets a pointer to the `AudioPlayer` instance.
    * @return A raw pointer to the `audioPlayer` managed by this component.
    */

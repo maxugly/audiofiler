@@ -117,7 +117,7 @@ void MainComponent::openButtonClicked()
             auto result = audioPlayer->loadFile(file);
             if (result.wasOk())
             {
-                controlPanel->setTotalTimeStaticString(formatTime(audioPlayer->getThumbnail().getTotalLength()));
+                controlPanel->setTotalTimeStaticString(TimeUtils::formatTime(audioPlayer->getThumbnail().getTotalLength()));
                 controlPanel->setLoopInPosition(0.0);
                 controlPanel->setLoopOutPosition(audioPlayer->getThumbnail().getTotalLength());
                 controlPanel->updateLoopLabels();
@@ -162,6 +162,3 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     return false;
 }
 
-juce::String MainComponent::formatTime(double seconds) {
-  return TimeUtils::formatTime(seconds);
-}
