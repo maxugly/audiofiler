@@ -13,7 +13,7 @@
  * placement mode for more precise interaction. It exposes `onLeftClick` and
  * `onRightClick` function objects for flexible callback assignment.
  */
-class LoopButton : public juce::TextButton {
+class LoopButton final : public juce::TextButton {
 public:
     std::function<void()> onLeftClick;  ///< Function to call when the left mouse button is released over the button.
     std::function<void()> onRightClick; ///< Function to call when the right mouse button is released over the button.
