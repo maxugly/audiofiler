@@ -105,6 +105,8 @@ target_sources(audiofiler PRIVATE
         Source/StatsPresenter.cpp
         Source/MouseHandler.h
         Source/MouseHandler.cpp
+        Source/FocusManager.h
+        Source/FocusManager.cpp
 )
 
 target_link_libraries(audiofiler PRIVATE
