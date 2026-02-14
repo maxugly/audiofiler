@@ -2,6 +2,7 @@
 
 #include "ControlPanel.h"
 #include "Config.h"
+#include "TimeUtils.h"
 
 LoopEditorPresenter::LoopEditorPresenter(ControlPanel& ownerPanel)
     : owner(ownerPanel),
@@ -42,7 +43,7 @@ void LoopEditorPresenter::initialiseEditors()
 void LoopEditorPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
     const double totalLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
 
     if (newPosition >= 0.0 && newPosition <= totalLength)
         editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
@@ -73,7 +74,7 @@ void LoopEditorPresenter::textEditorFocusLost(juce::TextEditor& editor)
 void LoopEditorPresenter::applyLoopEdit(juce::TextEditor& editor, bool isLoopIn)
 {
     const double totalLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
 
     if (newPosition >= 0.0 && newPosition <= totalLength)
     {
@@ -122,13 +123,4 @@ void LoopEditorPresenter::restoreEditorValue(juce::TextEditor& editor, bool isLo
     editor.setText(owner.formatTime(value), juce::dontSendNotification);
 }
 
-double LoopEditorPresenter::parseTime(const juce::String& timeString) const
-{
-    auto parts = juce::StringArray::fromTokens(timeString, ":", "");
-    if (parts.size() != 4) return -1.0;
-    return parts[0].getIntValue() * 3600.0
-         + parts[1].getIntValue() * 60.0
-         + parts[2].getIntValue()
-         + parts[3].getIntValue() / 1000.0;
-}
 

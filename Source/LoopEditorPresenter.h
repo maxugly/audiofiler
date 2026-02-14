@@ -25,7 +25,6 @@ private:
 
     void applyLoopEdit(juce::TextEditor& editor, bool isLoopIn);
     void restoreEditorValue(juce::TextEditor& editor, bool isLoopIn);
-    double parseTime(const juce::String& timeString) const;
 
     ControlPanel& owner;
     juce::TextEditor& loopInEditor;
