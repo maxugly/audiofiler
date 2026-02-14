@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 
 project(audiofiler VERSION 0.0.0001)
 
+# Ensure these are globally defined to prevent any target from picking up defaults
+add_compile_definitions(JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
+
 option(BUILD_HEADLESS_TESTS "Build only headless tests" OFF)
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
@@ -37,8 +40,6 @@ if (NOT BUILD_HEADLESS_TESTS)
             JUCE_USE_FLAC_AUDIO_FORMAT=1
             JUCE_USE_OGGVORBIS_AUDIO_FORMAT=1
             JUCE_USE_WINDOWS_MEDIA_FORMAT=1
-            JUCE_WEB_BROWSER=0
-            JUCE_USE_CURL=0
             JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
             JUCE_ALSA=1
             JUCE_JACK=1
@@ -117,13 +118,16 @@ if (NOT BUILD_HEADLESS_TESTS)
     juce_generate_juce_header(audiofiler)
 endif()
 
-juce_add_console_app(audiofiler_tests
-    PRODUCT_NAME "audiofiler_tests"
-)
-
-target_sources(audiofiler_tests PRIVATE
+# Use add_executable instead of juce_add_console_app to verify if it simplifies definition propagation
+add_executable(audiofiler_tests
     Source/Tests/PlaybackHelpersTest.cpp
     Source/PlaybackHelpers.h
+)
+
+target_compile_definitions(audiofiler_tests PRIVATE
+    JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
+    JUCE_MODULE_AVAILABLE_juce_core=1
+    JUCE_STANDALONE_APPLICATION=1
 )
 
 target_link_libraries(audiofiler_tests PRIVATE

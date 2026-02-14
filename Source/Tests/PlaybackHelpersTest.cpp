@@ -3,8 +3,8 @@
 #include <iostream>
 
 namespace juce {
-    extern const char* juce_compilationDate = __DATE__;
-    extern const char* juce_compilationTime = __TIME__;
+    const char* juce_compilationDate = __DATE__;
+    const char* juce_compilationTime = __TIME__;
 }
 
 class PlaybackHelpersTest : public juce::UnitTest
