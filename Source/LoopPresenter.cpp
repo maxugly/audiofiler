@@ -352,21 +352,11 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
     // Format is HH:MM:SS:mmm (012345678901)
     int charIndex = editor->getTextIndexAt(event.getPosition());
     
-    double baseStep = Config::Audio::loopStepMilliseconds;
-    if (charIndex >= 0 && charIndex <= 1)      // HH
-        baseStep = Config::Audio::loopStepHours;
-    else if (charIndex >= 3 && charIndex <= 4) // MM
-        baseStep = Config::Audio::loopStepMinutes;
-    else if (charIndex >= 6 && charIndex <= 7) // SS
-        baseStep = Config::Audio::loopStepSeconds;
-    // else mmm (default baseStep)
+    double sampleRate = 0.0;
+    if (auto* reader = owner.getAudioPlayer().getAudioFormatReader())
+        sampleRate = reader->sampleRate;
 
-    double multiplier = FocusManager::getStepMultiplier(event.mods.isShiftDown(), event.mods.isCtrlDown());
-    double step = baseStep * multiplier;
-
-    // Alt is a x10 multiplier
-    if (event.mods.isAltDown())
-        step *= 10.0;
+    double step = TimeEntryHelpers::calculateStepSize(charIndex, event.mods, sampleRate);
 
     const double direction = (wheel.deltaY > 0) ? 1.0 : -1.0;
     const double delta = direction * step;

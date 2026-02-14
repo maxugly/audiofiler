@@ -224,28 +224,19 @@ void PlaybackTextPresenter::mouseWheelMove(const juce::MouseEvent& event, const 
     double currentVal = TimeUtils::parseTime(editor->getText());
     if (currentVal < 0.0) currentVal = 0.0;
 
-    // Determine step size (matching LoopPresenter logic)
+    // Determine step size
     int charIndex = editor->getTextIndexAt(event.getPosition());
-    double step = Config::Audio::loopStepMilliseconds;
     
-    if (charIndex >= 0 && charIndex <= 1)      step = Config::Audio::loopStepHours;
-    else if (charIndex >= 3 && charIndex <= 4) step = Config::Audio::loopStepMinutes;
-    else if (charIndex >= 6 && charIndex <= 7) step = Config::Audio::loopStepSeconds;
-    else if (charIndex >= 9) 
-    {
-        if (event.mods.isCtrlDown() && event.mods.isShiftDown())
-        {
-            auto& audioPlayer = owner.getAudioPlayer();
-            if (auto* reader = audioPlayer.getAudioFormatReader())
-                step = 1.0 / reader->sampleRate;
-            else
-                step = 0.0001;
-        }
-        else if (event.mods.isShiftDown()) step = Config::Audio::loopStepMillisecondsFine;
-        else step = Config::Audio::loopStepMilliseconds;
-    }
+    // Check if it's remaining time (starts with '-')
+    bool isNegative = (editor == &owner.remainingTimeEditor) || editor->getText().startsWith("-");
+    int offset = isNegative ? 1 : 0;
+    int effectiveIndex = charIndex - offset;
 
-    if (event.mods.isAltDown()) step *= 10.0;
+    double sampleRate = 0.0;
+    if (auto* reader = owner.getAudioPlayer().getAudioFormatReader())
+        sampleRate = reader->sampleRate;
+
+    double step = TimeEntryHelpers::calculateStepSize(effectiveIndex, event.mods, sampleRate);
 
     double direction = (wheel.deltaY > 0) ? 1.0 : -1.0;
     double newVal = juce::jmax(0.0, currentVal + (direction * step));
