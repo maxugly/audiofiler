@@ -5,7 +5,7 @@
 
 void PlaybackCursorGlow::renderGlow(juce::Graphics& g, const ControlPanel& controlPanel, const juce::Rectangle<int>& waveformBounds)
 {
-    const auto& audioPlayer = controlPanel.getAudioPlayer();
+    auto& audioPlayer = controlPanel.getAudioPlayer();
     const float audioLength = (float)audioPlayer.getThumbnail().getTotalLength();
     if (audioLength <= 0.0f)
         return;
