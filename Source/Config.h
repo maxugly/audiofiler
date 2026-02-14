@@ -126,6 +126,7 @@ namespace Config {
 
         // Waveform
         struct Waveform {
+            static constexpr float loopRegionFadeProportion = 0.2f;
             static constexpr float heightScale = 0.5f;
             static constexpr int pixelsPerSampleLow = 4;
             static constexpr int pixelsPerSampleMedium = 2;
