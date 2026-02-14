@@ -1,4 +1,7 @@
-#include "SilenceAnalysisWorker.h"
+import sys
+
+def main():
+    content = """#include "SilenceAnalysisWorker.h"
 
 #include "ControlPanel.h"
 #include "AudioPlayer.h"
@@ -173,3 +176,9 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
     SilenceDetectionLogger::logNoSoundFound(ownerPanel, "end");
     resumeIfNeeded(audioPlayer, wasPlaying);
 }
+"""
+    with open("Source/SilenceAnalysisWorker.cpp", "w") as f:
+        f.write(content)
+
+if __name__ == "__main__":
+    main()
