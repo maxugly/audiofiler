@@ -116,6 +116,7 @@ target_link_libraries(audiofiler PRIVATE
         juce::juce_graphics
         juce::juce_gui_basics
         juce::juce_gui_extra
+        juce::juce_opengl
         ${GTK3_LIBRARIES}
 )
 

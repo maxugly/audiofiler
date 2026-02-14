@@ -213,6 +213,7 @@ private:
     std::unique_ptr<ControlPanel> controlPanel;     ///< The main control panel containing buttons and displays.
     std::unique_ptr<KeybindHandler> keybindHandler; ///< Delegates keyboard shortcut logic.
     std::unique_ptr<PlaybackLoopController> playbackLoopController; ///< Enforces loop bounds during playback.
+    juce::OpenGLContext openGLContext; ///< Context for OpenGL rendering.
     
     /** @} */
     //==============================================================================

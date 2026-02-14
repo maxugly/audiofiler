@@ -30,6 +30,7 @@ MainComponent::MainComponent()
     // 7. Focus Setup - We allow the component to receive focus, 
     // but we no longer "grab" it here to avoid Peer assertion crashes.
     setWantsKeyboardFocus(true);
+    openGLContext.attachTo(*this);
 
 #if TESTING_MODE
     juce::File audioFile(TEST_FILE_PATH);
@@ -56,6 +57,7 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
+    openGLContext.detach();
     audioPlayer->removeChangeListener(this);
     shutdownAudio();
     stopTimer();
