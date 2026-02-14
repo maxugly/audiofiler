@@ -4,6 +4,7 @@
 #include "AudioPlayer.h"
 #include "SilenceDetectionLogger.h"
 #include <limits>
+#include <new>
 
 namespace
 {
@@ -31,7 +32,7 @@ void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float thre
 
     const juce::int64 lengthInSamples = reader->lengthInSamples;
     SilenceDetectionLogger::logReadingSamples(ownerPanel, "In", lengthInSamples);
-    if (lengthInSamples == 0)
+    if (lengthInSamples <= 0)
     {
         SilenceDetectionLogger::logZeroLength(ownerPanel);
         resumeIfNeeded(audioPlayer, wasPlaying);
@@ -45,7 +46,18 @@ void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float thre
         return;
     }
 
-    auto buffer = std::make_unique<juce::AudioBuffer<float>>(reader->numChannels, (int) lengthInSamples);
+    std::unique_ptr<juce::AudioBuffer<float>> buffer;
+    try
+    {
+        buffer = std::make_unique<juce::AudioBuffer<float>>(reader->numChannels, (int) lengthInSamples);
+    }
+    catch (const std::bad_alloc&)
+    {
+        SilenceDetectionLogger::logAudioTooLarge(ownerPanel);
+        resumeIfNeeded(audioPlayer, wasPlaying);
+        return;
+    }
+
     reader->read(buffer.get(), 0, (int) lengthInSamples, 0, true, true);
 
     for (int sample = 0; sample < buffer->getNumSamples(); ++sample)
@@ -86,7 +98,7 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
 
     const juce::int64 lengthInSamples = reader->lengthInSamples;
     SilenceDetectionLogger::logReadingSamples(ownerPanel, "Out", lengthInSamples);
-    if (lengthInSamples == 0)
+    if (lengthInSamples <= 0)
     {
         SilenceDetectionLogger::logZeroLength(ownerPanel);
         resumeIfNeeded(audioPlayer, wasPlaying);
@@ -100,7 +112,18 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
         return;
     }
 
-    auto buffer = std::make_unique<juce::AudioBuffer<float>>(reader->numChannels, (int) lengthInSamples);
+    std::unique_ptr<juce::AudioBuffer<float>> buffer;
+    try
+    {
+        buffer = std::make_unique<juce::AudioBuffer<float>>(reader->numChannels, (int) lengthInSamples);
+    }
+    catch (const std::bad_alloc&)
+    {
+        SilenceDetectionLogger::logAudioTooLarge(ownerPanel);
+        resumeIfNeeded(audioPlayer, wasPlaying);
+        return;
+    }
+
     reader->read(buffer.get(), 0, (int) lengthInSamples, 0, true, true);
 
     for (int sample = buffer->getNumSamples() - 1; sample >= 0; --sample)
