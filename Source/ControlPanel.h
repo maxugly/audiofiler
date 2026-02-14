@@ -44,7 +44,7 @@ class PlaybackTextPresenter;
  * `MainComponent` and `AudioPlayer`. It also integrates a `SilenceDetector` for
  * automatic loop point setting.
  */
-class ControlPanel : public juce::Component, public juce::ChangeListener
+class ControlPanel final : public juce::Component, public juce::ChangeListener
 {
 public:
     //==============================================================================
