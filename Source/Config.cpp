@@ -46,12 +46,9 @@ namespace Config {
 
         // Zoom Popup
         const juce::Colour zoomPopupBorder = juce::Colours::blue;
-        const juce::Colour zoomPopupIndicator = juce::Colours::white;
 
 
         // Additional colors for UI elements found in code
-        const juce::Colour zoomPopupShadowOuter = juce::Colours::black.withAlpha(0.5f);
-        const juce::Colour zoomPopupShadowInner = juce::Colours::black;
         const juce::Colour zoomPopupTrackingLine = juce::Colours::dodgerblue;
         const juce::Colour zoomPopupPlaybackLine = juce::Colours::lime;
         const juce::Colour zoomPopupZeroLine = juce::Colours::grey.withAlpha(0.3f);

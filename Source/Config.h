@@ -66,11 +66,8 @@ namespace Config {
 
         // Zoom Popup
         extern const juce::Colour zoomPopupBorder;
-        extern const juce::Colour zoomPopupIndicator;
 
         // Extra Zoom Colors
-        extern const juce::Colour zoomPopupShadowOuter;
-        extern const juce::Colour zoomPopupShadowInner;
         extern const juce::Colour zoomPopupTrackingLine;
         extern const juce::Colour zoomPopupPlaybackLine;
         extern const juce::Colour zoomPopupZeroLine;
@@ -172,10 +169,8 @@ namespace Config {
 
         // Zoom Popup
         struct Zoom {
-            static constexpr float factor = 10.0f;
             static constexpr float popupScale = 0.8f;
             static constexpr float borderThickness = 2.0f;
-            static constexpr float indicatorThickness = 1.0f;
         };
     };
 
