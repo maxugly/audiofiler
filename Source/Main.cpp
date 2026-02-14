@@ -79,7 +79,7 @@ private:
        * It sets the `MainComponent` as its content, makes it resizable,
        * centers it on screen, and makes it visible.
        */
-      MainWindow (juce::String name) : DocumentWindow (name, Config::Colors::background, allButtons) {
+      MainWindow (juce::String name) : DocumentWindow (name, Config::Colors::Window::background, allButtons) {
         setUsingNativeTitleBar (true);
         setContentOwned (new MainComponent(), true);
         setResizable (true, true);

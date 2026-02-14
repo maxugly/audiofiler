@@ -85,9 +85,9 @@ ControlPanel::~ControlPanel()
 void ControlPanel::initialiseLookAndFeel()
 {
     setLookAndFeel (&modernLF);
-    modernLF.setBaseOffColor(Config::Colors::buttonBase);
-    modernLF.setBaseOnColor(Config::Colors::buttonOn);
-    modernLF.setTextColor(Config::Colors::buttonText);
+    modernLF.setBaseOffColor(Config::Colors::Button::base);
+    modernLF.setBaseOnColor(Config::Colors::Button::on);
+    modernLF.setTextColor(Config::Colors::Button::text);
 }
 
 /**
@@ -142,7 +142,7 @@ void ControlPanel::resized()
 
 void ControlPanel::paint(juce::Graphics& g)
 {
-    g.fillAll (Config::Colors::background);
+    g.fillAll (Config::Colors::Window::background);
     if (waveformRenderer != nullptr)
         waveformRenderer->render(g);
     if (playbackTextPresenter != nullptr)
