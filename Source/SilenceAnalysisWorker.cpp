@@ -69,7 +69,12 @@ void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float thre
     while (currentPos < lengthInSamples)
     {
         const int numThisTime = (int) std::min((juce::int64) kChunkSize, lengthInSamples - currentPos);
-        reader->read(&buffer, 0, numThisTime, currentPos, true, true);
+        buffer.clear();
+        if (!reader->read(&buffer, 0, numThisTime, currentPos, true, true))
+        {
+            resumeIfNeeded(audioPlayer, wasPlaying);
+            return;
+        }
 
         for (int sample = 0; sample < numThisTime; ++sample)
         {
@@ -147,7 +152,12 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
         const int numThisTime = (int) std::min((juce::int64) kChunkSize, currentPos);
         const juce::int64 startSample = currentPos - numThisTime;
 
-        reader->read(&buffer, 0, numThisTime, startSample, true, true);
+        buffer.clear();
+        if (!reader->read(&buffer, 0, numThisTime, startSample, true, true))
+        {
+            resumeIfNeeded(audioPlayer, wasPlaying);
+            return;
+        }
 
         for (int sample = numThisTime - 1; sample >= 0; --sample)
         {
