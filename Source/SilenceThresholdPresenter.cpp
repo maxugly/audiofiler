@@ -31,9 +31,9 @@ void SilenceThresholdPresenter::configureEditor(juce::TextEditor& editor,
     editor.setText(juce::String(static_cast<int>(initialValue * 100.0f)));
     editor.setReadOnly(false);
     editor.setJustification(juce::Justification::centred);
-    editor.setColour(juce::TextEditor::backgroundColourId, Config::textEditorBackgroundColour);
-    editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-    editor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
+    editor.setColour(juce::TextEditor::backgroundColourId, Config::Colors::textEditorBackground);
+    editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+    editor.setFont(juce::Font(juce::FontOptions(Config::Layout::Text::playbackSize)));
     editor.applyFontToAllText(editor.getFont());
     editor.setMultiLine(false);
     editor.setReturnKeyStartsNewLine(false);
@@ -47,9 +47,9 @@ void SilenceThresholdPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
     const int newPercentage = editor.getText().getIntValue();
     if (isValidPercentage(newPercentage))
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
     else
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorOutOfRangeColour);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorOutOfRange);
 
     editor.setColour(juce::TextEditor::backgroundColourId,
                      owner.getLookAndFeel().findColour(juce::TextEditor::backgroundColourId));
@@ -85,7 +85,7 @@ void SilenceThresholdPresenter::applyThresholdFromEditor(juce::TextEditor& edito
                 detector.detectOutSilence();
         }
 
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
         editor.setColour(juce::TextEditor::backgroundColourId,
                          owner.getLookAndFeel().findColour(juce::TextEditor::backgroundColourId));
         editor.setText(juce::String(intValue), juce::dontSendNotification);
@@ -93,7 +93,7 @@ void SilenceThresholdPresenter::applyThresholdFromEditor(juce::TextEditor& edito
     else
     {
         restoreEditorToCurrentValue(editor);
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
         owner.getStatsDisplay().insertTextAtCaret("Warning: Threshold value must be between 1 and 99. Restored to last valid value.\n");
     }
 }

@@ -364,15 +364,15 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
         g.drawHorizontalLine(juce::roundToInt(bottomAmplitudeY), leftExtent, rightExtent);
 
         g.setColour(Config::Colors::playbackText);
-        g.setFont(Config::Layout::Text::mouseCursorTextSize);
-        g.drawText(juce::String(amplitude, 2), mouseHandler.getMouseCursorX() + Config::Layout::Glow::mouseTextOffset, (int)amplitudeY - Config::Layout::Text::mouseCursorTextSize,
-                   100, Config::Layout::Text::mouseCursorTextSize, juce::Justification::left, true);
+        g.setFont(Config::Layout::Text::mouseCursorSize);
+        g.drawText(juce::String(amplitude, 2), mouseHandler.getMouseCursorX() + Config::Layout::Glow::mouseTextOffset, (int)amplitudeY - Config::Layout::Text::mouseCursorSize,
+                   100, Config::Layout::Text::mouseCursorSize, juce::Justification::left, true);
         g.drawText(juce::String(-amplitude, 2), mouseHandler.getMouseCursorX() + Config::Layout::Glow::mouseTextOffset, (int)bottomAmplitudeY,
-                   100, Config::Layout::Text::mouseCursorTextSize, juce::Justification::left, true);
+                   100, Config::Layout::Text::mouseCursorSize, juce::Justification::left, true);
 
         const juce::String timeText = controlPanel.formatTime(mouseHandler.getMouseCursorTime());
         g.drawText(timeText, mouseHandler.getMouseCursorX() + Config::Layout::Glow::mouseTextOffset, mouseHandler.getMouseCursorY() + Config::Layout::Glow::mouseTextOffset, 100,
-                   Config::Layout::Text::mouseCursorTextSize, juce::Justification::left, true);
+                   Config::Layout::Text::mouseCursorSize, juce::Justification::left, true);
     }
 
     g.setColour(currentLineColor);
