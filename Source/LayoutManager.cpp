@@ -29,12 +29,24 @@ void LayoutManager::layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHei
     const int buttonWidth = Config::Layout::buttonWidth;
 
     auto topRow = bounds.removeFromTop(rowHeight).reduced(margin);
-    controlPanel.openButton.setBounds(topRow.removeFromLeft(buttonWidth)); topRow.removeFromLeft(margin);
-    controlPanel.playStopButton.setBounds(topRow.removeFromLeft(buttonWidth)); topRow.removeFromLeft(margin);
-    controlPanel.autoplayButton.setBounds(topRow.removeFromLeft(buttonWidth)); topRow.removeFromLeft(margin);
-    controlPanel.loopButton.setBounds(topRow.removeFromLeft(buttonWidth)); topRow.removeFromLeft(margin);
-    controlPanel.cutButton.setBounds(topRow.removeFromLeft(buttonWidth)); topRow.removeFromLeft(margin);
-    controlPanel.exitButton.setBounds(topRow.removeFromRight(buttonWidth)); topRow.removeFromRight(margin);
+
+    controlPanel.openButton.setBounds(topRow.removeFromLeft(buttonWidth));
+    topRow.removeFromLeft(margin);
+
+    controlPanel.playStopButton.setBounds(topRow.removeFromLeft(buttonWidth));
+    topRow.removeFromLeft(margin);
+
+    controlPanel.autoplayButton.setBounds(topRow.removeFromLeft(buttonWidth));
+    topRow.removeFromLeft(margin);
+
+    controlPanel.loopButton.setBounds(topRow.removeFromLeft(buttonWidth));
+    topRow.removeFromLeft(margin);
+
+    controlPanel.cutButton.setBounds(topRow.removeFromLeft(buttonWidth));
+    topRow.removeFromLeft(margin);
+
+    controlPanel.exitButton.setBounds(topRow.removeFromRight(buttonWidth));
+    topRow.removeFromRight(margin);
 }
 
 void LayoutManager::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int rowHeight)
@@ -82,9 +94,16 @@ void LayoutManager::layoutBottomRowAndTextDisplay(juce::Rectangle<int>& bounds, 
     auto bottomRow = bounds.removeFromBottom(rowHeight).reduced(margin);
     controlPanel.layoutCache.bottomRowTopY = bottomRow.getY();
     controlPanel.layoutCache.contentAreaBounds = bounds.reduced(margin);
-    controlPanel.qualityButton.setBounds(bottomRow.removeFromRight(buttonWidth)); bottomRow.removeFromRight(margin);
-    controlPanel.channelViewButton.setBounds(bottomRow.removeFromRight(buttonWidth)); bottomRow.removeFromRight(margin);
-    controlPanel.statsButton.setBounds(bottomRow.removeFromRight(buttonWidth)); bottomRow.removeFromRight(margin);
+
+    controlPanel.qualityButton.setBounds(bottomRow.removeFromRight(buttonWidth));
+    bottomRow.removeFromRight(margin);
+
+    controlPanel.channelViewButton.setBounds(bottomRow.removeFromRight(buttonWidth));
+    bottomRow.removeFromRight(margin);
+
+    controlPanel.statsButton.setBounds(bottomRow.removeFromRight(buttonWidth));
+    bottomRow.removeFromRight(margin);
+
     controlPanel.modeButton.setBounds(bottomRow.removeFromRight(buttonWidth));
 
     controlPanel.layoutCache.playbackLeftTextX = controlPanel.getLocalBounds().getX() + margin;
