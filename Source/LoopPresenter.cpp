@@ -1,6 +1,7 @@
 #include "LoopPresenter.h"
 #include "FocusManager.h"
 
+#include "TimeUtils.h"
 #include "ControlPanel.h"
 #include "SilenceDetector.h"
 #include "AudioPlayer.h"
@@ -144,7 +145,7 @@ void LoopPresenter::setLoopEndFromSample(int sampleIndex)
 void LoopPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
     const double totalLength = getAudioTotalLength();
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
 
     if (newPosition >= 0.0 && newPosition <= totalLength)
     {
@@ -162,7 +163,7 @@ void LoopPresenter::textEditorTextChanged(juce::TextEditor& editor)
 
 void LoopPresenter::textEditorReturnKeyPressed(juce::TextEditor& editor)
 {
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
     if (&editor == &loopInEditor)
     {
         applyLoopInFromEditor(newPosition, editor);
@@ -190,7 +191,7 @@ void LoopPresenter::textEditorEscapeKeyPressed(juce::TextEditor& editor)
 
 void LoopPresenter::textEditorFocusLost(juce::TextEditor& editor)
 {
-    const double newPosition = parseTime(editor.getText());
+    const double newPosition = TimeUtils::parseTime(editor.getText());
     if (&editor == &loopInEditor)
     {
         applyLoopInFromEditor(newPosition, editor);
@@ -213,17 +214,6 @@ void LoopPresenter::textEditorFocusGained(juce::TextEditor& editor)
         owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
 }
 
-double LoopPresenter::parseTime(const juce::String& timeString) const
-{
-    auto parts = juce::StringArray::fromTokens(timeString, ":", "");
-    if (parts.size() != 4)
-        return -1.0;
-
-    return parts[0].getIntValue() * 3600.0
-         + parts[1].getIntValue() * 60.0
-         + parts[2].getIntValue()
-         + parts[3].getIntValue() / 1000.0;
-}
 
 double LoopPresenter::getAudioTotalLength() const
 {

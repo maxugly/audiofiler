@@ -37,7 +37,6 @@ private:
     void mouseUp(const juce::MouseEvent& event) override;
 
     void applyTimeEdit(juce::TextEditor& editor);
-    double parseTime(const juce::String& timeString) const;
     void syncEditorToPosition(juce::TextEditor& editor, double positionSeconds, bool isRemaining = false);
 
     juce::String buildCutLengthText() const;

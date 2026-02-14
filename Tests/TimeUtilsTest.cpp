@@ -24,6 +24,19 @@ public:
         beginTest("formatTime handles complex times");
         // 1h 1m 1s 500ms = 3600 + 60 + 1 + 0.5 = 3661.5
         expectEquals(TimeUtils::formatTime(3661.5), juce::String("01:01:01:500"));
+
+        beginTest("parseTime handles basic times");
+        expectEquals(TimeUtils::parseTime("00:00:01:000"), 1.0);
+        expectEquals(TimeUtils::parseTime("01:00:00:000"), 3600.0);
+        expectEquals(TimeUtils::parseTime("00:01:00:000"), 60.0);
+        expectEquals(TimeUtils::parseTime("00:00:00:500"), 0.5);
+
+        beginTest("parseTime handles negative input");
+        expectEquals(TimeUtils::parseTime("-00:00:01:000"), 1.0);
+
+        beginTest("parseTime handles invalid input");
+        expectEquals(TimeUtils::parseTime("00:00"), -1.0);
+        expectEquals(TimeUtils::parseTime("invalid"), -1.0);
     }
 };
 
