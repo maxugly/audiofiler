@@ -16,7 +16,18 @@ namespace TimeEntryHelpers
      * @param editor The TextEditor to validate.
      * @param totalLength The total length of the audio file in seconds.
      */
+
     void validateTimeEntry(juce::TextEditor& editor, double totalLength);
+
+    /**
+     * @brief Calculates the step size for mouse wheel adjustments based on cursor position and modifiers.
+     *
+     * @param charIndex The character index of the cursor in the text editor (normalized to HH:MM:SS:mmm).
+     * @param mods The modifier keys pressed.
+     * @param sampleRate The sample rate of the audio (if available) for sample-accurate stepping.
+     * @return The calculated step size in seconds.
+     */
+    double calculateStepSize(int charIndex, const juce::ModifierKeys& mods, double sampleRate = 0.0);
 }
 
 #endif // AUDIOFILER_TIMEENTRYHELPERS_H
