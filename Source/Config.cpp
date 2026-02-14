@@ -70,8 +70,6 @@ namespace Config {
         const juce::String loopInButton = "[I]n";
         const juce::String loopOutButton = "[O]ut";
         const juce::String clearButton = "X";
-        const juce::String detectInButton = "Detect In";
-        const juce::String detectOutButton = "Detect Out";
         const juce::String autoplayButton = "[A]utoPlay";
         const juce::String autoCutInButton = "[AC In]";
         const juce::String autoCutOutButton = "[AC Out]";

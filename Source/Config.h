@@ -221,8 +221,6 @@ namespace Config {
         extern const juce::String loopInButton;
         extern const juce::String loopOutButton;
         extern const juce::String clearButton;
-        extern const juce::String detectInButton;
-        extern const juce::String detectOutButton;
         extern const juce::String autoplayButton;
         extern const juce::String autoCutInButton;
         extern const juce::String autoCutOutButton;
