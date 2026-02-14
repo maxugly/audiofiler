@@ -2,11 +2,6 @@
 #include "../PlaybackHelpers.h"
 #include <iostream>
 
-namespace juce {
-    const char* juce_compilationDate = __DATE__;
-    const char* juce_compilationTime = __TIME__;
-}
-
 class PlaybackHelpersTest : public juce::UnitTest
 {
 public:
