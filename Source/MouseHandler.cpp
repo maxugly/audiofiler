@@ -35,7 +35,7 @@ void MouseHandler::mouseMove(const juce::MouseEvent& event)
         hoveredHandle = getHandleAtPosition(event.getPosition());
 
         // Lock handles if autocut is active and locking is enabled in Config
-        if (Config::lockHandlesWhenAutoCutActive)
+        if (Config::Audio::lockHandlesWhenAutoCutActive)
         {
             const auto& silenceDetector = owner.getSilenceDetector();
             if ((hoveredHandle == LoopMarkerHandle::In && silenceDetector.getIsAutoCutInActive()) ||
@@ -161,7 +161,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
         auto& silenceDetector = owner.getSilenceDetector();
         
         // Handle Locking logic
-        if (Config::lockHandlesWhenAutoCutActive)
+        if (Config::Audio::lockHandlesWhenAutoCutActive)
         {
             if ((draggedHandle == LoopMarkerHandle::In && silenceDetector.getIsAutoCutInActive()) ||
                 (draggedHandle == LoopMarkerHandle::Out && silenceDetector.getIsAutoCutOutActive()) ||
@@ -582,9 +582,9 @@ MouseHandler::LoopMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int
         float x = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (float)(time / audioLength);
         
         // Define handle hitboxes: Full height vertical strip (30px wide)
-        juce::Rectangle<int> hitStrip((int)(x - Config::loopMarkerBoxWidth / 2.0f), 
+        juce::Rectangle<int> hitStrip((int)(x - Config::Layout::Glow::loopMarkerBoxWidth / 2.0f),
                                       waveformBounds.getY(), 
-                                      (int)Config::loopMarkerBoxWidth, 
+                                      (int)Config::Layout::Glow::loopMarkerBoxWidth,
                                       waveformBounds.getHeight());
                                        
         return hitStrip.contains(pos);
@@ -602,7 +602,7 @@ MouseHandler::LoopMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int
     float inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (float)(actualIn / audioLength);
     float outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (float)(actualOut / audioLength);
     
-    int hollowHeight = Config::loopMarkerBoxHeight;
+    int hollowHeight = Config::Layout::Glow::loopMarkerBoxHeight;
     
     juce::Rectangle<int> topHollow((int)inX, waveformBounds.getY(), (int)(outX - inX), hollowHeight);
     juce::Rectangle<int> bottomHollow((int)inX, waveformBounds.getBottom() - hollowHeight, (int)(outX - inX), hollowHeight);

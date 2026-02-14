@@ -22,9 +22,9 @@ void LoopEditorPresenter::initialiseEditors()
     {
         editor.setReadOnly(false);
         editor.setJustification(juce::Justification::centred);
-        editor.setColour(juce::TextEditor::backgroundColourId, Config::textEditorBackgroundColour);
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-        editor.setFont(juce::Font(juce::FontOptions(Config::playbackTextSize)));
+        editor.setColour(juce::TextEditor::backgroundColourId, Config::Colors::textEditorBackground);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+        editor.setFont(juce::Font(juce::FontOptions(Config::Layout::Text::playbackSize)));
         editor.setMultiLine(false);
         editor.setReturnKeyStartsNewLine(false);
         editor.setWantsKeyboardFocus(true);
@@ -45,11 +45,11 @@ void LoopEditorPresenter::textEditorTextChanged(juce::TextEditor& editor)
     const double newPosition = parseTime(editor.getText());
 
     if (newPosition >= 0.0 && newPosition <= totalLength)
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
     else if (newPosition == -1.0)
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
     else
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
 }
 
 void LoopEditorPresenter::textEditorReturnKeyPressed(juce::TextEditor& editor)
@@ -61,7 +61,7 @@ void LoopEditorPresenter::textEditorReturnKeyPressed(juce::TextEditor& editor)
 void LoopEditorPresenter::textEditorEscapeKeyPressed(juce::TextEditor& editor)
 {
     restoreEditorValue(editor, &editor == &loopInEditor);
-    editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+    editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
     editor.giveAwayKeyboardFocus();
 }
 
@@ -82,7 +82,7 @@ void LoopEditorPresenter::applyLoopEdit(juce::TextEditor& editor, bool isLoopIn)
             if (owner.getLoopOutPosition() > -1.0 && newPosition > owner.getLoopOutPosition())
             {
                 restoreEditorValue(editor, true);
-                editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
+                editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
                 return;
             }
             owner.setLoopInPosition(newPosition);
@@ -97,13 +97,13 @@ void LoopEditorPresenter::applyLoopEdit(juce::TextEditor& editor, bool isLoopIn)
             if (owner.getLoopInPosition() > -1.0 && newPosition < owner.getLoopInPosition())
             {
                 restoreEditorValue(editor, false);
-                editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
+                editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
                 return;
             }
             owner.setLoopOutPosition(newPosition);
         }
 
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
         owner.ensureLoopOrder();
         owner.updateLoopLabels();
         owner.repaint();
@@ -111,7 +111,7 @@ void LoopEditorPresenter::applyLoopEdit(juce::TextEditor& editor, bool isLoopIn)
     else
     {
         restoreEditorValue(editor, isLoopIn);
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
         owner.repaint();
     }
 }
