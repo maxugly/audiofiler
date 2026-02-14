@@ -3,6 +3,7 @@
 namespace Config {
 
     namespace Colors {
+        #if !defined(JUCE_HEADLESS)
         // General
         const juce::Colour playbackText = juce::Colour(0xFF34FA11); // Bright green
 
@@ -50,6 +51,7 @@ namespace Config {
         const juce::Colour zoomPopupTrackingLine = juce::Colours::dodgerblue;
         const juce::Colour zoomPopupPlaybackLine = juce::Colours::lime;
         const juce::Colour zoomPopupZeroLine = juce::Colours::grey.withAlpha(0.3f);
+        #endif
     }
 
     namespace Labels {
@@ -81,6 +83,7 @@ namespace Config {
 }
 
 // Refactored definitions
+#if !defined(JUCE_HEADLESS)
 const juce::Colour Config::Colors::Window::background { juce::Colours::black };
 const juce::Colour Config::Colors::Button::base { 0xff5a5a5a };
 const juce::Colour Config::Colors::Button::on { 0xff00bfff };
@@ -92,3 +95,4 @@ const juce::Colour Config::Colors::Button::exit { juce::Colours::darkred };
 const juce::Colour Config::Colors::Button::clear { juce::Colours::red };
 const juce::Colour Config::Colors::Button::loopPlacement { 0xffff1493 };
 const juce::Colour Config::Colors::Button::loopActive { 0xff0066cc };
+#endif

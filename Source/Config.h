@@ -1,7 +1,11 @@
 #ifndef AUDIOFILER_CONFIG_H
 #define AUDIOFILER_CONFIG_H
 
+#if !defined(JUCE_HEADLESS)
 #include <juce_graphics/juce_graphics.h>
+#else
+#include <juce_core/juce_core.h>
+#endif
 
 /**
  * @file Config.h
@@ -13,6 +17,7 @@ namespace Config {
     // Colors
     //==============================================================================
     namespace Colors {
+        #if !defined(JUCE_HEADLESS)
 
         struct Window {
             static const juce::Colour background;
@@ -67,6 +72,7 @@ namespace Config {
         extern const juce::Colour zoomPopupTrackingLine;
         extern const juce::Colour zoomPopupPlaybackLine;
         extern const juce::Colour zoomPopupZeroLine;
+        #endif
 
     }
 

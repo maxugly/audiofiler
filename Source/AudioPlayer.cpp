@@ -20,8 +20,10 @@
  * to playback state changes (e.g., reaching the end of the file).
  */
 AudioPlayer::AudioPlayer()
+    #if !defined(JUCE_HEADLESS)
     : thumbnailCache(Config::Audio::thumbnailCacheSize), // Initialize thumbnail cache with a configured size
       thumbnail(Config::Audio::thumbnailSizePixels, formatManager, thumbnailCache) // Initialize thumbnail with configured size
+    #endif
 {
     formatManager.registerBasicFormats(); // Register standard audio file formats
     transportSource.addChangeListener(this); // Listen to transportSource for changes (e.g., playback finished)
@@ -60,7 +62,9 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
         loadedFile = file; // Store the loaded file for later reference
         auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true); // True means reader is owned by source
         transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate); // Set new source for playback
+        #if !defined(JUCE_HEADLESS)
         thumbnail.setSource(new juce::FileInputSource(file)); // Update thumbnail to reflect new file
+        #endif
         readerSource.reset(newSource.release()); // Transfer ownership to unique_ptr
         return juce::Result::ok();
     }
@@ -132,10 +136,12 @@ void AudioPlayer::setLooping(bool shouldLoop)
  * This accessor allows other components, particularly UI elements, to
  * retrieve and draw the waveform visualization.
  */
+#if !defined(JUCE_HEADLESS)
 juce::AudioThumbnail& AudioPlayer::getThumbnail()
 {
     return thumbnail;
 }
+#endif
 
 /**
  * @brief Gets a reference to the internal `juce::AudioTransportSource`.

@@ -128,7 +128,9 @@ public:
      * This is used by UI components (e.g., `MainComponent`) to draw the waveform.
      * @return A reference to the `juce::AudioThumbnail` object.
      */
+    #if !defined(JUCE_HEADLESS)
     juce::AudioThumbnail& getThumbnail();
+    #endif
 
     /**
      * @brief Gets a reference to the internal `juce::AudioTransportSource`.
@@ -231,8 +233,10 @@ private:
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource; ///< Handles reading audio data from a file.
     juce::AudioTransportSource transportSource;             ///< Controls playback, such as starting, stopping, and positioning.
 
+    #if !defined(JUCE_HEADLESS)
     juce::AudioThumbnailCache thumbnailCache;               ///< Caches audio thumbnails to avoid re-generating them.
     juce::AudioThumbnail thumbnail;                         ///< Generates and stores the visual waveform data.
+    #endif
 
     juce::File loadedFile;                                  ///< Stores the currently loaded audio file.
 
