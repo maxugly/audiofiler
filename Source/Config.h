@@ -15,21 +15,18 @@ namespace Config {
     // Colors
     //==============================================================================
     namespace Colors {
+
+        struct Window {
+            static const juce::Colour background;
+        };
+
+        struct Button {
+            static const juce::Colour base, on, text, outline, disabledBackground, disabledText, exit, clear, loopPlacement, loopActive;
+        };
         // General
-        extern const juce::Colour background;
         extern const juce::Colour playbackText;
 
         // Buttons
-        extern const juce::Colour buttonBase;
-        extern const juce::Colour buttonOn;
-        extern const juce::Colour buttonText;
-        extern const juce::Colour buttonOutline;
-        extern const juce::Colour buttonDisabledBackground;
-        extern const juce::Colour buttonDisabledText;
-        extern const juce::Colour buttonExit;
-        extern const juce::Colour buttonClear;
-        extern const juce::Colour buttonLoopPlacement;
-        extern const juce::Colour buttonLoopActive;
 
         // Text Editors
         extern const juce::Colour textEditorBackground;

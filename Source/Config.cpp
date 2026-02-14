@@ -4,20 +4,9 @@ namespace Config {
 
     namespace Colors {
         // General
-        const juce::Colour background = juce::Colours::black;
         const juce::Colour playbackText = juce::Colour(0xFF34FA11); // Bright green
 
         // Buttons
-        const juce::Colour buttonBase = juce::Colour(0xff5a5a5a);
-        const juce::Colour buttonOn = juce::Colour(0xff00bfff); // Deep Sky Blue
-        const juce::Colour buttonText = juce::Colour(0xFFFFFFFF); // White
-        const juce::Colour buttonOutline = juce::Colour(0xff808080); // Medium Grey
-        const juce::Colour buttonDisabledBackground = juce::Colour(0xff2a2a2a);
-        const juce::Colour buttonDisabledText = juce::Colour(0xff4a4a4a);
-        const juce::Colour buttonExit = juce::Colours::darkred;
-        const juce::Colour buttonClear = juce::Colours::red;
-        const juce::Colour buttonLoopPlacement = juce::Colour(0xffff1493); // Deep Pink
-        const juce::Colour buttonLoopActive = juce::Colour(0xff0066cc); // Moderate Blue
 
         // Text Editors
         const juce::Colour textEditorBackground = juce::Colours::grey.withAlpha(Config::Layout::Text::backgroundAlpha);
@@ -98,3 +87,16 @@ namespace Config {
     }
 
 }
+
+// Refactored definitions
+const juce::Colour Config::Colors::Window::background { juce::Colours::black };
+const juce::Colour Config::Colors::Button::base { 0xff5a5a5a };
+const juce::Colour Config::Colors::Button::on { 0xff00bfff };
+const juce::Colour Config::Colors::Button::text { 0xFFFFFFFF };
+const juce::Colour Config::Colors::Button::outline { 0xff808080 };
+const juce::Colour Config::Colors::Button::disabledBackground { 0xff2a2a2a };
+const juce::Colour Config::Colors::Button::disabledText { 0xff4a4a4a };
+const juce::Colour Config::Colors::Button::exit { juce::Colours::darkred };
+const juce::Colour Config::Colors::Button::clear { juce::Colours::red };
+const juce::Colour Config::Colors::Button::loopPlacement { 0xffff1493 };
+const juce::Colour Config::Colors::Button::loopActive { 0xff0066cc };
