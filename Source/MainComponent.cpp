@@ -32,27 +32,7 @@ MainComponent::MainComponent()
     setWantsKeyboardFocus(true);
     openGLContext.attachTo(*this);
 
-#if TESTING_MODE
-    juce::File audioFile(TEST_FILE_PATH);
-    if (audioFile.existsAsFile())
-    {
-        auto result = audioPlayer->loadFile(audioFile);
-        if (result.wasOk())
-        {
-            controlPanel->setTotalTimeStaticString(formatTime(audioPlayer->getThumbnail().getTotalLength()));
-            controlPanel->setLoopInPosition(0.0);
-            controlPanel->setLoopOutPosition(audioPlayer->getThumbnail().getTotalLength());
-            controlPanel->updateComponentStates();
-            
-            // Calculate and display dynamic statistics
-            controlPanel->updateStatsFromAudio();
-        }
-        else
-        {
-            controlPanel->setStatsDisplayText(result.getErrorMessage(), Config::Colors::statsErrorText);
-        }
-    }
-#endif
+
 }
 
 MainComponent::~MainComponent()
