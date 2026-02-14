@@ -118,6 +118,8 @@ void WaveformRenderer::drawReducedQualityWaveform(juce::Graphics& g, AudioPlayer
     const float height = (float)waveformBounds.getHeight();
     const float centerY = (float)waveformBounds.getCentreY();
     const float halfHeightScale = height * Config::Layout::Waveform::heightScale;
+    if (pixelsPerSample <= 0)
+        return;
     const double timePerPixel = audioLength / (double)width;
     const double timeDelta = timePerPixel * pixelsPerSample;
     const int offsetX = waveformBounds.getX();
@@ -134,6 +136,7 @@ void WaveformRenderer::drawReducedQualityWaveform(juce::Graphics& g, AudioPlayer
         const float bottomY = centerY - (minVal * halfHeightScale);
 
         const float xPos = (float)(offsetX + x);
+    waveformRects.ensureStorageAllocated(width / pixelsPerSample + 1);
         waveformRects.addWithoutMerging({ xPos, topY, 1.0f, bottomY - topY });
     }
 
