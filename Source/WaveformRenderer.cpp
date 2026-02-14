@@ -1,6 +1,5 @@
 #include "WaveformRenderer.h"
 
-#include "PlaybackCursorGlow.h"
 #include "ControlPanel.h"
 #include "AudioPlayer.h"
 #include "FocusManager.h"
@@ -325,7 +324,10 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
 void WaveformRenderer::drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const
 {
     const auto waveformBounds = controlPanel.getWaveformBounds();
-    PlaybackCursorGlow::renderGlow(g, controlPanel, waveformBounds);
+    const float drawPosition = (float)audioPlayer.getTransportSource().getCurrentPosition();
+    const float x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
+
+    drawGlowingLine(g, (int)x, waveformBounds.getY(), waveformBounds.getBottom(), Config::Colors::playbackText);
 }
 
 void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const

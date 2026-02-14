@@ -64,8 +64,6 @@ if (NOT BUILD_TESTS_ONLY)
             Source/LayoutManager.cpp
             Source/WaveformRenderer.h
             Source/WaveformRenderer.cpp
-            Source/PlaybackCursorGlow.h
-            Source/PlaybackCursorGlow.cpp
             Source/KeybindHandler.h
             Source/KeybindHandler.cpp
             Source/LoopPresenter.h
