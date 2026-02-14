@@ -21,14 +21,14 @@ void SilenceDetectionLogger::logZeroLength(ControlPanel& panel)
     panel.getStatsDisplay().insertTextAtCaret("SilenceDetector: Audio length is 0, cannot detect silence.\n");
 }
 
-void SilenceDetectionLogger::logLoopStartSet(ControlPanel& panel, int sampleIndex, double sampleRate)
+void SilenceDetectionLogger::logLoopStartSet(ControlPanel& panel, juce::int64 sampleIndex, double sampleRate)
 {
     panel.getStatsDisplay().insertTextAtCaret("Auto-set loop start to sample "
         + juce::String(sampleIndex)
         + " (" + panel.formatTime((double) sampleIndex / sampleRate) + ")\n");
 }
 
-void SilenceDetectionLogger::logLoopEndSet(ControlPanel& panel, int sampleIndex, double sampleRate)
+void SilenceDetectionLogger::logLoopEndSet(ControlPanel& panel, juce::int64 sampleIndex, double sampleRate)
 {
     panel.getStatsDisplay().insertTextAtCaret("Auto-set loop end to sample "
         + juce::String(sampleIndex)
