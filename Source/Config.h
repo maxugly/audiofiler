@@ -75,9 +75,6 @@ namespace Config {
         extern const juce::Colour zoomPopupPlaybackLine;
         extern const juce::Colour zoomPopupZeroLine;
 
-        // Hazy Box
-        extern const juce::Colour hazyBoxFade;
-        extern const juce::Colour hazyBoxLine;
     }
 
     //==============================================================================
@@ -196,7 +193,6 @@ namespace Config {
         constexpr float mouseAmplitudeLineLength = 50.0f;
         constexpr float thresholdLineWidth = 100.0f;
 
-        constexpr float waveBoxHaze = 0.2f;
     }
 
     //==============================================================================

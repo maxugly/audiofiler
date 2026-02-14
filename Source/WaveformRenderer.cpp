@@ -150,7 +150,7 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
     const double actualOut = juce::jmax(controlPanel.getLoopInPosition(), controlPanel.getLoopOutPosition());
     const float inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
     const float outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
-    const float fadeLength = waveformBounds.getWidth() * Config::Animation::waveBoxHaze;
+    const float fadeLength = waveformBounds.getWidth() * 0.2f;
     const float boxHeight = (float)Config::Layout::Glow::loopMarkerBoxHeight;
 
     const juce::Rectangle<float> leftRegion((float)waveformBounds.getX(), (float)waveformBounds.getY(), inX - (float)waveformBounds.getX(), (float)waveformBounds.getHeight());

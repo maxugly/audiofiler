@@ -48,9 +48,6 @@ namespace Config {
         const juce::Colour zoomPopupBorder = juce::Colours::blue;
         const juce::Colour zoomPopupIndicator = juce::Colours::white;
 
-        // Hazy Box (Unused/Optional but present in original)
-        const juce::Colour hazyBoxFade = juce::Colours::black.withAlpha(0.0f);
-        const juce::Colour hazyBoxLine = juce::Colours::cyan;
 
         // Additional colors for UI elements found in code
         const juce::Colour zoomPopupShadowOuter = juce::Colours::black.withAlpha(0.5f);
