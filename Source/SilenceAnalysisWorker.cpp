@@ -33,14 +33,24 @@ void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float thre
 
     const juce::int64 lengthInSamples = reader->lengthInSamples;
     SilenceDetectionLogger::logReadingSamples(ownerPanel, "In", lengthInSamples);
-    if (lengthInSamples == 0)
+
+    // Security Fix: Check for invalid length to prevent processing errors
+    if (lengthInSamples <= 0)
     {
         SilenceDetectionLogger::logZeroLength(ownerPanel);
         resumeIfNeeded(audioPlayer, wasPlaying);
         return;
     }
 
-    // Process in chunks to avoid large memory allocation and integer overflow
+    // Security Fix: Validate channel count to prevent invalid buffer allocation
+    if (reader->numChannels <= 0)
+    {
+        // Log error if needed, for now just bail out
+        resumeIfNeeded(audioPlayer, wasPlaying);
+        return;
+    }
+
+    // Security Fix: Process in chunks to avoid large memory allocation (unbounded allocation vulnerability) and integer overflow
     const int chunkSize = 65536;
     juce::AudioBuffer<float> buffer(reader->numChannels, chunkSize);
 
@@ -93,14 +103,23 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
 
     const juce::int64 lengthInSamples = reader->lengthInSamples;
     SilenceDetectionLogger::logReadingSamples(ownerPanel, "Out", lengthInSamples);
-    if (lengthInSamples == 0)
+
+    // Security Fix: Check for invalid length
+    if (lengthInSamples <= 0)
     {
         SilenceDetectionLogger::logZeroLength(ownerPanel);
         resumeIfNeeded(audioPlayer, wasPlaying);
         return;
     }
 
-    // Process in chunks backwards
+    // Security Fix: Validate channel count
+    if (reader->numChannels <= 0)
+    {
+        resumeIfNeeded(audioPlayer, wasPlaying);
+        return;
+    }
+
+    // Security Fix: Process in chunks backwards to avoid unbounded memory allocation
     const int chunkSize = 65536;
     juce::AudioBuffer<float> buffer(reader->numChannels, chunkSize);
 
