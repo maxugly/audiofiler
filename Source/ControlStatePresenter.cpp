@@ -11,6 +11,11 @@ ControlStatePresenter::ControlStatePresenter(ControlPanel& ownerPanel)
 {
 }
 
+/**
+ * @brief Refreshes the enabled/visible state of all controls based on current app state.
+ *
+ * Checks if a file is loaded and if cut mode is active, then delegates to specific helpers.
+ */
 void ControlStatePresenter::refreshStates()
 {
     const bool enabled = owner.getAudioPlayer().getThumbnail().getTotalLength() > 0.0;
@@ -19,6 +24,12 @@ void ControlStatePresenter::refreshStates()
     updateCutModeControlStates(owner.m_isCutModeActive, enabled);
 }
 
+
+
+/**
+ * @brief Updates the state of general transport and mode buttons.
+ * @param enabled True if an audio file is loaded.
+ */
 void ControlStatePresenter::updateGeneralButtonStates(bool enabled)
 {
     owner.openButton.setEnabled(true);
@@ -44,6 +55,13 @@ void ControlStatePresenter::updateGeneralButtonStates(bool enabled)
     }
 }
 
+
+
+/**
+ * @brief Updates the state of cut-mode specific controls (looping, silence detection).
+ * @param isCutModeActive True if the UI is in Cut Mode.
+ * @param enabled True if an audio file is loaded.
+ */
 void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, bool enabled)
 {
     owner.loopInButton.setEnabled(enabled && isCutModeActive);
@@ -63,8 +81,8 @@ void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, boo
     owner.autoCutInButton.setToggleState(owner.silenceDetector->getIsAutoCutInActive(), juce::dontSendNotification);
     owner.autoCutOutButton.setToggleState(owner.silenceDetector->getIsAutoCutOutActive(), juce::dontSendNotification);
 
-    owner.silenceDetector->getInSilenceThresholdEditor().setEnabled(true);
-    owner.silenceDetector->getOutSilenceThresholdEditor().setEnabled(true);
+    owner.silenceDetector->getInSilenceThresholdEditor().setEnabled(enabled && isCutModeActive);
+    owner.silenceDetector->getOutSilenceThresholdEditor().setEnabled(enabled && isCutModeActive);
 
     owner.loopInButton.setVisible(isCutModeActive);
     owner.loopOutButton.setVisible(isCutModeActive);
