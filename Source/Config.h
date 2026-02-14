@@ -29,8 +29,6 @@ namespace Config {
         // General
         extern const juce::Colour playbackText;
 
-        // Buttons
-
         // Text Editors
         extern const juce::Colour textEditorBackground;
         extern const juce::Colour textEditorError;
