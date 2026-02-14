@@ -92,14 +92,12 @@ namespace Config {
         static constexpr int buttonHeight = 30;
         static constexpr int buttonWidth = 80;
         static constexpr int clearButtonWidth = 25;
-        static constexpr int clearButtonMargin = 25;
         static constexpr float buttonCornerRadius = 5.0f;
         static constexpr float buttonOutlineThickness = 1.0f;
 
         // Text & Editors
         static constexpr int loopTextWidth = 165;
         static constexpr int thresholdEditorWidth = 80;
-        static constexpr int loopTextOffsetY = 10;
 
         struct Text {
             static constexpr int playbackWidth = 520;
@@ -141,7 +139,6 @@ namespace Config {
         // Glow & Lines
         struct Glow {
              static constexpr float offsetFactor = 0.5f;
-             static constexpr int loopHollowHeightDivisor = 3;
              static constexpr float mouseAlpha = 0.3f;
              static constexpr int mousePadding = 2;
              static constexpr int mouseHighlightOffset = 2;
@@ -151,7 +148,6 @@ namespace Config {
 
              // Thicknesses
              static constexpr float thickness = 3.0f;
-             static constexpr float mouseAmplitudeLineThickness = 1.0f;
              static constexpr float mouseAmplitudeGlowThickness = 3.0f;
              static constexpr float placementModeGlowThickness = 3.0f;
              static constexpr float thresholdGlowThickness = 3.0f;
@@ -178,9 +174,6 @@ namespace Config {
     // Animation
     //==============================================================================
     namespace Animation {
-        constexpr float pulseSpeedFactor = 0.002f;
-        constexpr float loopPulseAlphaMin = 0.1f;
-        constexpr float loopPulseAlphaModulation = 0.8f;
 
         constexpr float buttonHighlightedBrightness = 0.1f;
         constexpr float buttonPressedDarkness = 0.1f;
