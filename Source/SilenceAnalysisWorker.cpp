@@ -62,7 +62,7 @@ void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float thre
         return;
     }
 
-    // Security Fix: Process in chunks to avoid large memory allocation (unbounded allocation vulnerability) and integer overflow
+    // Security Fix: Process in chunks to avoid large memory allocation (unbounded allocation vulnerability) and integer overflow (files > 2GB cause negative size when cast to int)
     juce::AudioBuffer<float> buffer(reader->numChannels, kChunkSize);
 
     juce::int64 currentPos = 0;
@@ -143,7 +143,7 @@ void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float thr
         return;
     }
 
-    // Security Fix: Process in chunks backwards to avoid unbounded memory allocation
+    // Security Fix: Process in chunks backwards to avoid unbounded memory allocation and integer overflow
     juce::AudioBuffer<float> buffer(reader->numChannels, kChunkSize);
 
     juce::int64 currentPos = lengthInSamples;

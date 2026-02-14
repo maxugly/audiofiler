@@ -125,7 +125,7 @@ if (NOT BUILD_TESTS_ONLY)
 endif()
 
 # Tests
-add_executable(tests Tests/TestMain.cpp Tests/TimeUtilsTest.cpp Source/TimeUtils.cpp Source/PlaybackHelpers.cpp Tests/PlaybackHelpersTest.cpp)
+add_executable(tests Tests/TestMain.cpp Tests/TimeUtilsTest.cpp Source/TimeUtils.cpp Source/PlaybackHelpers.cpp Tests/PlaybackHelpersTest.cpp Tests/SecurityFixTest.cpp)
 target_compile_definitions(tests PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
 target_link_libraries(tests PRIVATE juce::juce_core)
 
