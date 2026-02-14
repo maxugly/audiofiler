@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 
 project(audiofiler VERSION 0.0.0001)
 
+# Enable testing infrastructure
+enable_testing()
+
 option(BUILD_TESTS_ONLY "Build tests only" OFF)
 
 
@@ -125,3 +128,6 @@ endif()
 add_executable(tests Tests/TestMain.cpp Tests/TimeUtilsTest.cpp Source/TimeUtils.cpp Source/PlaybackHelpers.cpp Tests/PlaybackHelpersTest.cpp)
 target_compile_definitions(tests PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
 target_link_libraries(tests PRIVATE juce::juce_core)
+
+# Register tests with CTest
+add_test(NAME AllTests COMMAND tests)
