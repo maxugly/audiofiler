@@ -1,4 +1,5 @@
 #include "ControlPanel.h"
+#include "TimeUtils.h"
 #include "MainComponent.h" // Full header required for MainComponent access (e.g., getAudioPlayer)
 #include "AudioPlayer.h"    // Required for AudioPlayer types in public methods
 #include "Config.h"
@@ -359,7 +360,7 @@ void ControlPanel::setLoopEnd(int sampleIndex)
 
 juce::String ControlPanel::formatTime(double seconds) const
 {
-    return owner.formatTime(seconds);
+    return TimeUtils::formatTime(seconds);
 }
 
 const juce::LookAndFeel& ControlPanel::getLookAndFeel() const
