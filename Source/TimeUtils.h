@@ -7,6 +7,7 @@ class TimeUtils
 {
 public:
     static juce::String formatTime(double seconds);
+    static double parseTime(const juce::String& timeString);
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include "PlaybackTextPresenter.h"
 
 #include "ControlPanel.h"
+#include "TimeUtils.h"
 #include "Config.h"
 #include "AudioPlayer.h"
 #include <cmath>
@@ -135,7 +136,7 @@ void PlaybackTextPresenter::textEditorFocusGained(juce::TextEditor&)
 
 void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor& editor)
 {
-    double newTime = parseTime(editor.getText());
+    double newTime = TimeUtils::parseTime(editor.getText());
     if (newTime < 0.0) return;
 
     auto& transport = owner.getAudioPlayer().getTransportSource();
@@ -178,20 +179,6 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor& editor)
     updateEditors();
 }
 
-double PlaybackTextPresenter::parseTime(const juce::String& timeString) const
-{
-    // Remove leading '-' if present for remaining time
-    juce::String cleanTime = timeString.startsWithChar('-') ? timeString.substring(1) : timeString;
-    
-    auto parts = juce::StringArray::fromTokens(cleanTime, ":", "");
-    if (parts.size() != 4)
-        return -1.0;
-
-    return parts[0].getIntValue() * 3600.0
-         + parts[1].getIntValue() * 60.0
-         + parts[2].getIntValue()
-         + parts[3].getIntValue() / 1000.0;
-}
 
 void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor& editor, double positionSeconds, bool isRemaining)
 {
@@ -245,7 +232,7 @@ void PlaybackTextPresenter::mouseWheelMove(const juce::MouseEvent& event, const 
     auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
     if (editor == nullptr) return;
 
-    double currentVal = parseTime(editor->getText());
+    double currentVal = TimeUtils::parseTime(editor->getText());
     if (currentVal < 0.0) currentVal = 0.0;
 
     // Determine step size (matching LoopPresenter logic)
