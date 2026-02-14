@@ -7,6 +7,8 @@ enable_testing()
 
 option(BUILD_TESTS_ONLY "Build tests only" OFF)
 
+# Attempt to disable juceaide build to avoid X11 dependency
+set(JUCE_BUILD_HELPER_TOOLS OFF CACHE BOOL "" FORCE)
 
 include(cmake/CPM.cmake)
 CPMAddPackage(
@@ -125,9 +127,33 @@ if (NOT BUILD_TESTS_ONLY)
 endif()
 
 # Tests
-add_executable(tests Tests/TestMain.cpp Tests/TimeUtilsTest.cpp Source/TimeUtils.cpp Source/PlaybackHelpers.cpp Tests/PlaybackHelpersTest.cpp Tests/SecurityFixTest.cpp)
-target_compile_definitions(tests PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
-target_link_libraries(tests PRIVATE juce::juce_core)
+add_executable(tests
+    Tests/TestMain.cpp
+    Tests/TimeUtilsTest.cpp
+    Source/TimeUtils.cpp
+    Source/PlaybackHelpers.cpp
+    Tests/PlaybackHelpersTest.cpp
+    Tests/SecurityFixTest.cpp
+    Source/AudioPlayer.cpp
+    Tests/AudioPlayerTest.cpp
+    Source/Config.cpp
+)
+
+target_compile_definitions(tests PRIVATE
+    JUCE_USE_CURL=0
+    JUCE_WEB_BROWSER=0
+    JUCE_HEADLESS=1
+    JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
+    JUCE_DONT_DECLARE_PROJECTINFO=1
+)
+
+target_link_libraries(tests PRIVATE
+    juce::juce_core
+    juce::juce_audio_basics
+    juce::juce_audio_formats
+    juce::juce_audio_devices
+    juce::juce_events
+)
 
 # Register tests with CTest
 add_test(NAME AllTests COMMAND tests)

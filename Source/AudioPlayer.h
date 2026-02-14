@@ -1,7 +1,14 @@
 #ifndef AUDIOFILER_AUDIOPLAYER_H
 #define AUDIOFILER_AUDIOPLAYER_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_audio_basics/juce_audio_basics.h>
+    #include <juce_audio_formats/juce_audio_formats.h>
+    #include <juce_audio_devices/juce_audio_devices.h>
+    #include <juce_events/juce_events.h>
+#else
+    #include <JuceHeader.h>
+#endif
 
 #include "Config.h"
 
