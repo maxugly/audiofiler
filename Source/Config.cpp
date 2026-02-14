@@ -7,8 +7,6 @@ namespace Config {
         // General
         const juce::Colour playbackText = juce::Colour(0xFF34FA11); // Bright green
 
-        // Buttons
-
         // Text Editors
         const juce::Colour textEditorBackground = juce::Colours::grey.withAlpha(Config::Layout::Text::backgroundAlpha);
         const juce::Colour textEditorError = juce::Colours::red;
