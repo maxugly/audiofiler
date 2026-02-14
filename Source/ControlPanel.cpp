@@ -131,8 +131,7 @@ void ControlPanel::finaliseSetup()
  * This method is central to the responsive design of the UI. It divides the
  * available area into logical sections (top row, loop/cut controls, bottom row,
  * and the main waveform/stats area) and calls specialized layout helper methods
- * to position buttons, editors, and display areas dynamically. Debugging statements
- * (`DBG`) are included to help trace layout changes during development.
+ * to position buttons, editors, and display areas dynamically.
  */
 void ControlPanel::resized()
 {

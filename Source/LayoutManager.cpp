@@ -13,7 +13,6 @@ LayoutManager::LayoutManager(ControlPanel& controlPanelIn)
 
 void LayoutManager::performLayout()
 {
-    DBG("ControlPanel::resized() - START");
     auto bounds = controlPanel.getLocalBounds();
     const int rowHeight = Config::Layout::buttonHeight + Config::Layout::windowBorderMargins * 2;
 
@@ -21,7 +20,6 @@ void LayoutManager::performLayout()
     layoutLoopAndCutControls(bounds, rowHeight);
     layoutBottomRowAndTextDisplay(bounds, rowHeight);
     layoutWaveformAndStats(bounds);
-    DBG("ControlPanel::resized() - END");
 }
 
 void LayoutManager::layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHeight)
