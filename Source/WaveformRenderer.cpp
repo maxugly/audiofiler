@@ -6,6 +6,7 @@
 #include "MouseHandler.h"
 #include "SilenceDetector.h"
 #include "Config.h"
+#include "PlaybackCursorGlow.h"
 
 void WaveformRenderer::invalidateWaveformCache()
 {
@@ -327,7 +328,7 @@ void WaveformRenderer::drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioP
     const float drawPosition = (float)audioPlayer.getTransportSource().getCurrentPosition();
     const float x = (drawPosition / audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
 
-    drawGlowingLine(g, (int)x, waveformBounds.getY(), waveformBounds.getBottom(), Config::Colors::playbackText);
+    PlaybackCursorGlow::renderGlow(g, (int)x, waveformBounds.getY(), waveformBounds.getBottom(), Config::Colors::playbackText);
 }
 
 void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const
@@ -427,7 +428,7 @@ void WaveformRenderer::drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& a
                    Config::Layout::Text::mouseCursorSize, juce::Justification::left, true);
     }
 
-    drawGlowingLine(g, mouseHandler.getMouseCursorX(), waveformBounds.getY(), waveformBounds.getBottom(), currentLineColor);
+    PlaybackCursorGlow::renderGlow(g, mouseHandler.getMouseCursorX(), waveformBounds.getY(), waveformBounds.getBottom(), currentLineColor);
     g.setColour(currentLineColor);
     g.drawHorizontalLine(mouseHandler.getMouseCursorY(), (float)waveformBounds.getX(), (float)waveformBounds.getRight());
 }
@@ -571,24 +572,4 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
     // Draw blue border
     g.setColour(Config::Colors::zoomPopupBorder);
     g.drawRect(popupBounds.toFloat(), Config::Layout::Zoom::borderThickness);
-}
-
-void WaveformRenderer::drawGlowingLine(juce::Graphics& g, int x, int topY, int bottomY, juce::Colour baseColor) const
-{
-    const float glowWidth = Config::Layout::Glow::thickness;
-
-    // Create a horizontal gradient for the glow: Transparent -> Color -> Transparent
-    juce::ColourGradient gradient(baseColor.withAlpha(0.0f), (float)x - glowWidth, 0.0f,
-                                  baseColor.withAlpha(0.0f), (float)x + glowWidth, 0.0f, false);
-
-    // Use a slightly higher alpha for the center to ensure visibility, as requested
-    gradient.addColour(0.5, baseColor.withAlpha(0.6f));
-
-    g.setGradientFill(gradient);
-    // Draw the glow
-    g.fillRect((float)x - glowWidth, (float)topY, glowWidth * 2.0f, (float)(bottomY - topY));
-
-    // Draw the core 1-pixel vertical line
-    g.setColour(baseColor);
-    g.drawVerticalLine(x, (float)topY, (float)bottomY);
 }

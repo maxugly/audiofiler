@@ -110,6 +110,8 @@ if (NOT BUILD_TESTS_ONLY)
             Source/FocusManager.cpp
             Source/PlaybackHelpers.h
             Source/PlaybackHelpers.cpp
+            Source/PlaybackCursorGlow.h
+            Source/PlaybackCursorGlow.cpp
     )
 
     target_link_libraries(audiofiler PRIVATE

@@ -2,6 +2,7 @@
 #define AUDIOFILER_WAVEFORMRENDERER_H
 
 #include <JuceHeader.h>
+#include "PlaybackCursorGlow.h"
 
 class ControlPanel;
 class AudioPlayer;
@@ -42,7 +43,6 @@ private:
     void drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
     void drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
     void drawZoomPopup(juce::Graphics& g) const;
-    void drawGlowingLine(juce::Graphics& g, int x, int topY, int bottomY, juce::Colour baseColor) const;
 
     ControlPanel& controlPanel;
 };
