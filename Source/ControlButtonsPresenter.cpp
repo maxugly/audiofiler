@@ -99,7 +99,7 @@ void ControlButtonsPresenter::initialiseExitButton()
 {
     owner.addAndMakeVisible(owner.exitButton);
     owner.exitButton.setButtonText(ControlPanelCopy::exitButtonText());
-    owner.exitButton.setColour(juce::TextButton::buttonColourId, Config::exitButtonColor);
+    owner.exitButton.setColour(juce::TextButton::buttonColourId, Config::Colors::buttonExit);
     owner.exitButton.onClick = [] {
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
     };
@@ -209,7 +209,7 @@ void ControlButtonsPresenter::initialiseClearButtons()
 {
     owner.addAndMakeVisible(owner.clearLoopInButton);
     owner.clearLoopInButton.setButtonText(ControlPanelCopy::clearButtonText());
-    owner.clearLoopInButton.setColour(juce::TextButton::buttonColourId, Config::clearButtonColor);
+    owner.clearLoopInButton.setColour(juce::TextButton::buttonColourId, Config::Colors::buttonClear);
     owner.clearLoopInButton.onClick = [this] {
         if (owner.loopResetPresenter != nullptr)
             owner.loopResetPresenter->clearLoopIn();
@@ -217,7 +217,7 @@ void ControlButtonsPresenter::initialiseClearButtons()
 
     owner.addAndMakeVisible(owner.clearLoopOutButton);
     owner.clearLoopOutButton.setButtonText(ControlPanelCopy::clearButtonText());
-    owner.clearLoopOutButton.setColour(juce::TextButton::buttonColourId, Config::clearButtonColor);
+    owner.clearLoopOutButton.setColour(juce::TextButton::buttonColourId, Config::Colors::buttonClear);
     owner.clearLoopOutButton.onClick = [this] {
         if (owner.loopResetPresenter != nullptr)
             owner.loopResetPresenter->clearLoopOut();

@@ -1,5 +1,6 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "MainComponent.h"
+#include "Config.h"
 
 /**
  * @file Main.cpp
@@ -78,7 +79,7 @@ private:
        * It sets the `MainComponent` as its content, makes it resizable,
        * centers it on screen, and makes it visible.
        */
-      MainWindow (juce::String name) : DocumentWindow (name, juce::Colours::black, allButtons) {
+      MainWindow (juce::String name) : DocumentWindow (name, Config::Colors::background, allButtons) {
         setUsingNativeTitleBar (true);
         setContentOwned (new MainComponent(), true);
         setResizable (true, true);

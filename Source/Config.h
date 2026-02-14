@@ -1,370 +1,250 @@
 #ifndef AUDIOFILER_CONFIG_H
 #define AUDIOFILER_CONFIG_H
 
+#include <juce_graphics/juce_graphics.h>
+
 /**
  * @file Config.h
  * @brief Centralized configuration for the audiofiler application.
- *
- * This file contains a collection of compile-time constants and settings
- * that control the application's appearance, behavior, and default values.
- * By centralizing these parameters, it becomes easier to tweak the application's
- * look and feel, and other core functionalities without modifying the main source code.
- * All settings are contained within the `Config` namespace.
  */
 namespace Config {
-    //==============================================================================
-    // General Application Settings
-    //==============================================================================
 
-    /**
-     * @def TESTING_MODE
-     * @brief A preprocessor definition to enable or disable testing-specific features.
-     * When set to 1, it might enable features like automatically loading a default
-     * audio file (`t.mp3`) on startup to speed up the development and testing cycle.
-     * Set to 0 for production builds.
-     */
-    #define TESTING_MODE 0 
-
-    /// The margin around the entire window content, in pixels.
-    constexpr int windowBorderMargins = 15;
-
-    /// The initial width of the main application window in pixels.
-    constexpr int initialWindowWidth = 1200;
-
-    /// The initial height of the main application window in pixels.
-    constexpr int initialWindowHeight = 800;
-
-    /// The number of most recent audio files the thumbnail cache can hold.
-    constexpr int thumbnailCacheSize = 5;
-
-    /// The resolution of the generated audio thumbnails in pixels.
-    constexpr int thumbnailSizePixels = 512;
-
-    /// The amount of time in seconds to skip forward or backward when using keyboard shortcuts (e.g., arrow keys).
-    constexpr double keyboardSkipAmountSeconds = 5.0;
+    #define TESTING_MODE 0
 
     //==============================================================================
-    // UI Element Sizing
+    // Colors
     //==============================================================================
+    namespace Colors {
+        // General
+        extern const juce::Colour background;
+        extern const juce::Colour playbackText;
 
-    /// The height in pixels for buttons.
-    constexpr int buttonHeight = 30;
-    /// The default width in pixels for most buttons.
-    constexpr int buttonWidth = 80;
+        // Buttons
+        extern const juce::Colour buttonBase;
+        extern const juce::Colour buttonOn;
+        extern const juce::Colour buttonText;
+        extern const juce::Colour buttonOutline;
+        extern const juce::Colour buttonDisabledBackground;
+        extern const juce::Colour buttonDisabledText;
+        extern const juce::Colour buttonExit;
+        extern const juce::Colour buttonClear;
+        extern const juce::Colour buttonLoopPlacement;
+        extern const juce::Colour buttonLoopActive;
 
-    /// The width of the main playback time and sample position display.
-    constexpr int playbackTextWidth = 520; 
-    /// The height of the playback time display, chosen to prevent text from being cut off.
-    constexpr int playbackTextHeight = 30; 
+        // Text Editors
+        extern const juce::Colour textEditorBackground;
+        extern const juce::Colour textEditorError;
+        extern const juce::Colour textEditorWarning;
+        extern const juce::Colour textEditorOutOfRange;
 
-    /// The width of the loop start/end time display editors.
-    constexpr int loopTextWidth = 165;
-    /// The width of the silence threshold percentage editors.
-    constexpr int thresholdEditorWidth = 80;
+        // Waveform & Visuals
+        extern const juce::Colour waveform;
+        extern const juce::Colour playbackCursor;
+        extern const juce::Colour loopRegion;
+        extern const juce::Colour loopLine;
+        extern const juce::Colour loopMarkerAuto;
+        extern const juce::Colour loopMarkerHover;
+        extern const juce::Colour loopMarkerDrag;
 
-    /// The width of the small 'X' button used to clear loop points.
-    constexpr int clearButtonWidth = 25;
-    /// The margin used for laying out clear buttons next to other elements.
-    constexpr int clearButtonMargin = 25; 
+        // Mouse Cursor
+        extern const juce::Colour mouseCursorLine;
+        extern const juce::Colour mouseCursorHighlight;
+        extern const juce::Colour mouseAmplitudeLine;
+        extern const juce::Colour mousePlacementMode;
 
-    //==============================================================================
-    // UI Element Positioning
-    //==============================================================================
+        // Silence Threshold
+        extern const juce::Colour thresholdLine;
+        extern const juce::Colour thresholdRegion;
 
-    /// The vertical offset from the top for the loop start/end text editors.
-    constexpr int loopTextOffsetY = 10; 
-    /// The vertical offset from the top for the main playback time display.
-    constexpr int playbackTimeTextOffsetY = 25; 
+        // Stats Display
+        extern const juce::Colour statsBackground;
+        extern const juce::Colour statsText;
+        extern const juce::Colour statsErrorText;
 
-    //==============================================================================
-    // Fonts and Text
-    //==============================================================================
+        // Animation/Glow
+        extern const juce::Colour playbackCursorGlowStart;
+        extern const juce::Colour playbackCursorGlowEnd;
+        extern const juce::Colour mouseAmplitudeGlow;
+        extern const juce::Colour placementModeGlow;
 
-    /// The default font size for the playback time display.
-    constexpr int playbackTextSize = 30;
-    /// The font size for text that follows the mouse cursor (e.g., time/amplitude display).
-    constexpr int mouseCursorTextSize = 20;
+        // Zoom Popup
+        extern const juce::Colour zoomPopupBorder;
+        extern const juce::Colour zoomPopupIndicator;
 
-    /// A scaling factor to determine the height of text within a button, relative to button height.
-    constexpr float buttonTextHeightScale = 0.45f;         
-    /// A larger scaling factor for the play/pause symbols to make them more prominent.
-    constexpr float buttonPlayPauseTextHeightScale = 0.7f; 
+        // Extra Zoom Colors
+        extern const juce::Colour zoomPopupShadowOuter;
+        extern const juce::Colour zoomPopupShadowInner;
+        extern const juce::Colour zoomPopupTrackingLine;
+        extern const juce::Colour zoomPopupPlaybackLine;
+        extern const juce::Colour zoomPopupZeroLine;
 
-    //==============================================================================
-    // Color Palette - General
-    //==============================================================================
-
-    /// The background color of the main application window.
-    const juce::Colour mainBackgroundColor = juce::Colours::black;
-    /// The primary color for text in the playback time display.
-    const juce::Colour playbackTextColor = juce::Colour(0xFF34FA11); // A bright green
-    /// The alpha (opacity) for the background of text elements, allowing the waveform to be seen behind them.
-    constexpr float playbackTextBackgroundAlpha = 0.7f; 
-
-    //==============================================================================
-    // Color Palette - Buttons
-    //==============================================================================
-
-    /// The standard background color for an enabled, non-toggled button.
-    const juce::Colour buttonBaseColour = juce::Colour(0xff5a5a5a); 
-    /// The color of a button when it is in an "on" or "active" toggled state.
-    const juce::Colour buttonOnColour = juce::Colour(0xff00bfff);   // Deep Sky Blue
-    /// The default color for button text.
-    const juce::Colour buttonTextColour = juce::Colour(0xFFFFFFFF); // White
-    /// The color of the outline around buttons.
-    const juce::Colour buttonOutlineColour = juce::Colour(0xff808080); // Medium Grey Outline
-
-    /// The background color for a disabled (non-interactive) button.
-    const juce::Colour disabledButtonBackgroundColour = juce::Colour(0xff2a2a2a); 
-    /// The text color for a disabled button, providing low contrast against its background.
-    const juce::Colour disabledButtonTextColour = juce::Colour(0xff4a4a4a);     
-
-    /// The background color for the 'Exit' button, indicating a destructive action.
-    const juce::Colour exitButtonColor = juce::Colours::darkred;
-    /// The color of the small 'X' button used for clearing loop points.
-    const juce::Colour clearButtonColor = juce::Colours::red;
-
-    /// The color for loop-related buttons when they are in "placement mode" (i.e., waiting for a mouse click).
-    const juce::Colour loopButtonPlacementModeColor = juce::Colour(0xffff1493); // Deep Pink
-    /// The color for the main 'Loop' button when the loop is active.
-    const juce::Colour loopButtonActiveColor = juce::Colour(0xff0066cc);   // Moderate Blue
+        // Hazy Box
+        extern const juce::Colour hazyBoxFade;
+        extern const juce::Colour hazyBoxLine;
+    }
 
     //==============================================================================
-    // Color Palette - Text Editors
+    // Layout & Sizing
     //==============================================================================
+    namespace Layout {
+        // Window
+        constexpr int windowBorderMargins = 15;
+        constexpr int initialWindowWidth = 1200;
+        constexpr int initialWindowHeight = 800;
+
+        // Button
+        constexpr int buttonHeight = 30;
+        constexpr int buttonWidth = 80;
+        constexpr int clearButtonWidth = 25;
+        constexpr int clearButtonMargin = 25;
+        constexpr float buttonCornerRadius = 5.0f;
+        constexpr float buttonOutlineThickness = 1.0f;
+
+        // Text & Editors
+        constexpr int loopTextWidth = 165;
+        constexpr int thresholdEditorWidth = 80;
+        constexpr int loopTextOffsetY = 10;
+
+        namespace Text {
+            constexpr int playbackWidth = 520;
+            constexpr int playbackHeight = 30;
+            constexpr int playbackOffsetY = 25;
+
+            constexpr int playbackSize = 30;
+            constexpr int mouseCursorSize = 20;
+            constexpr float buttonHeightScale = 0.45f;
+            constexpr float buttonPlayPauseHeightScale = 0.7f;
+
+            constexpr float backgroundAlpha = 0.7f;
+            constexpr int editorOutlineThickness = 1;
+        }
+
+        // Stats Display
+        namespace Stats {
+            constexpr int initialHeight = 150;
+            constexpr int minHeight = 50;
+            constexpr int maxHeight = 600;
+            constexpr float cornerRadius = 4.0f;
+            constexpr int handleAreaHeight = 12;
+            constexpr int handleWidth = 40;
+            constexpr int handleLineHeight = 2;
+            constexpr float handleAlpha = 0.3f;
+            constexpr int internalPadding = 2;
+            constexpr int sideMargin = 10;
+            constexpr int topMargin = 10;
+        }
+
+        // Waveform
+        namespace Waveform {
+            constexpr float heightScale = 0.5f;
+            constexpr int pixelsPerSampleLow = 4;
+            constexpr int pixelsPerSampleMedium = 2;
+        }
+
+        // Glow & Lines
+        namespace Glow {
+             constexpr float offsetFactor = 0.5f;
+             constexpr int loopHollowHeightDivisor = 3;
+             constexpr float mouseAlpha = 0.3f;
+             constexpr int mousePadding = 2;
+             constexpr int mouseHighlightOffset = 2;
+             constexpr int mouseHighlightSize = 5;
+             constexpr float mouseAmplitudeAlpha = 0.7f;
+             constexpr int mouseTextOffset = 5;
+
+             // Thicknesses
+             constexpr float mouseAmplitudeLineThickness = 1.0f;
+             constexpr float mouseAmplitudeGlowThickness = 3.0f;
+             constexpr float placementModeGlowThickness = 3.0f;
+             constexpr float thresholdGlowThickness = 3.0f;
+             constexpr float loopLineGlowThickness = 3.0f;
+
+             // Loop Markers
+             constexpr float loopMarkerWidthThin = 1.0f;
+             constexpr float loopBoxOutlineThickness = 1.5f;
+             constexpr float loopBoxOutlineThicknessInteracting = 3.0f;
+             constexpr float loopMarkerBoxWidth = 30.0f;
+             constexpr int loopMarkerBoxHeight = 30;
+             constexpr float loopMarkerCenterDivisor = 2.0f;
+
+             // Playback Cursor
+             constexpr float cursorGlowRadius = 5.0f;
+             constexpr float cursorGlowLineThickness = 2.0f;
+        }
+
+        // Zoom Popup
+        namespace Zoom {
+            constexpr float factor = 10.0f;
+            constexpr float popupScale = 0.8f;
+            constexpr float borderThickness = 2.0f;
+            constexpr float indicatorThickness = 1.0f;
+        }
+    }
+
+    //==============================================================================
+    // Animation
+    //==============================================================================
+    namespace Animation {
+        constexpr float pulseSpeedFactor = 0.002f;
+        constexpr float loopPulseAlphaMin = 0.1f;
+        constexpr float loopPulseAlphaModulation = 0.8f;
+
+        constexpr float buttonHighlightedBrightness = 0.1f;
+        constexpr float buttonPressedDarkness = 0.1f;
+
+        constexpr float mouseAmplitudeLineLength = 50.0f;
+        constexpr float thresholdLineWidth = 100.0f;
+
+        constexpr float waveBoxHaze = 0.2f;
+    }
+
+    //==============================================================================
+    // Audio Settings
+    //==============================================================================
+    namespace Audio {
+         constexpr int thumbnailCacheSize = 5;
+         constexpr int thumbnailSizePixels = 512;
+         constexpr double keyboardSkipSeconds = 5.0;
+
+         constexpr double loopStepHours = 3600.0;
+         constexpr double loopStepMinutes = 60.0;
+         constexpr double loopStepSeconds = 1.0;
+         constexpr double loopStepMilliseconds = 0.01;
+         constexpr double loopStepMillisecondsFine = 0.001;
+
+         constexpr float silenceThresholdIn = 0.01f;
+         constexpr float silenceThresholdOut = 0.01f;
+         constexpr bool lockHandlesWhenAutoCutActive = false;
+    }
     
-    /// The background color for various text editors, semi-transparent.
-    const juce::Colour textEditorBackgroundColour = juce::Colours::grey.withAlpha(Config::playbackTextBackgroundAlpha);
-    /// The color for text in an editor when the input causes an error.
-    const juce::Colour textEditorErrorColor = juce::Colours::red;
-    /// The color for text in an editor when the input is a non-critical warning (e.g., out of range).
-    const juce::Colour textEditorWarningColor = juce::Colours::orange;
-    /// Alias for the warning color, specifically for values outside a valid numerical range.
-    const juce::Colour textEditorOutOfRangeColour = juce::Colours::orange; 
-    
     //==============================================================================
-    // Color Palette - Waveform & Audio Visuals
+    // Labels
     //==============================================================================
-
-    /// The main color of the audio waveform display.
-    const juce::Colour waveformColor = juce::Colours::deeppink;
-    /// The color of the playback cursor line.
-    const juce::Colour playbackCursorColor = juce::Colours::lime;
-    /// The color of the translucent region that indicates the current loop.
-    const juce::Colour loopRegionColor = juce::Colour(0xff0066cc).withAlpha(0.3f);
-    /// The color of the vertical lines that mark the loop start and end points.
-    const juce::Colour loopLineColor = juce::Colours::blue;
-    /// The color for loop marker boxes when auto-cut is active.
-    const juce::Colour loopMarkerAutoColor = juce::Colour(0xff00bfff); // Same as buttonOnColour (Deep Sky Blue)
-    /// Hover color for loop marker handles.
-    const juce::Colour loopMarkerHoverColor = juce::Colours::teal;
-    /// Drag color for loop marker handles.
-    const juce::Colour loopMarkerDragColor = juce::Colours::green;
-
-    //==============================================================================
-    // Color Palette - Mouse Cursor Indicators
-    //==============================================================================
-
-    /// The color of the vertical line that follows the mouse cursor over the waveform.
-    const juce::Colour mouseCursorLineColor = juce::Colours::yellow;
-    /// The color of the highlight box that shows the time-domain region of the cursor.
-    const juce::Colour mouseCursorHighlightColor = juce::Colours::darkorange.withAlpha(0.4f);
-    /// The color of the horizontal line indicating the amplitude at the mouse cursor's position.
-    const juce::Colour mouseAmplitudeLineColor = juce::Colours::orange.brighter(0.5f);
-    /// The color of the cursor when in loop point "placement mode".
-    const juce::Colour placementModeCursorColor = juce::Colours::deeppink; // Pink lines
-
-    //==============================================================================
-    // Color Palette - Silence Threshold Visuals
-    //==============================================================================
-
-    /// The color of the horizontal lines that visualize the silence detection thresholds.
-    const juce::Colour thresholdLineColor = juce::Colour(0xffe600e6); // Reddish purple
-    /// The color of the translucent region below the threshold lines.
-    const juce::Colour thresholdRegionColor = juce::Colours::red.withAlpha(0.15f); 
-
-    //==============================================================================
-    // Color Palette - Stats & Info Display
-    //==============================================================================
-    
-    /// The background color for the statistics and information overlay.
-    const juce::Colour statsDisplayBackgroundColour = juce::Colours::black.withAlpha(0.5f);
-    /// The default text color for the statistics display.
-    const juce::Colour statsDisplayTextColour = juce::Colours::white;
-    /// The color for error messages shown in the statistics display.
-    const juce::Colour errorTextColour = juce::Colours::red;
-
-    /// The initial height of the statistics overlay in pixels.
-    constexpr int initialStatsDisplayHeight = 150;
-    /// Minimum allowed height for the stats overlay.
-    constexpr int statsMinHeight = 50;
-    /// Maximum allowed height for the stats overlay.
-    constexpr int statsMaxHeight = 600;
-    
-    /// Corner radius for the stats overlay background.
-    constexpr float statsCornerRadius = 4.0f;
-    /// Height of the area reserved for the resize handle at the bottom.
-    constexpr int statsHandleAreaHeight = 12;
-    /// Width of the visual resize handle lines.
-    constexpr int statsHandleWidth = 40;
-    /// Height/thickness of the visual resize handle lines.
-    constexpr int statsHandleLineHeight = 2;
-    /// Opacity of the resize handle.
-    constexpr float statsHandleAlpha = 0.3f;
-    
-    /// Padding between the overlay border and the text editor.
-    constexpr int statsInternalPadding = 2;
-    /// Horizontal margin from the content area edges.
-    constexpr int statsOverlaySideMargin = 10;
-    /// Vertical offset from the top of the content area.
-    constexpr int statsOverlayTopMargin = 10;
-
-    // --- Loop Adjustment Steps ---
-    constexpr double loopStepHours = 3600.0;
-    constexpr double loopStepMinutes = 60.0;
-    constexpr double loopStepSeconds = 1.0;
-    constexpr double loopStepMilliseconds = 0.01;
-    constexpr double loopStepMillisecondsFine = 0.001;
-
-    //==============================================================================
-    // Animation, Glow, and Style Settings
-    //==============================================================================
-
-    /// The corner radius for buttons, giving them a rounded look.
-    constexpr float buttonCornerRadius = 5.0f;
-    /// The thickness of the outline around buttons.
-    constexpr float buttonOutlineThickness = 1.0f;
-    /// A brightness multiplier applied to buttons on mouse hover for interactive feedback.
-    constexpr float buttonHighlightedBrightnessFactor = 0.1f; 
-    /// A darkness multiplier applied to buttons when they are clicked.
-    constexpr float buttonPressedDarknessFactor = 0.1f;   
-
-    /// Thickness of the outline drawn around text editors.
-    constexpr int textEditorOutlineThickness = 1;
-
-    // --- Waveform Rendering ---
-    constexpr int pixelsPerSampleLow = 4;
-    constexpr int pixelsPerSampleMedium = 2;
-    constexpr float waveformHeightScale = 0.5f;
-
-    // --- Glow and Overlays ---
-    constexpr float glowOffsetFactor = 0.5f;
-    constexpr int loopHollowHeightDivisor = 3;
-    
-    // --- Mouse Cursor Overlays ---
-    constexpr float mouseGlowAlpha = 0.3f;
-    constexpr int mouseGlowPadding = 2;
-    constexpr int mouseHighlightOffset = 2;
-    constexpr int mouseHighlightSize = 5;
-    constexpr float mouseAmplitudeGlowAlpha = 0.7f;
-    constexpr int mouseTextOffset = 5;
-
-    // --- Glow Effects ---
-    /// The start color for the gradient glow around the playback cursor (fully transparent).
-    const juce::Colour playbackCursorGlowColorStart = juce::Colours::lime.withAlpha(0.0f);
-    /// The end color for the gradient glow around the playback cursor (semi-transparent).
-    const juce::Colour playbackCursorGlowColorEnd = juce::Colours::lime.withAlpha(0.5f);
-    /// The color of the glow effect for the horizontal amplitude line following the mouse.
-    const juce::Colour mouseAmplitudeGlowColor = juce::Colours::yellow;
-    /// The glow color for the cursor when in loop point "placement mode".
-    const juce::Colour placementModeGlowColor = juce::Colours::red.withAlpha(0.7f); 
-
-    // --- Line Thickness ---
-    /// The thickness of the horizontal amplitude line.
-    const float mouseAmplitudeLineThickness = 1.0f;
-    /// The thickness of the glow effect around the amplitude line.
-    const float mouseAmplitudeGlowThickness = 3.0f;
-    /// The thickness of the glow effect for the cursor in placement mode.
-    constexpr float placementModeGlowThickness = 3.0f;
-    /// The thickness of the glow effect for the horizontal silence threshold lines.
-    constexpr float thresholdGlowThickness = 3.0f;       
-    /// The thickness of the glow effect for the vertical loop start/end lines.
-    constexpr float loopLineGlowThickness = 3.0f;        
-    /// Thickness of the vertical loop marker line (thin part).
-    constexpr float loopMarkerWidthThin = 1.0f;
-    /// Thickness of the loop box hollow outline.
-    constexpr float loopBoxOutlineThickness = 1.5f;
-    /// Thickness of the loop box hollow outline when hovered or dragged.
-    constexpr float loopBoxOutlineThicknessInteracting = 3.0f;
-    /// Width of the hollow box markers.
-    constexpr float loopMarkerBoxWidth = 30.0f;
-    /// Height of the hollow box markers.
-    constexpr int loopMarkerBoxHeight = 30;
-    /// Divisor used to center marker lines.
-    constexpr float loopMarkerCenterDivisor = 2.0f;
-
-    // --- Zoom Popup Settings ---
-    /// Zoom factor for the popup view (e.g., 10x).
-    constexpr float zoomFactor = 10.0f;
-    /// Scale of the popup relative to the full waveform area (80%).
-    constexpr float zoomPopupScale = 0.8f;
-    /// Color for the zoom popup border.
-    const juce::Colour zoomPopupBorderColor = juce::Colours::blue;
-    /// Color for the thin indicator in the zoom popup.
-    const juce::Colour zoomPopupIndicatorColor = juce::Colours::white;
-    /// Thickness of the zoom popup border.
-    constexpr float zoomPopupBorderThickness = 2.0f;
-    /// Thickness of the indicator line in the zoom popup.
-    constexpr float zoomPopupIndicatorThickness = 1.0f;
-
-    // --- Animation Parameters ---
-    /// Controls the speed of the pulsing glow animation on the loop lines.
-    constexpr float pulseSpeedFactor = 0.002f;           
-    /// The minimum alpha multiplier for the pulsing loop lines, ensuring they never fully disappear.
-    constexpr float loopPulseAlphaMinFactor = 0.1f;      
-    /// The range of the alpha modulation, controlling the intensity of the pulse.
-    constexpr float loopPulseAlphaModulationFactor = 0.8f; 
-    /// The length in pixels of the horizontal line that shows the audio amplitude at the cursor position.
-    const float mouseAmplitudeLineLength = 50.0f;
-    /// The width in pixels for the visualization of the silence threshold lines.
-    constexpr float thresholdLineWidth = 100.0f;         
-
-    // --- Hazy Wave Box (Not currently used) ---
-    const juce::Colour hazyWaveBoxFadeColor = juce::Colours::black.withAlpha(0.0f); // Fully transparent black for fade effect
-    const juce::Colour hazyWavyBoxLineColor = juce::Colours::cyan; // A distinct color for the lines
-    constexpr float waveBoxHaze = 0.2f; // Represents the proportion of the shaded box's width to fade
-
-    //==============================================================================
-    // Button Labels
-    //==============================================================================
-    const juce::String openButtonText = "[D]ir";
-    const juce::String playButtonText = juce::CharPointer_UTF8 ("\xe2\x96\xb6"); // Play symbol
-    const juce::String stopButtonText = juce::CharPointer_UTF8 ("\xe2\x8f\xb8"); // Stop symbol
-    const juce::String viewModeClassicText = "[V]iew01";
-    const juce::String viewModeOverlayText = "[V]iew02";
-    const juce::String channelViewMonoText = "[C]han 1";
-    const juce::String channelViewStereoText = "[C]han 2";
-    const juce::String qualityButtonText = "[Q]ual";
-    const juce::String qualityHighText = "[Q]ual H";
-    const juce::String qualityMediumText = "[Q]ual M";
-    const juce::String qualityLowText = "[Q]ual L";
-    const juce::String exitButtonText = "[E]xit";
-    const juce::String statsButtonText = "[S]tats";
-    const juce::String loopButtonText = "[L]oop";
-    const juce::String loopInButtonText = "[I]n";
-    const juce::String loopOutButtonText = "[O]ut";
-    const juce::String clearButtonText = "X";
-    const juce::String detectInButtonText = "Detect In";
-    const juce::String detectOutButtonText = "Detect Out";
-    const juce::String autoplayButtonText = "[A]utoPlay";
-    const juce::String autoCutInButtonText = "[AC In]";
-    const juce::String autoCutOutButtonText = "[AC Out]";
-    const juce::String cutButtonText = "[Cut]";
-
-    //==============================================================================
-    // Audio Processing and Silence Detection
-    //==============================================================================
-
-    /// The default amplitude threshold to be considered "silence" when detecting the start of audio.
-    /// A value of 0.01 means any sample with an absolute amplitude below 1% is considered silent.
-    constexpr float silenceThreshold = 0.01f;
-
-    /// The default amplitude threshold for detecting the end of audio. Can be different from the 'in' threshold.
-    constexpr float outSilenceThreshold = 0.01f;
-
-    /// If true, handles are unresponsive when their respective autocut is active.
-    /// If false, dragging a handle will automatically disable the autocut.
-    constexpr bool lockHandlesWhenAutoCutActive = false;
+    namespace Labels {
+        extern const juce::String openButton;
+        extern const juce::String playButton;
+        extern const juce::String stopButton;
+        extern const juce::String viewModeClassic;
+        extern const juce::String viewModeOverlay;
+        extern const juce::String channelViewMono;
+        extern const juce::String channelViewStereo;
+        extern const juce::String qualityButton;
+        extern const juce::String qualityHigh;
+        extern const juce::String qualityMedium;
+        extern const juce::String qualityLow;
+        extern const juce::String exitButton;
+        extern const juce::String statsButton;
+        extern const juce::String loopButton;
+        extern const juce::String loopInButton;
+        extern const juce::String loopOutButton;
+        extern const juce::String clearButton;
+        extern const juce::String detectInButton;
+        extern const juce::String detectOutButton;
+        extern const juce::String autoplayButton;
+        extern const juce::String autoCutInButton;
+        extern const juce::String autoCutOutButton;
+        extern const juce::String cutButton;
+    }
 
 } // namespace Config
 

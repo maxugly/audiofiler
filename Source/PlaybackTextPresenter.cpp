@@ -25,8 +25,8 @@ void PlaybackTextPresenter::initialiseEditors()
         ed.setJustification(just);
         ed.setColour(juce::TextEditor::backgroundColourId, juce::Colours::transparentBlack);
         ed.setColour(juce::TextEditor::outlineColourId, juce::Colours::transparentBlack);
-        ed.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
-        ed.setFont(juce::Font(juce::FontOptions((float)Config::playbackTextSize)));
+        ed.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+        ed.setFont(juce::Font(juce::FontOptions((float)Config::Layout::Text::playbackSize)));
         ed.applyFontToAllText(ed.getFont());
         ed.setMultiLine(false);
         ed.setReturnKeyStartsNewLine(false);
@@ -60,14 +60,14 @@ void PlaybackTextPresenter::updateEditors()
 
 void PlaybackTextPresenter::layoutEditors()
 {
-    const int textY = owner.getBottomRowTopY() - Config::playbackTimeTextOffsetY;
+    const int textY = owner.getBottomRowTopY() - Config::Layout::Text::playbackOffsetY;
     auto [leftX, centreX, rightX] = owner.getPlaybackLabelXs();
 
-    owner.elapsedTimeEditor.setBounds(leftX, textY, Config::playbackTextWidth, Config::playbackTextHeight);
-    owner.remainingTimeEditor.setBounds(rightX, textY, Config::playbackTextWidth, Config::playbackTextHeight);
+    owner.elapsedTimeEditor.setBounds(leftX, textY, Config::Layout::Text::playbackWidth, Config::Layout::Text::playbackHeight);
+    owner.remainingTimeEditor.setBounds(rightX, textY, Config::Layout::Text::playbackWidth, Config::Layout::Text::playbackHeight);
     
     // The center is special because it's shared with total time which is static
-    owner.loopLengthEditor.setBounds(centreX, textY, Config::playbackTextWidth / 2, Config::playbackTextHeight);
+    owner.loopLengthEditor.setBounds(centreX, textY, Config::Layout::Text::playbackWidth / 2, Config::Layout::Text::playbackHeight);
 }
 
 void PlaybackTextPresenter::render(juce::Graphics& g) const
@@ -76,11 +76,11 @@ void PlaybackTextPresenter::render(juce::Graphics& g) const
         return;
 
     // Draw the static total time part behind or next to the loop length
-    const int textY = owner.getBottomRowTopY() - Config::playbackTimeTextOffsetY;
+    const int textY = owner.getBottomRowTopY() - Config::Layout::Text::playbackOffsetY;
     auto [leftX, centreX, rightX] = owner.getPlaybackLabelXs();
 
-    g.setColour(Config::playbackTextColor);
-    g.setFont((float)Config::playbackTextSize);
+    g.setColour(Config::Colors::playbackText);
+    g.setFont((float)Config::Layout::Text::playbackSize);
     
     juce::String totalTimeStr = " / " + getTotalTimeStaticString();
     
@@ -90,7 +90,7 @@ void PlaybackTextPresenter::render(juce::Graphics& g) const
     
     // We want to draw it centered-ish with the loop length
     // But since loopLength is its own editor, let's just draw totalTime to the right of centreX + playbackTextWidth/2
-    g.drawText(totalTimeStr, centreX + (Config::playbackTextWidth / 2), textY, Config::playbackTextWidth / 2, Config::playbackTextHeight, juce::Justification::left, false);
+    g.drawText(totalTimeStr, centreX + (Config::Layout::Text::playbackWidth / 2), textY, Config::Layout::Text::playbackWidth / 2, Config::Layout::Text::playbackHeight, juce::Justification::left, false);
 }
 
 void PlaybackTextPresenter::textEditorTextChanged(juce::TextEditor& editor)
@@ -236,11 +236,11 @@ void PlaybackTextPresenter::mouseWheelMove(const juce::MouseEvent& event, const 
 
     // Determine step size (matching LoopPresenter logic)
     int charIndex = editor->getTextIndexAt(event.getPosition());
-    double step = Config::loopStepMilliseconds;
+    double step = Config::Audio::loopStepMilliseconds;
     
-    if (charIndex >= 0 && charIndex <= 1)      step = Config::loopStepHours;
-    else if (charIndex >= 3 && charIndex <= 4) step = Config::loopStepMinutes;
-    else if (charIndex >= 6 && charIndex <= 7) step = Config::loopStepSeconds;
+    if (charIndex >= 0 && charIndex <= 1)      step = Config::Audio::loopStepHours;
+    else if (charIndex >= 3 && charIndex <= 4) step = Config::Audio::loopStepMinutes;
+    else if (charIndex >= 6 && charIndex <= 7) step = Config::Audio::loopStepSeconds;
     else if (charIndex >= 9) 
     {
         if (event.mods.isCtrlDown() && event.mods.isShiftDown())
@@ -251,8 +251,8 @@ void PlaybackTextPresenter::mouseWheelMove(const juce::MouseEvent& event, const 
             else
                 step = 0.0001;
         }
-        else if (event.mods.isShiftDown()) step = Config::loopStepMillisecondsFine;
-        else step = Config::loopStepMilliseconds;
+        else if (event.mods.isShiftDown()) step = Config::Audio::loopStepMillisecondsFine;
+        else step = Config::Audio::loopStepMilliseconds;
     }
 
     if (event.mods.isAltDown()) step *= 10.0;

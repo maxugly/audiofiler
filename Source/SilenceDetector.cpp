@@ -27,8 +27,8 @@
  */
 SilenceDetector::SilenceDetector(ControlPanel& ownerPanel)
     : owner(ownerPanel),
-      currentInSilenceThreshold(Config::silenceThreshold),
-      currentOutSilenceThreshold(Config::outSilenceThreshold)
+      currentInSilenceThreshold(Config::Audio::silenceThresholdIn),
+      currentOutSilenceThreshold(Config::Audio::silenceThresholdOut)
 {
     thresholdPresenter = std::make_unique<SilenceThresholdPresenter>(*this, owner);
 }

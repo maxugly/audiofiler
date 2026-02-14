@@ -11,13 +11,13 @@ void PlaybackCursorGlow::renderGlow(juce::Graphics& g, const ControlPanel& contr
         * waveformBounds.getWidth()) + waveformBounds.getX();
 
     juce::ColourGradient glowGradient;
-    glowGradient.addColour(0.0, Config::playbackCursorGlowColorStart);
-    glowGradient.addColour(0.5, Config::playbackCursorGlowColorEnd);
-    glowGradient.addColour(1.0, Config::playbackCursorColor.withAlpha(0.0f));
-    glowGradient.point1 = { x - 5.0f, (float) waveformBounds.getCentreY() };
-    glowGradient.point2 = { x + 5.0f, (float) waveformBounds.getCentreY() };
+    glowGradient.addColour(0.0, Config::Colors::playbackCursorGlowStart);
+    glowGradient.addColour(0.5, Config::Colors::playbackCursorGlowEnd);
+    glowGradient.addColour(1.0, Config::Colors::playbackCursor.withAlpha(0.0f));
+    glowGradient.point1 = { x - Config::Layout::Glow::cursorGlowRadius, (float) waveformBounds.getCentreY() };
+    glowGradient.point2 = { x + Config::Layout::Glow::cursorGlowRadius, (float) waveformBounds.getCentreY() };
     g.setGradientFill(glowGradient);
 
-    g.drawLine((float) x, (float) waveformBounds.getY(), (float) x, (float) waveformBounds.getBottom(), 2.0f);
+    g.drawLine((float) x, (float) waveformBounds.getY(), (float) x, (float) waveformBounds.getBottom(), Config::Layout::Glow::cursorGlowLineThickness);
 }
 

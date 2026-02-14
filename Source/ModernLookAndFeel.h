@@ -23,10 +23,10 @@ public:
      * created while this LookAndFeel is active will share the same base appearance.
      */
   ModernLookAndFeel() {
-    setColour (juce::TextButton::buttonColourId, Config::buttonBaseColour);
-    setColour (juce::TextButton::buttonOnColourId, Config::buttonOnColour);
-    setColour (juce::TextButton::textColourOffId, Config::buttonTextColour);
-    setColour (juce::TextButton::textColourOnId, Config::buttonTextColour); } // Use same text colour for on/off states
+    setColour (juce::TextButton::buttonColourId, Config::Colors::buttonBase);
+    setColour (juce::TextButton::buttonOnColourId, Config::Colors::buttonOn);
+    setColour (juce::TextButton::textColourOffId, Config::Colors::buttonText);
+    setColour (juce::TextButton::textColourOnId, Config::Colors::buttonText); } // Use same text colour for on/off states
 
     //------------------------------------------------------------------------------------------------
     /** @name Color Setters
@@ -58,25 +58,25 @@ public:
      */
   void drawButtonBackground (juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour,
                             bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override {
-    auto cornerSize = Config::buttonCornerRadius;
-    auto outlineThickness = Config::buttonOutlineThickness;
+    auto cornerSize = Config::Layout::buttonCornerRadius;
+    auto outlineThickness = Config::Layout::buttonOutlineThickness;
     auto bounds = button.getLocalBounds().toFloat().reduced (outlineThickness / 2.0f);
 
     juce::Colour currentBackgroundColour;
     if (!button.isEnabled()) {
-        currentBackgroundColour = Config::disabledButtonBackgroundColour;
+        currentBackgroundColour = Config::Colors::buttonDisabledBackground;
     } else {
         currentBackgroundColour = backgroundColour;
         if (shouldDrawButtonAsHighlighted)
-            currentBackgroundColour = currentBackgroundColour.brighter (Config::buttonHighlightedBrightnessFactor);
+            currentBackgroundColour = currentBackgroundColour.brighter (Config::Animation::buttonHighlightedBrightness);
         if (shouldDrawButtonAsDown)
-            currentBackgroundColour = currentBackgroundColour.darker (Config::buttonPressedDarknessFactor);
+            currentBackgroundColour = currentBackgroundColour.darker (Config::Animation::buttonPressedDarkness);
     }
 
     g.setColour (currentBackgroundColour);
     g.fillRoundedRectangle (bounds, cornerSize);
 
-    g.setColour (Config::buttonOutlineColour);
+    g.setColour (Config::Colors::buttonOutline);
     g.drawRoundedRectangle (bounds, cornerSize, outlineThickness); }
 
   /**
@@ -92,11 +92,11 @@ public:
      */
   juce::Font getTextButtonFont (juce::TextButton& button, int buttonHeight) override {
     juce::Font font = LookAndFeel_V4::getTextButtonFont (button, buttonHeight);
-    if (button.getButtonText() == Config::playButtonText ||
-      button.getButtonText() == Config::stopButtonText) {
-      font.setHeight (buttonHeight * Config::buttonPlayPauseTextHeightScale); }
+    if (button.getButtonText() == Config::Labels::playButton ||
+      button.getButtonText() == Config::Labels::stopButton) {
+      font.setHeight (buttonHeight * Config::Layout::Text::buttonPlayPauseHeightScale); }
     else {
-      font.setHeight (buttonHeight * Config::buttonTextHeightScale); }
+      font.setHeight (buttonHeight * Config::Layout::Text::buttonHeightScale); }
     return font; }
 
   /**
@@ -117,7 +117,7 @@ public:
     
     juce::Colour textColourToUse;
     if (!button.isEnabled()) {
-        textColourToUse = Config::disabledButtonTextColour;
+        textColourToUse = Config::Colors::buttonDisabledText;
     } else {
         textColourToUse = button.findColour (button.getToggleState() ? juce::TextButton::textColourOnId
                                                                   : juce::TextButton::textColourOffId);
@@ -137,7 +137,7 @@ public:
      */
   void fillTextEditorBackground (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override {
       if (!textEditor.isEnabled()) {
-          g.setColour(Config::disabledButtonBackgroundColour);
+          g.setColour(Config::Colors::buttonDisabledBackground);
       } else {
           g.setColour(textEditor.findColour(juce::TextEditor::backgroundColourId));
       }
@@ -157,11 +157,11 @@ public:
      */
   void drawTextEditorOutline (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override {
       if (!textEditor.isEnabled()) {
-          g.setColour(Config::disabledButtonTextColour.withAlpha(0.5f)); // Faint outline for disabled
+          g.setColour(Config::Colors::buttonDisabledText.withAlpha(0.5f)); // Faint outline for disabled
       } else {
           g.setColour(textEditor.findColour(juce::TextEditor::outlineColourId));
       }
-      g.drawRect(0, 0, width, height, Config::textEditorOutlineThickness); // Use Config for thickness
+      g.drawRect(0, 0, width, height, Config::Layout::Text::editorOutlineThickness); // Use Config for thickness
   }
 
 private:

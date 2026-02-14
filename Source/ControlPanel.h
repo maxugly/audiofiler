@@ -258,9 +258,9 @@ public:
     /**
      * @brief Sets the text content of the stats display box with an optional custom color.
      * @param text The string to display in the stats panel.
-     * @param color The color of the displayed text. Defaults to `Config::statsDisplayTextColour`.
+     * @param color The color of the displayed text. Defaults to `Config::Colors::statsText`.
      */
-    void setStatsDisplayText(const juce::String& text, juce::Colour color = Config::statsDisplayTextColour);
+    void setStatsDisplayText(const juce::String& text, juce::Colour color = Config::Colors::statsText);
 
     /**
      * @brief Pulls the latest audio statistics via the StatsPresenter and updates the display.

@@ -14,7 +14,7 @@ StatsPresenter::StatsPresenter(ControlPanel& ownerIn)
     statsDisplay.setWantsKeyboardFocus(false);
     statsDisplay.setColour(juce::TextEditor::backgroundColourId, juce::Colours::transparentBlack);
     statsDisplay.setColour(juce::TextEditor::outlineColourId, juce::Colours::transparentBlack);
-    statsDisplay.setColour(juce::TextEditor::textColourId, Config::statsDisplayTextColour);
+    statsDisplay.setColour(juce::TextEditor::textColourId, Config::Colors::statsText);
     statsOverlay.setVisible(false);
 
     statsOverlay.onHeightChanged = [this](int newHeight) {
@@ -24,7 +24,7 @@ StatsPresenter::StatsPresenter(ControlPanel& ownerIn)
 
 void StatsPresenter::updateStats()
 {
-    setDisplayText(buildStatsString(), Config::statsDisplayTextColour);
+    setDisplayText(buildStatsString(), Config::Colors::statsText);
 }
 
 void StatsPresenter::toggleVisibility()
@@ -47,8 +47,8 @@ juce::String StatsPresenter::getStatsText() const
 void StatsPresenter::layoutWithin(const juce::Rectangle<int>& contentAreaBounds)
 {
     auto statsBounds = contentAreaBounds.withHeight(currentHeight)
-                                        .reduced(Config::statsOverlaySideMargin, 0)
-                                        .translated(0, Config::statsOverlayTopMargin);
+                                        .reduced(Config::Layout::Stats::sideMargin, 0)
+                                        .translated(0, Config::Layout::Stats::topMargin);
     if (showStats)
     {
         statsOverlay.setBounds(statsBounds);

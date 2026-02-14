@@ -147,15 +147,15 @@ void LoopPresenter::textEditorTextChanged(juce::TextEditor& editor)
 
     if (newPosition >= 0.0 && newPosition <= totalLength)
     {
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
     }
     else if (newPosition == -1.0)
     {
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
     }
     else
     {
-        editor.setColour(juce::TextEditor::textColourId, Config::textEditorWarningColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
     }
 }
 
@@ -183,7 +183,7 @@ void LoopPresenter::textEditorEscapeKeyPressed(juce::TextEditor& editor)
     {
         syncEditorToPosition(editor, loopOutPosition);
     }
-    editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+    editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
     editor.giveAwayKeyboardFocus();
 }
 
@@ -244,14 +244,14 @@ bool LoopPresenter::applyLoopInFromEditor(double newPosition, juce::TextEditor& 
         if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
             owner.setNeedsJumpToLoopIn(true);
 
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
         owner.repaint();
         updateLoopLabels();
         return true;
     }
 
     syncEditorToPosition(editor, loopInPosition);
-    editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
+    editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
     owner.repaint();
     return false;
 }
@@ -276,14 +276,14 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition, juce::TextEditor&
         if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
             owner.setNeedsJumpToLoopIn(true);
 
-        editor.setColour(juce::TextEditor::textColourId, Config::playbackTextColor);
+        editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
         owner.repaint();
         updateLoopLabels();
         return true;
     }
 
     syncEditorToPosition(editor, loopOutPosition);
-    editor.setColour(juce::TextEditor::textColourId, Config::textEditorErrorColor);
+    editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
     owner.repaint();
     return false;
 }
@@ -374,14 +374,14 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
     // Determine character index under the mouse to set step size contextually
     // Format is HH:MM:SS:mmm (012345678901)
     int charIndex = editor->getTextIndexAt(event.getPosition());
-    double step = Config::loopStepMilliseconds;
+    double step = Config::Audio::loopStepMilliseconds;
     
     if (charIndex >= 0 && charIndex <= 1)      // HH
-        step = Config::loopStepHours;
+        step = Config::Audio::loopStepHours;
     else if (charIndex >= 3 && charIndex <= 4) // MM
-        step = Config::loopStepMinutes;
+        step = Config::Audio::loopStepMinutes;
     else if (charIndex >= 6 && charIndex <= 7) // SS
-        step = Config::loopStepSeconds;
+        step = Config::Audio::loopStepSeconds;
     else if (charIndex >= 9)                   // mmm
     {
         if (event.mods.isCtrlDown() && event.mods.isShiftDown())
@@ -395,11 +395,11 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::Mo
         }
         else if (event.mods.isShiftDown())
         {
-            step = Config::loopStepMillisecondsFine; // 1ms
+            step = Config::Audio::loopStepMillisecondsFine; // 1ms
         }
         else
         {
-            step = Config::loopStepMilliseconds; // 10ms
+            step = Config::Audio::loopStepMilliseconds; // 10ms
         }
     }
 

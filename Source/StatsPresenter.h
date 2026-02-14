@@ -19,28 +19,28 @@ public:
         addAndMakeVisible(statsDisplay);
         addAndMakeVisible(resizer);
         
-        constrainer.setMinimumHeight(Config::statsMinHeight);
-        constrainer.setMaximumHeight(Config::statsMaxHeight);
+        constrainer.setMinimumHeight(Config::Layout::Stats::minHeight);
+        constrainer.setMaximumHeight(Config::Layout::Stats::maxHeight);
     }
 
     void paint(juce::Graphics& g) override
     {
-        g.setColour(Config::statsDisplayBackgroundColour);
-        g.fillRoundedRectangle(getLocalBounds().toFloat(), Config::statsCornerRadius);
+        g.setColour(Config::Colors::statsBackground);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), Config::Layout::Stats::cornerRadius);
 
         // Draw a subtle resize handle at the bottom
-        auto handleArea = getLocalBounds().removeFromBottom(Config::statsHandleAreaHeight);
-        g.setColour(juce::Colours::white.withAlpha(Config::statsHandleAlpha));
+        auto handleArea = getLocalBounds().removeFromBottom(Config::Layout::Stats::handleAreaHeight);
+        g.setColour(juce::Colours::white.withAlpha(Config::Layout::Stats::handleAlpha));
         
-        g.fillRect(handleArea.withSizeKeepingCentre(Config::statsHandleWidth, Config::statsHandleLineHeight).translated(0, -1));
-        g.fillRect(handleArea.withSizeKeepingCentre(Config::statsHandleWidth, Config::statsHandleLineHeight).translated(0, 2));
+        g.fillRect(handleArea.withSizeKeepingCentre(Config::Layout::Stats::handleWidth, Config::Layout::Stats::handleLineHeight).translated(0, -1));
+        g.fillRect(handleArea.withSizeKeepingCentre(Config::Layout::Stats::handleWidth, Config::Layout::Stats::handleLineHeight).translated(0, 2));
     }
 
     void resized() override
     {
         auto b = getLocalBounds();
-        auto handleArea = b.removeFromBottom(Config::statsHandleAreaHeight);
-        statsDisplay.setBounds(b.reduced(Config::statsInternalPadding));
+        auto handleArea = b.removeFromBottom(Config::Layout::Stats::handleAreaHeight);
+        statsDisplay.setBounds(b.reduced(Config::Layout::Stats::internalPadding));
         resizer.setBounds(handleArea);
         if (onHeightChanged)
             onHeightChanged(getHeight());
@@ -117,7 +117,7 @@ public:
      * @param color The colour to apply to the text.
      */
     void setDisplayText(const juce::String& text,
-                        juce::Colour color = Config::statsDisplayTextColour);
+                        juce::Colour color = Config::Colors::statsText);
 
     /**
      * @brief Provides access to the underlying TextEditor for log-style append operations.
@@ -138,7 +138,7 @@ private:
     ControlPanel& owner;
     StatsOverlay statsOverlay;
     bool showStats { false };
-    int currentHeight { Config::initialStatsDisplayHeight };
+    int currentHeight { Config::Layout::Stats::initialHeight };
 };
 
 #endif // AUDIOFILER_STATSPRESENTER_H

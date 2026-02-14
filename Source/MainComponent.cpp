@@ -22,7 +22,7 @@ MainComponent::MainComponent()
     setAudioChannels(0, 2);
 
     // 5. Set Window Size - This triggers resized() and lays out the ControlPanel
-    setSize(Config::initialWindowWidth, Config::initialWindowHeight);
+    setSize(Config::Layout::initialWindowWidth, Config::Layout::initialWindowHeight);
     
     // 6. Start the UI Refresh Timer
     startTimerHz(60);
@@ -48,7 +48,7 @@ MainComponent::MainComponent()
         }
         else
         {
-            controlPanel->setStatsDisplayText(result.getErrorMessage(), juce::Colours::red);
+            controlPanel->setStatsDisplayText(result.getErrorMessage(), Config::Colors::statsErrorText);
         }
     }
 #endif
@@ -82,7 +82,7 @@ void MainComponent::paint(juce::Graphics& g)
 {
     // ControlPanel handles the bulk of the UI painting.
     // Fill the background to prevent "ghosting" artifacts.
-    g.fillAll(juce::Colours::black);
+    g.fillAll(Config::Colors::background);
 }
 
 void MainComponent::resized()
@@ -150,7 +150,7 @@ void MainComponent::openButtonClicked()
             }
             else
             {
-                controlPanel->setStatsDisplayText(result.getErrorMessage(), juce::Colours::red);
+                controlPanel->setStatsDisplayText(result.getErrorMessage(), Config::Colors::statsErrorText);
             }
         }
         // Safely request focus after a UI interaction

@@ -53,6 +53,8 @@ target_compile_definitions(audiofiler PRIVATE
 
 target_sources(audiofiler PRIVATE
         Source/Main.cpp
+        Source/Config.h
+        Source/Config.cpp
         Source/MainComponent.h
 		Source/MainComponent.cpp
         Source/AudioPlayer.h

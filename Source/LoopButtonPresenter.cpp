@@ -14,12 +14,12 @@ void LoopButtonPresenter::updateColours()
     const auto placementMode = owner.getMouseHandler().getCurrentPlacementMode();
     owner.loopInButton.setColour(juce::TextButton::buttonColourId,
         placementMode == AppEnums::PlacementMode::LoopIn
-            ? Config::loopButtonPlacementModeColor
-            : Config::loopButtonActiveColor);
+            ? Config::Colors::buttonLoopPlacement
+            : Config::Colors::buttonLoopActive);
     owner.loopOutButton.setColour(juce::TextButton::buttonColourId,
         placementMode == AppEnums::PlacementMode::LoopOut
-            ? Config::loopButtonPlacementModeColor
-            : Config::loopButtonActiveColor);
+            ? Config::Colors::buttonLoopPlacement
+            : Config::Colors::buttonLoopActive);
     owner.updateLoopLabels();
 }
 
