@@ -227,6 +227,9 @@ namespace Config {
         extern const juce::String autoCutInButton;
         extern const juce::String autoCutOutButton;
         extern const juce::String cutButton;
+
+        extern const juce::String silenceThresholdInTooltip;
+        extern const juce::String silenceThresholdOutTooltip;
     }
 
 } // namespace Config

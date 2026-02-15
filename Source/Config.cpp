@@ -74,6 +74,9 @@ namespace Config {
         const juce::String autoCutInButton = "[AC In]";
         const juce::String autoCutOutButton = "[AC Out]";
         const juce::String cutButton = "[Cut]";
+
+        const juce::String silenceThresholdInTooltip = "Threshold to detect start of sound (0.0 - 1.0)";
+        const juce::String silenceThresholdOutTooltip = "Threshold to detect end of sound (0.0 - 1.0)";
     }
 
 }

@@ -83,7 +83,6 @@ if (NOT BUILD_TESTS_ONLY)
             Source/SilenceAnalysisWorker.cpp
             Source/SilenceDetectionLogger.h
             Source/SilenceDetectionLogger.cpp
-            Source/ControlPanelCopy.h
             Source/ControlButtonsPresenter.h
             Source/ControlButtonsPresenter.cpp
             Source/SilenceThresholdPresenter.h

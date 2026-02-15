@@ -1,7 +1,6 @@
 #include "LoopResetPresenter.h"
 
 #include "ControlPanel.h"
-#include "ControlPanelCopy.h"
 #include "Config.h"
 #include "SilenceDetector.h"
 #include "AudioPlayer.h"

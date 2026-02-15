@@ -1,7 +1,7 @@
 #include "ControlButtonsPresenter.h"
 
 #include "ControlPanel.h"
-#include "ControlPanelCopy.h"
+#include "Config.h"
 #include "TransportPresenter.h"
 #include "SilenceDetectionPresenter.h"
 #include "LoopPresenter.h"
@@ -35,14 +35,14 @@ void ControlButtonsPresenter::initialiseAllButtons()
 void ControlButtonsPresenter::initialiseOpenButton()
 {
     owner.addAndMakeVisible(owner.openButton);
-    owner.openButton.setButtonText(ControlPanelCopy::openButtonText());
+    owner.openButton.setButtonText(Config::Labels::openButton);
     owner.openButton.onClick = [this] { owner.invokeOwnerOpenDialog(); };
 }
 
 void ControlButtonsPresenter::initialisePlayStopButton()
 {
     owner.addAndMakeVisible(owner.playStopButton);
-    owner.playStopButton.setButtonText(ControlPanelCopy::playButtonText());
+    owner.playStopButton.setButtonText(Config::Labels::playButton);
     owner.playStopButton.onClick = [this] { owner.getAudioPlayer().togglePlayStop(); };
     owner.playStopButton.setEnabled(false);
 }
@@ -50,13 +50,13 @@ void ControlButtonsPresenter::initialisePlayStopButton()
 void ControlButtonsPresenter::initialiseModeButton()
 {
     owner.addAndMakeVisible(owner.modeButton);
-    owner.modeButton.setButtonText(ControlPanelCopy::viewModeClassicText());
+    owner.modeButton.setButtonText(Config::Labels::viewModeClassic);
     owner.modeButton.setClickingTogglesState(true);
     owner.modeButton.onClick = [this] {
         owner.currentMode = owner.modeButton.getToggleState() ? AppEnums::ViewMode::Overlay : AppEnums::ViewMode::Classic;
         owner.modeButton.setButtonText(owner.currentMode == AppEnums::ViewMode::Classic
-                                       ? ControlPanelCopy::viewModeClassicText()
-                                       : ControlPanelCopy::viewModeOverlayText());
+                                       ? Config::Labels::viewModeClassic
+                                       : Config::Labels::viewModeOverlay);
         owner.resized();
         owner.repaint();
     };
@@ -65,15 +65,15 @@ void ControlButtonsPresenter::initialiseModeButton()
 void ControlButtonsPresenter::initialiseChannelViewButton()
 {
     owner.addAndMakeVisible(owner.channelViewButton);
-    owner.channelViewButton.setButtonText(ControlPanelCopy::channelViewMonoText());
+    owner.channelViewButton.setButtonText(Config::Labels::channelViewMono);
     owner.channelViewButton.setClickingTogglesState(true);
     owner.channelViewButton.onClick = [this] {
         owner.currentChannelViewMode = owner.channelViewButton.getToggleState()
             ? AppEnums::ChannelViewMode::Stereo
             : AppEnums::ChannelViewMode::Mono;
         owner.channelViewButton.setButtonText(owner.currentChannelViewMode == AppEnums::ChannelViewMode::Mono
-                                              ? ControlPanelCopy::channelViewMonoText()
-                                              : ControlPanelCopy::channelViewStereoText());
+                                              ? Config::Labels::channelViewMono
+                                              : Config::Labels::channelViewStereo);
         owner.repaint();
     };
 }
@@ -81,7 +81,7 @@ void ControlButtonsPresenter::initialiseChannelViewButton()
 void ControlButtonsPresenter::initialiseQualityButton()
 {
     owner.addAndMakeVisible(owner.qualityButton);
-    owner.qualityButton.setButtonText(ControlPanelCopy::qualityButtonText());
+    owner.qualityButton.setButtonText(Config::Labels::qualityButton);
     owner.qualityButton.onClick = [this] {
         if (owner.currentQuality == AppEnums::ThumbnailQuality::High)
             owner.currentQuality = AppEnums::ThumbnailQuality::Medium;
@@ -98,7 +98,7 @@ void ControlButtonsPresenter::initialiseQualityButton()
 void ControlButtonsPresenter::initialiseExitButton()
 {
     owner.addAndMakeVisible(owner.exitButton);
-    owner.exitButton.setButtonText(ControlPanelCopy::exitButtonText());
+    owner.exitButton.setButtonText(Config::Labels::exitButton);
     owner.exitButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::exit);
     owner.exitButton.onClick = [] {
         juce::JUCEApplication::getInstance()->systemRequestedQuit();
@@ -108,7 +108,7 @@ void ControlButtonsPresenter::initialiseExitButton()
 void ControlButtonsPresenter::initialiseStatsButton()
 {
     owner.addAndMakeVisible(owner.statsButton);
-    owner.statsButton.setButtonText(ControlPanelCopy::statsButtonText());
+    owner.statsButton.setButtonText(Config::Labels::statsButton);
     owner.statsButton.setClickingTogglesState(true);
     owner.statsButton.onClick = [this] {
         owner.setShouldShowStats(owner.statsButton.getToggleState());
@@ -119,7 +119,7 @@ void ControlButtonsPresenter::initialiseStatsButton()
 void ControlButtonsPresenter::initialiseLoopButton()
 {
     owner.addAndMakeVisible(owner.loopButton);
-    owner.loopButton.setButtonText(ControlPanelCopy::loopButtonText());
+    owner.loopButton.setButtonText(Config::Labels::loopButton);
     owner.loopButton.setClickingTogglesState(true);
     owner.loopButton.onClick = [this] {
         if (owner.transportPresenter != nullptr)
@@ -130,7 +130,7 @@ void ControlButtonsPresenter::initialiseLoopButton()
 void ControlButtonsPresenter::initialiseAutoplayButton()
 {
     owner.addAndMakeVisible(owner.autoplayButton);
-    owner.autoplayButton.setButtonText(ControlPanelCopy::autoplayButtonText());
+    owner.autoplayButton.setButtonText(Config::Labels::autoplayButton);
     owner.autoplayButton.setClickingTogglesState(true);
     owner.autoplayButton.setToggleState(owner.m_shouldAutoplay, juce::dontSendNotification);
     owner.autoplayButton.onClick = [this] {
@@ -142,7 +142,7 @@ void ControlButtonsPresenter::initialiseAutoplayButton()
 void ControlButtonsPresenter::initialiseAutoCutInButton()
 {
     owner.addAndMakeVisible(owner.autoCutInButton);
-    owner.autoCutInButton.setButtonText(ControlPanelCopy::autoCutInButtonText());
+    owner.autoCutInButton.setButtonText(Config::Labels::autoCutInButton);
     owner.autoCutInButton.setClickingTogglesState(true);
     owner.autoCutInButton.onClick = [this] {
         if (owner.silenceDetectionPresenter != nullptr)
@@ -153,7 +153,7 @@ void ControlButtonsPresenter::initialiseAutoCutInButton()
 void ControlButtonsPresenter::initialiseAutoCutOutButton()
 {
     owner.addAndMakeVisible(owner.autoCutOutButton);
-    owner.autoCutOutButton.setButtonText(ControlPanelCopy::autoCutOutButtonText());
+    owner.autoCutOutButton.setButtonText(Config::Labels::autoCutOutButton);
     owner.autoCutOutButton.setClickingTogglesState(true);
     owner.autoCutOutButton.onClick = [this] {
         if (owner.silenceDetectionPresenter != nullptr)
@@ -164,7 +164,7 @@ void ControlButtonsPresenter::initialiseAutoCutOutButton()
 void ControlButtonsPresenter::initialiseCutButton()
 {
     owner.addAndMakeVisible(owner.cutButton);
-    owner.cutButton.setButtonText(ControlPanelCopy::cutButtonText());
+    owner.cutButton.setButtonText(Config::Labels::cutButton);
     owner.cutButton.setClickingTogglesState(true);
     owner.cutButton.setToggleState(owner.m_isCutModeActive, juce::dontSendNotification);
     owner.cutButton.onClick = [this] {
@@ -176,7 +176,7 @@ void ControlButtonsPresenter::initialiseCutButton()
 void ControlButtonsPresenter::initialiseLoopButtons()
 {
     owner.addAndMakeVisible(owner.loopInButton);
-    owner.loopInButton.setButtonText(ControlPanelCopy::loopInButtonText());
+    owner.loopInButton.setButtonText(Config::Labels::loopInButton);
     owner.loopInButton.onLeftClick = [this] {
         owner.setLoopInPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
         owner.ensureLoopOrder();
@@ -191,7 +191,7 @@ void ControlButtonsPresenter::initialiseLoopButtons()
     };
 
     owner.addAndMakeVisible(owner.loopOutButton);
-    owner.loopOutButton.setButtonText(ControlPanelCopy::loopOutButtonText());
+    owner.loopOutButton.setButtonText(Config::Labels::loopOutButton);
     owner.loopOutButton.onLeftClick = [this] {
         owner.setLoopOutPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
         owner.ensureLoopOrder();
@@ -208,7 +208,7 @@ void ControlButtonsPresenter::initialiseLoopButtons()
 void ControlButtonsPresenter::initialiseClearButtons()
 {
     owner.addAndMakeVisible(owner.clearLoopInButton);
-    owner.clearLoopInButton.setButtonText(ControlPanelCopy::clearButtonText());
+    owner.clearLoopInButton.setButtonText(Config::Labels::clearButton);
     owner.clearLoopInButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
     owner.clearLoopInButton.onClick = [this] {
         if (owner.loopResetPresenter != nullptr)
@@ -216,7 +216,7 @@ void ControlButtonsPresenter::initialiseClearButtons()
     };
 
     owner.addAndMakeVisible(owner.clearLoopOutButton);
-    owner.clearLoopOutButton.setButtonText(ControlPanelCopy::clearButtonText());
+    owner.clearLoopOutButton.setButtonText(Config::Labels::clearButton);
     owner.clearLoopOutButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
     owner.clearLoopOutButton.onClick = [this] {
         if (owner.loopResetPresenter != nullptr)
