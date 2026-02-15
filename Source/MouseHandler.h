@@ -210,9 +210,9 @@ private:
     /**
      * @brief Removes keyboard focus from any focused `TextEditor` if the mouse click happens outside it.
      *
-     * @param clickPosition Position of the mouse click, relative to the owning `ControlPanel`.
+     * @param event The mouse event details.
      */
-    void clearTextEditorFocusIfNeeded(const juce::Point<int>& clickPosition);
+    void clearTextEditorFocusIfNeeded(const juce::MouseEvent& event);
 
     /** @} */
     //==============================================================================
