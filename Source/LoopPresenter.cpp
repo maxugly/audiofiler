@@ -35,6 +35,7 @@ void LoopPresenter::initialiseEditors() {
     editor.setMultiLine(false);
     editor.setReturnKeyStartsNewLine(false);
     editor.setWantsKeyboardFocus(true);
+    editor.setSelectAllWhenFocused(true);
   };
 
   owner.addAndMakeVisible(loopInEditor);
@@ -128,13 +129,11 @@ void LoopPresenter::ensureLoopOrder() {
 }
 
 void LoopPresenter::updateLoopLabels() {
-  const bool hasInFocus = loopInEditor.hasKeyboardFocus(true);
-  if (!isEditingIn && !hasInFocus) {
+  if (!isEditingIn && !loopInEditor.hasKeyboardFocus(true)) {
     syncEditorToPosition(loopInEditor, loopInPosition);
   }
 
-  const bool hasOutFocus = loopOutEditor.hasKeyboardFocus(true);
-  if (!isEditingOut && !hasOutFocus) {
+  if (!isEditingOut && !loopOutEditor.hasKeyboardFocus(true)) {
     syncEditorToPosition(loopOutEditor, loopOutPosition);
   }
 }
@@ -162,6 +161,11 @@ void LoopPresenter::setLoopEndFromSample(int sampleIndex) {
 }
 
 void LoopPresenter::textEditorTextChanged(juce::TextEditor &editor) {
+  if (&editor == &loopInEditor)
+    isEditingIn = true;
+  else if (&editor == &loopOutEditor)
+    isEditingOut = true;
+
   const double totalLength = getAudioTotalLength();
   TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }
