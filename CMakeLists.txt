@@ -88,8 +88,7 @@ if (NOT BUILD_TESTS_ONLY)
             Source/ControlButtonsPresenter.cpp
             Source/SilenceThresholdPresenter.h
             Source/SilenceThresholdPresenter.cpp
-            Source/LoopEditorPresenter.h
-            Source/LoopEditorPresenter.cpp
+
             Source/LoopButtonPresenter.h
             Source/LoopButtonPresenter.cpp
             Source/LoopResetPresenter.h
