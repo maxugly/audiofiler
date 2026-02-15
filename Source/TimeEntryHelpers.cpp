@@ -4,34 +4,16 @@
 
 namespace TimeEntryHelpers
 {
-    ValidationResult validateTime(const juce::String& text, double totalLength)
-    {
-        const double newPosition = TimeUtils::parseTime(text);
-
-        if (newPosition >= 0.0 && newPosition <= totalLength)
-        {
-            return ValidationResult::Valid;
-        }
-        else if (newPosition == -1.0)
-        {
-            return ValidationResult::Invalid;
-        }
-        else
-        {
-            return ValidationResult::OutOfRange;
-        }
-    }
-
 #ifndef JUCE_HEADLESS
     void validateTimeEntry(juce::TextEditor& editor, double totalLength)
     {
-        ValidationResult result = validateTime(editor.getText(), totalLength);
+        TimeUtils::ValidationResult result = TimeUtils::validateTime(editor.getText(), totalLength);
 
-        if (result == ValidationResult::Valid)
+        if (result == TimeUtils::ValidationResult::Valid)
         {
             editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
         }
-        else if (result == ValidationResult::Invalid)
+        else if (result == TimeUtils::ValidationResult::Invalid)
         {
             editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
         }

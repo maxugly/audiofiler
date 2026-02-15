@@ -7,27 +7,10 @@
  #include <JuceHeader.h>
 #endif
 
+#include "TimeUtils.h"
+
 namespace TimeEntryHelpers
 {
-    /**
-     * @brief Enum representing the result of a time validation check.
-     */
-    enum class ValidationResult
-    {
-        Valid,      ///< The time is valid and within the total length.
-        Invalid,    ///< The time string could not be parsed (e.g. invalid format).
-        OutOfRange  ///< The time is valid but outside the allowed range (e.g. > totalLength).
-    };
-
-    /**
-     * @brief Validates a time string against a total length.
-     *
-     * @param text The time string to parse (e.g., "00:01:30").
-     * @param totalLength The total length of the audio in seconds.
-     * @return A ValidationResult indicating the status.
-     */
-    ValidationResult validateTime(const juce::String& text, double totalLength);
-
 #ifndef JUCE_HEADLESS
     /**
      * @brief Validates the time entered in a TextEditor and updates its text colour.

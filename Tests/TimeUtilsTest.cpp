@@ -87,6 +87,34 @@ public:
         {
             expectWithinAbsoluteError(TimeUtils::parseTime(TimeUtils::formatTime(t)), t, 0.001);
         }
+
+        // ==========================================
+        // validateTime tests
+        // ==========================================
+        beginTest("validateTime with valid input");
+        {
+            // Within range
+            expect(TimeUtils::validateTime("00:00:10:000", 60.0) == TimeUtils::ValidationResult::Valid);
+            expect(TimeUtils::validateTime("00:00:00:000", 60.0) == TimeUtils::ValidationResult::Valid);
+            expect(TimeUtils::validateTime("00:01:00:000", 60.0) == TimeUtils::ValidationResult::Valid);
+        }
+
+        beginTest("validateTime with invalid input (parsing error)");
+        {
+             expect(TimeUtils::validateTime("invalid", 60.0) == TimeUtils::ValidationResult::Invalid);
+             expect(TimeUtils::validateTime("", 60.0) == TimeUtils::ValidationResult::Invalid);
+             expect(TimeUtils::validateTime("00:00", 60.0) == TimeUtils::ValidationResult::Invalid);
+        }
+
+        beginTest("validateTime with out of range input");
+        {
+            // Greater than total length
+            expect(TimeUtils::validateTime("00:01:01:000", 60.0) == TimeUtils::ValidationResult::OutOfRange);
+
+            // Negative input strings are parsed as positive magnitude by TimeUtils::parseTime
+            // So "-00:00:10:000" -> 10.0 -> Valid if totalLength >= 10.0
+             expect(TimeUtils::validateTime("-00:00:10:000", 60.0) == TimeUtils::ValidationResult::Valid);
+        }
     }
 };
 

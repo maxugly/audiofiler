@@ -35,3 +35,21 @@ double TimeUtils::parseTime(const juce::String& timeString)
          + parts[2].getIntValue()
          + parts[3].getIntValue() / 1000.0;
 }
+
+TimeUtils::ValidationResult TimeUtils::validateTime(const juce::String& text, double totalLength)
+{
+    const double newPosition = parseTime(text);
+
+    if (newPosition >= 0.0 && newPosition <= totalLength)
+    {
+        return ValidationResult::Valid;
+    }
+    else if (newPosition == -1.0)
+    {
+        return ValidationResult::Invalid;
+    }
+    else
+    {
+        return ValidationResult::OutOfRange;
+    }
+}
