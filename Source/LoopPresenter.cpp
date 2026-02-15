@@ -129,6 +129,7 @@ void LoopPresenter::ensureLoopOrder() {
 }
 
 void LoopPresenter::updateLoopLabels() {
+  // Guard against timer overwriting while editing OR focused
   if (!isEditingIn && !loopInEditor.hasKeyboardFocus(true)) {
     syncEditorToPosition(loopInEditor, loopInPosition);
   }
@@ -292,8 +293,10 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition,
 
 void LoopPresenter::syncEditorToPosition(juce::TextEditor &editor,
                                          double positionSeconds) {
-  // If the user is currently interacting with this box, don't touch it!
-  if (editor.hasKeyboardFocus(true)) {
+  // Multi-layered guard: Check flags AND OS-level focus
+  if (editor.hasKeyboardFocus(true) ||
+      (&editor == &loopInEditor && isEditingIn) ||
+      (&editor == &loopOutEditor && isEditingOut)) {
     return;
   }
 
@@ -325,26 +328,17 @@ void LoopPresenter::mouseUp(const juce::MouseEvent &event) {
   if (editor == nullptr)
     return;
 
+  // Set flags to block timer. 
+  // CRITICAL: Do NOT call grabKeyboardFocus here; let juce::TextEditor's internal logic 
+  // handle the click/focus sequence to avoid selection reset bugs.
   if (editor == &loopInEditor)
     isEditingIn = true;
   else if (editor == &loopOutEditor)
     isEditingOut = true;
 
-  editor->grabKeyboardFocus();
-
   int charIndex = editor->getTextIndexAt(event.getPosition());
   if (charIndex < 0)
     return;
-
-  // Time format: HH:MM:SS:mmm
-  // Indices:
-  // HH: 0-1 (2 chars)
-  // :   2
-  // MM: 3-4 (2 chars)
-  // :   5
-  // SS: 6-7 (2 chars)
-  // :   8
-  // mmm: 9-11 (3 chars)
 
   juce::Range<int> newRange;
 
@@ -359,9 +353,7 @@ void LoopPresenter::mouseUp(const juce::MouseEvent &event) {
   else
     return;
 
-  // Use callAsync to set the selection AFTER the TextEditor's internal mouseUp
-  // has finished. This prevents the TextEditor from resetting the caret
-  // position immediately.
+  // Selection AFTER the internal mouseUp sequence
   juce::MessageManager::callAsync([editor, newRange] {
     if (editor != nullptr)
       editor->setHighlightedRegion(newRange);
@@ -373,6 +365,15 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
   if (wheel.deltaY == 0.0f)
     return;
 
+  auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
+  if (editor != nullptr) {
+    // NEW GUARD: If typing or focused, ignore the wheel
+    if (editor->hasKeyboardFocus(true) ||
+        (editor == &loopInEditor && isEditingIn) ||
+        (editor == &loopOutEditor && isEditingOut))
+      return;
+  }
+
   // CTRL + Mouse Wheel (without Shift) controls zoom
   if (event.mods.isCtrlDown() && !event.mods.isShiftDown()) {
     float currentZoom = owner.getZoomFactor();
@@ -381,13 +382,7 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
     return;
   }
 
-  auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
   if (editor == nullptr)
-    return;
-
-  // NEW GUARD: If typing, ignore the wheel
-  if ((editor == &loopInEditor && isEditingIn) ||
-      (editor == &loopOutEditor && isEditingOut))
     return;
 
   const double totalLength = getAudioTotalLength();

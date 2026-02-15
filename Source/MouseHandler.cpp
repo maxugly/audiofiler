@@ -82,7 +82,7 @@ void MouseHandler::mouseMove(const juce::MouseEvent& event)
 void MouseHandler::mouseDown(const juce::MouseEvent& event)
 {
     // Why: Clicking on the waveform should defocus text fields so transport shortcuts keep working.
-    clearTextEditorFocusIfNeeded(event.getPosition());
+    clearTextEditorFocusIfNeeded(event);
 
     // --- ZOOM POPUP INTERACTION ---
     if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
@@ -559,29 +559,28 @@ void MouseHandler::seekToMousePosition(int x)
     }
 }
 
-void MouseHandler::clearTextEditorFocusIfNeeded(const juce::Point<int>& clickPosition)
+void MouseHandler::clearTextEditorFocusIfNeeded(const juce::MouseEvent& event)
 {
-    // Ensure we are not clearing focus if the click is actually within any
-    // text editor child (like the LoopPresenter editors or playback text)
+    // Robust "inside" check using Screen coordinates to avoid coordinate-space errors.
+    const auto screenPos = event.getScreenPosition();
+    
     for (int i = 0; i < owner.getNumChildComponents(); ++i)
     {
         auto* child = owner.getChildComponent(i);
         if (auto* editorChild = dynamic_cast<juce::TextEditor*>(child))
         {
-            if (editorChild->getBounds().contains(clickPosition))
-                return; // Stop immediately, do not clear focus
+            if (editorChild->getScreenBounds().contains(screenPos))
+                return; // STOP: We clicked inside an editor. Do not clear focus.
         }
     }
 
-    // Otherwise, if clicking elsewhere (like the waveform), clear focus from all editors
+    // If we didn't return, clear focus from all editors (we clicked the waveform/background).
     for (int i = 0; i < owner.getNumChildComponents(); ++i)
     {
         if (auto* editorChild = dynamic_cast<juce::TextEditor*>(owner.getChildComponent(i)))
         {
             if (editorChild->hasKeyboardFocus(false))
-            {
                 editorChild->giveAwayKeyboardFocus();
-            }
         }
     }
 }

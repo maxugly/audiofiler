@@ -205,8 +205,11 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
 void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor &editor,
                                                  double positionSeconds,
                                                  bool isRemaining) {
-  // If the user is currently interacting with this box, don't touch it!
-  if (editor.hasKeyboardFocus(true)) {
+  // Guard against timer overwriting while editing OR focused
+  if (editor.hasKeyboardFocus(true) ||
+      (&editor == &owner.elapsedTimeEditor && isEditingElapsed) ||
+      (&editor == &owner.remainingTimeEditor && isEditingRemaining) ||
+      (&editor == &owner.loopLengthEditor && isEditingLoopLength)) {
     return;
   }
 
@@ -220,7 +223,6 @@ void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor &editor,
 
 void PlaybackTextPresenter::mouseDown(const juce::MouseEvent &event) {
   if (auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent)) {
-    editor->grabKeyboardFocus();
     if (editor == &owner.elapsedTimeEditor)
       isEditingElapsed = true;
     else if (editor == &owner.remainingTimeEditor)
@@ -235,14 +237,15 @@ void PlaybackTextPresenter::mouseUp(const juce::MouseEvent &event) {
   if (editor == nullptr)
     return;
 
+  // Set flags to block timer. 
+  // CRITICAL: Do NOT call grabKeyboardFocus here; let juce::TextEditor's internal logic 
+  // handle the click/focus sequence to avoid selection reset bugs.
   if (editor == &owner.elapsedTimeEditor)
     isEditingElapsed = true;
   else if (editor == &owner.remainingTimeEditor)
     isEditingRemaining = true;
   else if (editor == &owner.loopLengthEditor)
     isEditingLoopLength = true;
-
-  editor->grabKeyboardFocus();
 
   // Check if it's remaining time (starts with '-')
   bool isNegative = (editor == &owner.remainingTimeEditor) ||
@@ -256,15 +259,6 @@ void PlaybackTextPresenter::mouseUp(const juce::MouseEvent &event) {
   int effectiveIndex = charIndex - offset;
 
   // Time format: [opt -]HH:MM:SS:mmm
-  // Indices (with offset):
-  // HH: 0-1 (2 chars)
-  // :   2
-  // MM: 3-4 (2 chars)
-  // :   5
-  // SS: 6-7 (2 chars)
-  // :   8
-  // mmm: 9-11 (3 chars)
-
   juce::Range<int> newRange;
 
   if (effectiveIndex <= 1)
@@ -278,9 +272,7 @@ void PlaybackTextPresenter::mouseUp(const juce::MouseEvent &event) {
   else
     return;
 
-  // Use callAsync to set the selection AFTER the TextEditor's internal mouseUp
-  // has finished. This prevents the TextEditor from resetting the caret
-  // position immediately.
+  // Selection AFTER the internal mouseUp sequence
   juce::MessageManager::callAsync([editor, newRange] {
     if (editor != nullptr)
       editor->setHighlightedRegion(newRange);
@@ -296,8 +288,9 @@ void PlaybackTextPresenter::mouseWheelMove(
   if (editor == nullptr)
     return;
 
-  // Don't allow wheel adjustments if we are actively typing
-  if ((editor == &owner.elapsedTimeEditor && isEditingElapsed) ||
+  // Don't allow wheel adjustments if we are actively typing or focused
+  if (editor->hasKeyboardFocus(true) ||
+      (editor == &owner.elapsedTimeEditor && isEditingElapsed) ||
       (editor == &owner.remainingTimeEditor && isEditingRemaining) ||
       (editor == &owner.loopLengthEditor && isEditingLoopLength))
     return;
