@@ -35,6 +35,7 @@ void LoopPresenter::initialiseEditors() {
     editor.setMultiLine(false);
     editor.setReturnKeyStartsNewLine(false);
     editor.setWantsKeyboardFocus(true);
+    editor.setSelectAllWhenFocused(true);
   };
 
   owner.addAndMakeVisible(loopInEditor);
@@ -162,6 +163,11 @@ void LoopPresenter::setLoopEndFromSample(int sampleIndex) {
 }
 
 void LoopPresenter::textEditorTextChanged(juce::TextEditor &editor) {
+  if (&editor == &loopInEditor)
+    isEditingIn = true;
+  else if (&editor == &loopOutEditor)
+    isEditingOut = true;
+
   const double totalLength = getAudioTotalLength();
   TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }
@@ -220,13 +226,6 @@ void LoopPresenter::mouseDown(const juce::MouseEvent &event) {
     isEditingIn = true;
   else if (event.eventComponent == &loopOutEditor)
     isEditingOut = true;
-}
-
-void LoopPresenter::textEditorFocusGained(juce::TextEditor &editor) {
-  if (&editor == &loopInEditor)
-    owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
-  else if (&editor == &loopOutEditor)
-    owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
 }
 
 double LoopPresenter::getAudioTotalLength() const {
