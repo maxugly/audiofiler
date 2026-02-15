@@ -133,7 +133,6 @@ endif()
 add_executable(tests
     Tests/TestMain.cpp
     Tests/SilenceWorkerTest.cpp
-    Tests/JuceHeadlessHelper.cpp
     Tests/TimeUtilsTest.cpp
     Source/TimeUtils.cpp
     Source/PlaybackHelpers.cpp
