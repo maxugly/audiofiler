@@ -127,10 +127,11 @@ void LoopPresenter::ensureLoopOrder() {
   }
 }
 
+/** @warning CRITICAL: Do not sync text if editor has focus or mouse is down. Prevents 60Hz timer from overwriting manual user input. */
 void LoopPresenter::updateLoopLabels() {
-  if (!loopInEditor.hasKeyboardFocus(false))
+  if (!loopInEditor.hasKeyboardFocus(false) && !loopInEditor.isMouseButtonDown())
     syncEditorToPosition(loopInEditor, loopInPosition);
-  if (!loopOutEditor.hasKeyboardFocus(false))
+  if (!loopOutEditor.hasKeyboardFocus(false) && !loopOutEditor.isMouseButtonDown())
     syncEditorToPosition(loopOutEditor, loopOutPosition);
 }
 
@@ -293,11 +294,14 @@ void LoopPresenter::mouseUp(const juce::MouseEvent &event) {
   if (editor == nullptr)
     return;
 
+  editor->grabKeyboardFocus();
+
   // Only apply smart highlight if the user hasn't made a manual selection
   if (editor->getHighlightedRegion().getLength() > 0)
     return;
 
-  int charIndex = editor->getTextIndexAt(event.getPosition());
+  auto localPos = editor->getLocalPoint(nullptr, event.getScreenPosition());
+  int charIndex = editor->getTextIndexAt(localPos);
   if (charIndex < 0)
     return;
 
@@ -343,7 +347,8 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
     return;
   // Determine character index under the mouse to set step size contextually
   // Format is HH:MM:SS:mmm (012345678901)
-  int charIndex = editor->getTextIndexAt(event.getPosition());
+  auto localPos = editor->getLocalPoint(nullptr, event.getScreenPosition());
+  int charIndex = editor->getTextIndexAt(localPos);
 
   double sampleRate = 0.0;
   if (auto *reader = owner.getAudioPlayer().getAudioFormatReader())
