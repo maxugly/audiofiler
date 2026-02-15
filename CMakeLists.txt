@@ -112,6 +112,8 @@ if (NOT BUILD_TESTS_ONLY)
             Source/PlaybackHelpers.cpp
             Source/PlaybackCursorGlow.h
             Source/PlaybackCursorGlow.cpp
+            Source/PlaybackOverlay.h
+            Source/PlaybackOverlay.cpp
     )
 
     target_link_libraries(audiofiler PRIVATE
