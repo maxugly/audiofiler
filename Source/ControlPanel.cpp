@@ -7,7 +7,6 @@
 #include "FocusManager.h"
 #include "LayoutManager.h"
 #include "LoopButtonPresenter.h"
-#include "LoopEditorPresenter.h"
 #include "LoopPresenter.h"
 #include "LoopResetPresenter.h"
 #include "MainComponent.h" // Full header required for MainComponent access (e.g., getAudioPlayer)
@@ -107,8 +106,6 @@ void ControlPanel::initialiseLookAndFeel() {
  * threshold editors.
  */
 void ControlPanel::initialiseLoopEditors() {
-  loopEditorPresenter = std::make_unique<LoopEditorPresenter>(*this);
-  loopEditorPresenter->initialiseEditors();
   loopResetPresenter = std::make_unique<LoopResetPresenter>(*this);
 
   addAndMakeVisible(silenceDetector->getInSilenceThresholdEditor());
