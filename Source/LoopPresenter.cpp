@@ -129,13 +129,11 @@ void LoopPresenter::ensureLoopOrder() {
 }
 
 void LoopPresenter::updateLoopLabels() {
-  const bool hasInFocus = loopInEditor.hasKeyboardFocus(true);
-  if (!isEditingIn && !hasInFocus) {
+  if (!isEditingIn && !loopInEditor.hasKeyboardFocus(true)) {
     syncEditorToPosition(loopInEditor, loopInPosition);
   }
 
-  const bool hasOutFocus = loopOutEditor.hasKeyboardFocus(true);
-  if (!isEditingOut && !hasOutFocus) {
+  if (!isEditingOut && !loopOutEditor.hasKeyboardFocus(true)) {
     syncEditorToPosition(loopOutEditor, loopOutPosition);
   }
 }
@@ -222,10 +220,13 @@ void LoopPresenter::textEditorFocusLost(juce::TextEditor &editor) {
 }
 
 void LoopPresenter::mouseDown(const juce::MouseEvent &event) {
-  if (event.eventComponent == &loopInEditor)
-    isEditingIn = true;
-  else if (event.eventComponent == &loopOutEditor)
-    isEditingOut = true;
+  if (auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent)) {
+    editor->grabKeyboardFocus();
+    if (editor == &loopInEditor)
+      isEditingIn = true;
+    else if (editor == &loopOutEditor)
+      isEditingOut = true;
+  }
 }
 
 double LoopPresenter::getAudioTotalLength() const {

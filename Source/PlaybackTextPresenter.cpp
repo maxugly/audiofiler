@@ -213,12 +213,15 @@ void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor &editor,
 }
 
 void PlaybackTextPresenter::mouseDown(const juce::MouseEvent &event) {
-  if (event.eventComponent == &owner.elapsedTimeEditor)
-    isEditingElapsed = true;
-  else if (event.eventComponent == &owner.remainingTimeEditor)
-    isEditingRemaining = true;
-  else if (event.eventComponent == &owner.loopLengthEditor)
-    isEditingLoopLength = true;
+  if (auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent)) {
+    editor->grabKeyboardFocus();
+    if (editor == &owner.elapsedTimeEditor)
+      isEditingElapsed = true;
+    else if (editor == &owner.remainingTimeEditor)
+      isEditingRemaining = true;
+    else if (editor == &owner.loopLengthEditor)
+      isEditingLoopLength = true;
+  }
 }
 
 void PlaybackTextPresenter::mouseUp(const juce::MouseEvent &event) {
