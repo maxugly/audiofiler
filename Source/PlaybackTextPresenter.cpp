@@ -42,19 +42,20 @@ void PlaybackTextPresenter::initialiseEditors()
     configure(owner.loopLengthEditor, juce::Justification::centred);
 }
 
+/** @warning CRITICAL: Do not sync text if editor has focus or mouse is down. Prevents 60Hz timer from overwriting manual user input. */
 void PlaybackTextPresenter::updateEditors()
 {
-    if (!owner.elapsedTimeEditor.hasKeyboardFocus(false))
+    if (!owner.elapsedTimeEditor.hasKeyboardFocus(false) && !owner.elapsedTimeEditor.isMouseButtonDown())
         syncEditorToPosition(owner.elapsedTimeEditor, owner.getAudioPlayer().getTransportSource().getCurrentPosition());
 
-    if (!owner.remainingTimeEditor.hasKeyboardFocus(false))
+    if (!owner.remainingTimeEditor.hasKeyboardFocus(false) && !owner.remainingTimeEditor.isMouseButtonDown())
     {
         const auto total = owner.getAudioPlayer().getThumbnail().getTotalLength();
         const auto remaining = juce::jmax(0.0, total - owner.getAudioPlayer().getTransportSource().getCurrentPosition());
         syncEditorToPosition(owner.remainingTimeEditor, remaining, true);
     }
 
-    if (!owner.loopLengthEditor.hasKeyboardFocus(false))
+    if (!owner.loopLengthEditor.hasKeyboardFocus(false) && !owner.loopLengthEditor.isMouseButtonDown())
     {
         double length = std::abs(owner.getLoopOutPosition() - owner.getLoopInPosition());
         owner.loopLengthEditor.setText(owner.formatTime(length), juce::dontSendNotification);
@@ -178,6 +179,8 @@ void PlaybackTextPresenter::mouseUp(const juce::MouseEvent& event)
     auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
     if (editor == nullptr) return;
 
+    editor->grabKeyboardFocus();
+
     // Only apply smart highlight if the user hasn't made a manual selection
     if (editor->getHighlightedRegion().getLength() > 0)
         return;
@@ -186,7 +189,8 @@ void PlaybackTextPresenter::mouseUp(const juce::MouseEvent& event)
     bool isNegative = (editor == &owner.remainingTimeEditor) || editor->getText().startsWith("-");
     int offset = isNegative ? 1 : 0;
 
-    int charIndex = editor->getTextIndexAt(event.getPosition());
+    auto localPos = editor->getLocalPoint(nullptr, event.getScreenPosition());
+    int charIndex = editor->getTextIndexAt(localPos);
     if (charIndex < 0) return;
 
     int effectiveIndex = charIndex - offset;
@@ -222,7 +226,8 @@ void PlaybackTextPresenter::mouseWheelMove(const juce::MouseEvent& event, const 
     if (currentVal < 0.0) currentVal = 0.0;
 
     // Determine step size
-    int charIndex = editor->getTextIndexAt(event.getPosition());
+    auto localPos = editor->getLocalPoint(nullptr, event.getScreenPosition());
+    int charIndex = editor->getTextIndexAt(localPos);
     
     // Check if it's remaining time (starts with '-')
     bool isNegative = (editor == &owner.remainingTimeEditor) || editor->getText().startsWith("-");
