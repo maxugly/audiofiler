@@ -98,6 +98,7 @@ void PlaybackTextPresenter::render(juce::Graphics& g) const
 
 void PlaybackTextPresenter::textEditorTextChanged(juce::TextEditor& editor)
 {
+    // Delegate validation to shared helper
     const double totalLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
     TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }

@@ -1,10 +1,34 @@
 #ifndef AUDIOFILER_TIMEENTRYHELPERS_H
 #define AUDIOFILER_TIMEENTRYHELPERS_H
 
-#include <JuceHeader.h>
+#ifdef JUCE_HEADLESS
+ #include <juce_core/juce_core.h>
+#else
+ #include <JuceHeader.h>
+#endif
 
 namespace TimeEntryHelpers
 {
+    /**
+     * @brief Enum representing the result of a time validation check.
+     */
+    enum class ValidationResult
+    {
+        Valid,      ///< The time is valid and within the total length.
+        Invalid,    ///< The time string could not be parsed (e.g. invalid format).
+        OutOfRange  ///< The time is valid but outside the allowed range (e.g. > totalLength).
+    };
+
+    /**
+     * @brief Validates a time string against a total length.
+     *
+     * @param text The time string to parse (e.g., "00:01:30").
+     * @param totalLength The total length of the audio in seconds.
+     * @return A ValidationResult indicating the status.
+     */
+    ValidationResult validateTime(const juce::String& text, double totalLength);
+
+#ifndef JUCE_HEADLESS
     /**
      * @brief Validates the time entered in a TextEditor and updates its text colour.
      *
@@ -16,7 +40,6 @@ namespace TimeEntryHelpers
      * @param editor The TextEditor to validate.
      * @param totalLength The total length of the audio file in seconds.
      */
-
     void validateTimeEntry(juce::TextEditor& editor, double totalLength);
 
     /**
@@ -28,6 +51,7 @@ namespace TimeEntryHelpers
      * @return The calculated step size in seconds.
      */
     double calculateStepSize(int charIndex, const juce::ModifierKeys& mods, double sampleRate = 0.0);
+#endif
 }
 
 #endif // AUDIOFILER_TIMEENTRYHELPERS_H

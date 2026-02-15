@@ -4,15 +4,34 @@
 
 namespace TimeEntryHelpers
 {
-    void validateTimeEntry(juce::TextEditor& editor, double totalLength)
+    ValidationResult validateTime(const juce::String& text, double totalLength)
     {
-        const double newPosition = TimeUtils::parseTime(editor.getText());
+        const double newPosition = TimeUtils::parseTime(text);
 
         if (newPosition >= 0.0 && newPosition <= totalLength)
         {
-            editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+            return ValidationResult::Valid;
         }
         else if (newPosition == -1.0)
+        {
+            return ValidationResult::Invalid;
+        }
+        else
+        {
+            return ValidationResult::OutOfRange;
+        }
+    }
+
+#ifndef JUCE_HEADLESS
+    void validateTimeEntry(juce::TextEditor& editor, double totalLength)
+    {
+        ValidationResult result = validateTime(editor.getText(), totalLength);
+
+        if (result == ValidationResult::Valid)
+        {
+            editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
+        }
+        else if (result == ValidationResult::Invalid)
         {
             editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorError);
         }
@@ -67,4 +86,5 @@ namespace TimeEntryHelpers
 
         return step;
     }
+#endif
 }

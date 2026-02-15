@@ -140,6 +140,8 @@ add_executable(tests
     Source/AudioPlayer.cpp
     Tests/AudioPlayerTest.cpp
     Source/Config.cpp
+    Source/TimeEntryHelpers.cpp
+    Tests/TimeEntryHelpersTest.cpp
 )
 
 target_compile_definitions(tests PRIVATE
