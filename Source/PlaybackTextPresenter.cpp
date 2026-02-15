@@ -162,6 +162,7 @@ void PlaybackTextPresenter::textEditorFocusLost(juce::TextEditor &editor) {
   applyTimeEdit(editor);
 }
 
+
 void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
   double newTime = TimeUtils::parseTime(editor.getText());
   if (newTime < 0.0)

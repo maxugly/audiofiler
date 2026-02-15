@@ -220,14 +220,12 @@ void LoopPresenter::textEditorFocusLost(juce::TextEditor &editor) {
 }
 
 void LoopPresenter::mouseDown(const juce::MouseEvent &event) {
-  if (auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent)) {
-    editor->grabKeyboardFocus();
-    if (editor == &loopInEditor)
-      isEditingIn = true;
-    else if (editor == &loopOutEditor)
-      isEditingOut = true;
-  }
+  if (event.eventComponent == &loopInEditor)
+    isEditingIn = true;
+  else if (event.eventComponent == &loopOutEditor)
+    isEditingOut = true;
 }
+
 
 double LoopPresenter::getAudioTotalLength() const {
   return owner.getAudioPlayer().getThumbnail().getTotalLength();
