@@ -9,7 +9,7 @@ class ControlPanel;
  * @class LoopEditorPresenter
  * @brief Configures and validates the loop start/end editors for ControlPanel.
  */
-class LoopEditorPresenter final : private juce::TextEditor::Listener
+class LoopEditorPresenter final : private juce::TextEditor::Listener, public juce::MouseListener
 {
 public:
     explicit LoopEditorPresenter(ControlPanel& ownerPanel);
@@ -22,6 +22,8 @@ private:
     void textEditorReturnKeyPressed(juce::TextEditor& editor) override;
     void textEditorEscapeKeyPressed(juce::TextEditor& editor) override;
     void textEditorFocusLost(juce::TextEditor& editor) override;
+
+    void mouseUp(const juce::MouseEvent& event) override;
 
     void applyLoopEdit(juce::TextEditor& editor, bool isLoopIn);
     void restoreEditorValue(juce::TextEditor& editor, bool isLoopIn);
