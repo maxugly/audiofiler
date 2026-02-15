@@ -42,13 +42,13 @@ void PlaybackTextPresenter::initialiseEditors() {
 }
 
 void PlaybackTextPresenter::updateEditors() {
-  if (!isEditingElapsed && !owner.elapsedTimeEditor.hasKeyboardFocus(false))
+  if (!isEditingElapsed && !owner.elapsedTimeEditor.hasKeyboardFocus(true))
     syncEditorToPosition(
         owner.elapsedTimeEditor,
         owner.getAudioPlayer().getTransportSource().getCurrentPosition());
 
   if (!isEditingRemaining &&
-      !owner.remainingTimeEditor.hasKeyboardFocus(false)) {
+      !owner.remainingTimeEditor.hasKeyboardFocus(true)) {
     const auto total = owner.getAudioPlayer().getThumbnail().getTotalLength();
     const auto remaining = juce::jmax(
         0.0,
@@ -57,11 +57,12 @@ void PlaybackTextPresenter::updateEditors() {
     syncEditorToPosition(owner.remainingTimeEditor, remaining, true);
   }
 
-  if (!isEditingLoopLength && !owner.loopLengthEditor.hasKeyboardFocus(false)) {
+  if (!isEditingLoopLength && !owner.loopLengthEditor.hasKeyboardFocus(true)) {
     double length =
         std::abs(owner.getLoopOutPosition() - owner.getLoopInPosition());
-    owner.loopLengthEditor.setText(owner.formatTime(length),
-                                   juce::dontSendNotification);
+    juce::String newText = owner.formatTime(length);
+    if (owner.loopLengthEditor.getText() != newText)
+      owner.loopLengthEditor.setText(newText, juce::dontSendNotification);
   }
 }
 
@@ -153,6 +154,15 @@ void PlaybackTextPresenter::textEditorFocusLost(juce::TextEditor &editor) {
   applyTimeEdit(editor);
 }
 
+void PlaybackTextPresenter::textEditorFocusGained(juce::TextEditor &editor) {
+  if (&editor == &owner.elapsedTimeEditor)
+    isEditingElapsed = true;
+  else if (&editor == &owner.remainingTimeEditor)
+    isEditingRemaining = true;
+  else if (&editor == &owner.loopLengthEditor)
+    isEditingLoopLength = true;
+}
+
 void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
   double newTime = TimeUtils::parseTime(editor.getText());
   if (newTime < 0.0)
@@ -198,7 +208,9 @@ void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor &editor,
   juce::String text = owner.formatTime(positionSeconds);
   if (isRemaining)
     text = "-" + text;
-  editor.setText(text, juce::dontSendNotification);
+
+  if (editor.getText() != text)
+    editor.setText(text, juce::dontSendNotification);
 }
 
 void PlaybackTextPresenter::mouseDown(const juce::MouseEvent &event) {
@@ -223,10 +235,6 @@ void PlaybackTextPresenter::mouseUp(const juce::MouseEvent &event) {
     isEditingLoopLength = true;
 
   editor->grabKeyboardFocus();
-
-  // Only apply smart highlight if the user hasn't made a manual selection
-  if (editor->getHighlightedRegion().getLength() > 0)
-    return;
 
   // Check if it's remaining time (starts with '-')
   bool isNegative = (editor == &owner.remainingTimeEditor) ||
@@ -278,6 +286,10 @@ void PlaybackTextPresenter::mouseWheelMove(
 
   auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
   if (editor == nullptr)
+    return;
+
+  // Don't allow wheel adjustments if we are actively typing
+  if (editor->hasKeyboardFocus(true))
     return;
 
   double currentVal = TimeUtils::parseTime(editor->getText());

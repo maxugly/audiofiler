@@ -128,10 +128,15 @@ void LoopPresenter::ensureLoopOrder() {
 }
 
 void LoopPresenter::updateLoopLabels() {
-  if (!isEditingIn && !loopInEditor.hasKeyboardFocus(false))
+  const bool hasInFocus = loopInEditor.hasKeyboardFocus(true);
+  if (!isEditingIn && !hasInFocus) {
     syncEditorToPosition(loopInEditor, loopInPosition);
-  if (!isEditingOut && !loopOutEditor.hasKeyboardFocus(false))
+  }
+
+  const bool hasOutFocus = loopOutEditor.hasKeyboardFocus(true);
+  if (!isEditingOut && !hasOutFocus) {
     syncEditorToPosition(loopOutEditor, loopOutPosition);
+  }
 }
 
 void LoopPresenter::setLoopStartFromSample(int sampleIndex) {
@@ -289,7 +294,9 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition,
 
 void LoopPresenter::syncEditorToPosition(juce::TextEditor &editor,
                                          double positionSeconds) {
-  editor.setText(owner.formatTime(positionSeconds), juce::dontSendNotification);
+  juce::String newText = owner.formatTime(positionSeconds);
+  if (editor.getText() != newText)
+    editor.setText(newText, juce::dontSendNotification);
 }
 
 void LoopPresenter::mouseEnter(const juce::MouseEvent &event) {
@@ -321,10 +328,6 @@ void LoopPresenter::mouseUp(const juce::MouseEvent &event) {
     isEditingOut = true;
 
   editor->grabKeyboardFocus();
-
-  // Only apply smart highlight if the user hasn't made a manual selection
-  if (editor->getHighlightedRegion().getLength() > 0)
-    return;
 
   int charIndex = editor->getTextIndexAt(event.getPosition());
   if (charIndex < 0)

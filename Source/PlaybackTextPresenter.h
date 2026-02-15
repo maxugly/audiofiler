@@ -34,6 +34,7 @@ private:
   void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
   void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
   void textEditorFocusLost(juce::TextEditor &editor) override;
+  void textEditorFocusGained(juce::TextEditor &editor) override;
 
   // juce::MouseListener overrides
   void mouseWheelMove(const juce::MouseEvent &event,
