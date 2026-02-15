@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y software-properties-common
+          sudo apt install -y software-properties-common ccache
           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo apt update
           sudo apt install -y g++-12 gcc-12 ninja-build pkg-config \
@@ -24,6 +24,14 @@ jobs:
             libxext-dev libxinerama-dev libxrandr-dev \
             libxrender-dev libwebkit2gtk-4.1-dev \
             libglu1-mesa-dev mesa-common-dev freeglut3-dev
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+          max-size: "500M"
 
       - name: Cache build
         uses: actions/cache@v3
@@ -42,10 +50,17 @@ jobs:
 
       - name: Configure CMake
         # Using g++-12 and Ninja for speed on the runner
-        run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=g++-12 .
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER=g++-12 .
 
       - name: Build with Ninja
         run: ninja -C build
+
+      - name: ccache statistics
+        run: ccache -s
 
       - name: Debug Build Output
         # This lists all files produced so we can see the exact binary name/path
