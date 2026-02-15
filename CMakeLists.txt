@@ -81,6 +81,8 @@ if (NOT BUILD_TESTS_ONLY)
             Source/SilenceDetectionPresenter.cpp
             Source/SilenceAnalysisWorker.h
             Source/SilenceAnalysisWorker.cpp
+            Source/SilenceAnalysisAlgorithms.h
+            Source/SilenceAnalysisAlgorithms.cpp
             Source/SilenceDetectionLogger.h
             Source/SilenceDetectionLogger.cpp
             Source/ControlPanelCopy.h
@@ -140,6 +142,8 @@ add_executable(tests
     Source/AudioPlayer.cpp
     Tests/AudioPlayerTest.cpp
     Source/Config.cpp
+    Source/SilenceAnalysisAlgorithms.cpp
+    Tests/SilenceAnalysisTest.cpp
 )
 
 target_compile_definitions(tests PRIVATE
