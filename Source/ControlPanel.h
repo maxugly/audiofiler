@@ -3,6 +3,7 @@
 
 class FocusManager;
 #include "AppEnums.h"
+#include "SessionState.h"
 #include "AudioPlayer.h" // Added for AudioPlayer type recognition
 #include "Config.h"
 #include "ControlPanelLayoutCache.h"
@@ -540,6 +541,7 @@ private:
    *  @{
    */
 
+  SessionState sessionState; ///< Persistent user intent state.
   MainComponent &owner;       ///< A reference to the owning `MainComponent` for
                               ///< inter-component communication.
   ModernLookAndFeel modernLF; ///< Custom look and feel instance for UI styling.
