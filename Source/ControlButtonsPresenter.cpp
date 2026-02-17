@@ -208,19 +208,19 @@ void ControlButtonsPresenter::initialiseLoopButtons()
 
 void ControlButtonsPresenter::initialiseClearButtons()
 {
-    owner.addAndMakeVisible(owner.clearLoopInButton);
-    owner.clearLoopInButton.setButtonText(ControlPanelCopy::clearButtonText());
-    owner.clearLoopInButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
-    owner.clearLoopInButton.onClick = [this] {
+    owner.addAndMakeVisible(owner.resetInButton);
+    owner.resetInButton.setButtonText(ControlPanelCopy::clearButtonText());
+    owner.resetInButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
+    owner.resetInButton.onClick = [this] {
         if (owner.cutResetPresenter != nullptr)
-            owner.cutResetPresenter->clearLoopIn();
+            owner.cutResetPresenter->resetIn();
     };
 
-    owner.addAndMakeVisible(owner.clearLoopOutButton);
-    owner.clearLoopOutButton.setButtonText(ControlPanelCopy::clearButtonText());
-    owner.clearLoopOutButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
-    owner.clearLoopOutButton.onClick = [this] {
+    owner.addAndMakeVisible(owner.resetOutButton);
+    owner.resetOutButton.setButtonText(ControlPanelCopy::clearButtonText());
+    owner.resetOutButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
+    owner.resetOutButton.onClick = [this] {
         if (owner.cutResetPresenter != nullptr)
-            owner.cutResetPresenter->clearLoopOut();
+            owner.cutResetPresenter->resetOut();
     };
 }

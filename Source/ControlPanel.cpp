@@ -6,7 +6,7 @@
 #include "ControlStatePresenter.h"
 #include "FocusManager.h"
 #include "LayoutManager.h"
-#include "LoopButtonPresenter.h"
+#include "CutButtonPresenter.h"
 
 #include "LoopPresenter.h"
 #include "CutResetPresenter.h"
@@ -61,7 +61,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   buttonPresenter = std::make_unique<ControlButtonsPresenter>(*this);
   buttonPresenter->initialiseAllButtons();
 
-  loopButtonPresenter = std::make_unique<LoopButtonPresenter>(*this);
+  cutButtonPresenter = std::make_unique<CutButtonPresenter>(*this);
   loopPresenter = std::make_unique<LoopPresenter>(*this, *silenceDetector,
                                                   cutInEditor, cutOutEditor);
   loopPresenter->initialiseEditors();
@@ -316,16 +316,17 @@ void ControlPanel::triggerChannelViewButton() {
 void ControlPanel::triggerLoopButton() { loopButton.triggerClick(); }
 
 /**
- * @brief Triggers the clear loop in button's action, resetting the loop in
- * position.
+ * @brief Triggers the reset-in button's action, resetting the cut-in boundary.
  */
-void ControlPanel::clearLoopIn() { clearLoopInButton.triggerClick(); }
+void ControlPanel::resetIn() { resetInButton.triggerClick(); }
 
 /**
- * @brief Triggers the clear loop out button's action, resetting the loop out
- * position.
+ * @brief Triggers the reset-out button's action, resetting the cut-out boundary.
  */
-void ControlPanel::clearLoopOut() { clearLoopOutButton.triggerClick(); }
+void ControlPanel::resetOut() { resetOutButton.triggerClick(); }
+
+void ControlPanel::clearLoopIn() { resetIn(); }
+void ControlPanel::clearLoopOut() { resetOut(); }
 
 /**
  * @brief Parses a time string (HH:MM:SS:mmm) into a double representing
@@ -373,8 +374,8 @@ void ControlPanel::setShouldLoop(bool shouldLoopParam) {
   shouldLoop = shouldLoopParam;
 }
 void ControlPanel::updateLoopButtonColors() {
-  if (loopButtonPresenter != nullptr)
-    loopButtonPresenter->updateColours();
+  if (cutButtonPresenter != nullptr)
+    cutButtonPresenter->updateColours();
 }
 
 // Public accessors for SilenceDetector and other classes to interact with

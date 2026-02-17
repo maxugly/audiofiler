@@ -26,7 +26,7 @@ class TransportPresenter;
 class SilenceDetectionPresenter;
 class ControlButtonsPresenter;
 class CutResetPresenter;
-class LoopButtonPresenter;
+class CutButtonPresenter;
 class PlaybackTextPresenter;
 class PlaybackOverlay;
 
@@ -264,12 +264,16 @@ public:
    * global looping on/off. */
   void triggerLoopButton();
 
-  /** @brief Programmatically "clicks" the clear loop in button to reset the
-   * loop-in point. */
-  void clearLoopIn();
+  /** @brief Programmatically "clicks" the reset-in button to reset the
+   * cut-in boundary. */
+  void resetIn();
 
-  /** @brief Programmatically "clicks" the clear loop out button to reset the
-   * loop-out point. */
+  /** @brief Programmatically "clicks" the reset-out button to reset the
+   * cut-out boundary. */
+  void resetOut();
+
+  /** @brief Legacy wrappers for reset actions. */
+  void clearLoopIn();
   void clearLoopOut();
   void forceInvalidateWaveformCache();
 
@@ -527,7 +531,7 @@ private:
   friend class TransportPresenter;
   friend class SilenceDetectionPresenter;
   friend class ControlButtonsPresenter;
-  friend class LoopButtonPresenter;
+  friend class CutButtonPresenter;
   friend class CutResetPresenter;
   friend class PlaybackTextPresenter;
 
@@ -572,10 +576,10 @@ private:
       silenceDetectionPresenter; ///< Owns auto-cut toggle behaviour.
   std::unique_ptr<ControlButtonsPresenter>
       buttonPresenter; ///< Handles button initialization.
-  std::unique_ptr<LoopButtonPresenter>
-      loopButtonPresenter; ///< Handles loop button colouring.
+  std::unique_ptr<CutButtonPresenter>
+      cutButtonPresenter; ///< Handles cut boundary button colouring.
   std::unique_ptr<CutResetPresenter>
-      cutResetPresenter; ///< Clears loop bounds.
+      cutResetPresenter; ///< Resets cut boundaries.
   std::unique_ptr<FocusManager> focusManager;
   std::unique_ptr<PlaybackOverlay> playbackOverlay;
 
@@ -583,8 +587,8 @@ private:
   juce::TextButton openButton, playStopButton, modeButton, exitButton,
       statsButton, loopButton, channelViewButton,
       qualityButton; ///< Standard TextButtons for various actions.
-  juce::TextButton clearLoopInButton,
-      clearLoopOutButton; ///< Small buttons to clear specific loop points.
+  juce::TextButton resetInButton,
+      resetOutButton; ///< Small buttons to reset cut boundaries.
   juce::TextEditor cutInEditor,
       cutOutEditor; ///< TextEditors for displaying statistics and editing loop
                      ///< points.

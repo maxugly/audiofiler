@@ -65,11 +65,11 @@ void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, boo
 {
     owner.loopInButton.setEnabled(enabled && isCutModeActive);
     owner.cutInEditor.setEnabled(enabled && isCutModeActive);
-    owner.clearLoopInButton.setEnabled(enabled && isCutModeActive);
+    owner.resetInButton.setEnabled(enabled && isCutModeActive);
 
     owner.loopOutButton.setEnabled(enabled && isCutModeActive);
     owner.cutOutEditor.setEnabled(enabled && isCutModeActive);
-    owner.clearLoopOutButton.setEnabled(enabled && isCutModeActive);
+    owner.resetOutButton.setEnabled(enabled && isCutModeActive);
 
     owner.loopLengthEditor.setEnabled(enabled && isCutModeActive);
     owner.loopLengthEditor.setVisible(isCutModeActive);
@@ -87,8 +87,8 @@ void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, boo
     owner.loopOutButton.setVisible(isCutModeActive);
     owner.cutInEditor.setVisible(isCutModeActive);
     owner.cutOutEditor.setVisible(isCutModeActive);
-    owner.clearLoopInButton.setVisible(isCutModeActive);
-    owner.clearLoopOutButton.setVisible(isCutModeActive);
+    owner.resetInButton.setVisible(isCutModeActive);
+    owner.resetOutButton.setVisible(isCutModeActive);
     owner.silenceDetector->getInSilenceThresholdEditor().setVisible(isCutModeActive);
     owner.silenceDetector->getOutSilenceThresholdEditor().setVisible(isCutModeActive);
     owner.autoCutInButton.setVisible(isCutModeActive);

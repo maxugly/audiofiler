@@ -11,7 +11,7 @@ CutResetPresenter::CutResetPresenter(ControlPanel& ownerPanel)
 {
 }
 
-void CutResetPresenter::clearLoopIn()
+void CutResetPresenter::resetIn()
 {
     owner.setLoopInPosition(0.0);
     owner.ensureLoopOrder();
@@ -21,7 +21,7 @@ void CutResetPresenter::clearLoopIn()
     owner.repaint();
 }
 
-void CutResetPresenter::clearLoopOut()
+void CutResetPresenter::resetOut()
 {
     owner.setLoopOutPosition(owner.getAudioPlayer().getThumbnail().getTotalLength());
     owner.ensureLoopOrder();

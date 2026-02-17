@@ -5,15 +5,15 @@ class ControlPanel;
 
 /**
  * @class CutResetPresenter
- * @brief Handles clear-loop button behavior, keeping ControlPanel lean.
+ * @brief Handles cut boundary reset behavior, keeping ControlPanel lean.
  */
 class CutResetPresenter
 {
 public:
     explicit CutResetPresenter(ControlPanel& ownerPanel);
 
-    void clearLoopIn();
-    void clearLoopOut();
+    void resetIn();
+    void resetOut();
 
 private:
     ControlPanel& owner;

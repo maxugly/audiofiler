@@ -64,7 +64,7 @@ void LayoutManager::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int r
     loopRow.removeFromLeft(margin);
     controlPanel.cutInEditor.setBounds(loopRow.removeFromLeft(loopTextWidth));
     loopRow.removeFromLeft(margin / 2);
-    controlPanel.clearLoopInButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
+    controlPanel.resetInButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
     loopRow.removeFromLeft(margin);
     controlPanel.silenceDetector->getInSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(thresholdEditorWidth));
     loopRow.removeFromLeft(margin / 2);
@@ -78,7 +78,7 @@ void LayoutManager::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int r
     loopRow.removeFromLeft(margin);
     controlPanel.cutOutEditor.setBounds(loopRow.removeFromLeft(loopTextWidth));
     loopRow.removeFromLeft(margin / 2);
-    controlPanel.clearLoopOutButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
+    controlPanel.resetOutButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
     loopRow.removeFromLeft(margin);
     controlPanel.silenceDetector->getOutSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(thresholdEditorWidth));
     loopRow.removeFromLeft(margin / 2);

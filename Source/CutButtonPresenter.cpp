@@ -1,15 +1,15 @@
-#include "LoopButtonPresenter.h"
+#include "CutButtonPresenter.h"
 
 #include "ControlPanel.h"
 #include "Config.h"
 #include "MouseHandler.h"
 
-LoopButtonPresenter::LoopButtonPresenter(ControlPanel& ownerPanel)
+CutButtonPresenter::CutButtonPresenter(ControlPanel& ownerPanel)
     : owner(ownerPanel)
 {
 }
 
-void LoopButtonPresenter::updateColours()
+void CutButtonPresenter::updateColours()
 {
     const auto placementMode = owner.getMouseHandler().getCurrentPlacementMode();
     owner.loopInButton.setColour(juce::TextButton::buttonColourId,

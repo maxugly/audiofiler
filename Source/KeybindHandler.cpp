@@ -117,12 +117,12 @@ bool KeybindHandler::handleLoopKeybinds(const juce::KeyPress& key)
     if (keyChar == 'u' || keyChar == 'U')
     {
         // Why: Clearing loop-in must remain possible even while placing loop points.
-        controlPanel.clearLoopIn();
+        controlPanel.resetIn();
         return true;
     }
     if (keyChar == 'p' || keyChar == 'P')
     {
-        controlPanel.clearLoopOut();
+        controlPanel.resetOut();
         return true;
     }
     return false;

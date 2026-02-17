@@ -94,8 +94,8 @@ if (NOT BUILD_TESTS_ONLY)
             Source/SilenceThresholdPresenter.h
             Source/SilenceThresholdPresenter.cpp
 
-            Source/LoopButtonPresenter.h
-            Source/LoopButtonPresenter.cpp
+            Source/CutButtonPresenter.h
+            Source/CutButtonPresenter.cpp
             Source/CutResetPresenter.h
             Source/CutResetPresenter.cpp
             Source/LoopButton.h
