@@ -74,7 +74,6 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
 
     if (reader != nullptr)
     {
-        std::lock_guard<std::mutex> lock(readerMutex);
         cutIn = 0.0;
         cutOut = reader->sampleRate > 0.0
             ? reader->lengthInSamples / reader->sampleRate
@@ -105,13 +104,16 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
         lastAutoCutOutActive = sessionState.cutPrefs.autoCut.outActive;
 
         loadedFile = file; // Store the loaded file for later reference
-        auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true); // True means reader is owned by source
-        // Use background thread for file reading with configured buffer size
-        transportSource.setSource(newSource.get(), Config::Audio::readAheadBufferSize, &readAheadThread, reader->sampleRate);
-        #if !defined(JUCE_HEADLESS)
-        thumbnail.setSource(new juce::FileInputSource(file)); // Update thumbnail to reflect new file
-        #endif
-        readerSource.reset(newSource.release()); // Transfer ownership to unique_ptr
+        {
+            std::lock_guard<std::mutex> lock(readerMutex);
+            auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true); // True means reader is owned by source
+            // Use background thread for file reading with configured buffer size
+            transportSource.setSource(newSource.get(), Config::Audio::readAheadBufferSize, &readAheadThread, reader->sampleRate);
+            #if !defined(JUCE_HEADLESS)
+            thumbnail.setSource(new juce::FileInputSource(file)); // Update thumbnail to reflect new file
+            #endif
+            readerSource.reset(newSource.release()); // Transfer ownership to unique_ptr
+        }
         setPlayheadPosition(cutIn);
         return juce::Result::ok();
     }
@@ -363,8 +365,20 @@ void AudioPlayer::setPlayheadPosition(double seconds)
     if (readerSource == nullptr)
         return;
 
-    const double effectiveIn = juce::jmin(cutIn, cutOut);
-    const double effectiveOut = juce::jmax(cutIn, cutOut);
+    double sampleRate = 0.0;
+    juce::int64 lengthInSamples = 0;
+    if (!getReaderInfo(sampleRate, lengthInSamples) || sampleRate <= 0.0)
+        return;
+
+    const double totalDuration = (double)lengthInSamples / sampleRate;
+
+    double effectiveIn = 0.0;
+    double effectiveOut = totalDuration;
+    if (sessionState.cutPrefs.active)
+    {
+        effectiveIn = juce::jmin(cutIn, cutOut);
+        effectiveOut = juce::jmax(cutIn, cutOut);
+    }
 
     transportSource.setPosition(juce::jlimit(effectiveIn, effectiveOut, seconds));
 }
