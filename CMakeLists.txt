@@ -36,7 +36,7 @@ if (NOT BUILD_TESTS_ONLY)
             PRODUCT_NAME "audiofiler"
     )
 
-    target_compile_definitions(audiofiler PUBLIC JUCE_DEBUG=1)
+    target_compile_definitions(audiofiler PUBLIC $<$<CONFIG:Debug>:JUCE_DEBUG=1> $<$<NOT:$<CONFIG:Debug>>:JUCE_DEBUG=0>)
 
     target_compile_definitions(audiofiler PRIVATE
             JUCE_USE_MP3AUDIOFORMAT=1
