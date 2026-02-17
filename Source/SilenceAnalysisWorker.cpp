@@ -33,6 +33,7 @@ void SilenceAnalysisWorker::startAnalysis(float thresholdVal, bool isIn)
     // Pause audio on the main thread before starting background work
     AudioPlayer& audioPlayer = client.getAudioPlayer();
     wasPlayingBeforeScan = audioPlayer.isPlaying();
+
     
     if (wasPlayingBeforeScan)
         audioPlayer.getTransportSource().stop();

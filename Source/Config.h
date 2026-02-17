@@ -23,6 +23,7 @@ namespace Config {
     //==============================================================================
     namespace Colors {
         // Removed #if !defined(JUCE_HEADLESS) guard to allow compilation of UI logic in tests
+
         
         struct Window {
             static const juce::Colour background;
@@ -84,6 +85,7 @@ namespace Config {
         extern const juce::Colour zoomPopupTrackingLine;
         extern const juce::Colour zoomPopupPlaybackLine;
         extern const juce::Colour zoomPopupZeroLine;
+
         
 
     }
