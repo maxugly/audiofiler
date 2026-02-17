@@ -25,7 +25,7 @@ class ControlStatePresenter;
 class TransportPresenter;
 class SilenceDetectionPresenter;
 class ControlButtonsPresenter;
-class LoopResetPresenter;
+class CutResetPresenter;
 class LoopButtonPresenter;
 class PlaybackTextPresenter;
 class PlaybackOverlay;
@@ -528,7 +528,7 @@ private:
   friend class SilenceDetectionPresenter;
   friend class ControlButtonsPresenter;
   friend class LoopButtonPresenter;
-  friend class LoopResetPresenter;
+  friend class CutResetPresenter;
   friend class PlaybackTextPresenter;
 
   //==============================================================================
@@ -574,8 +574,8 @@ private:
       buttonPresenter; ///< Handles button initialization.
   std::unique_ptr<LoopButtonPresenter>
       loopButtonPresenter; ///< Handles loop button colouring.
-  std::unique_ptr<LoopResetPresenter>
-      loopResetPresenter; ///< Clears loop bounds.
+  std::unique_ptr<CutResetPresenter>
+      cutResetPresenter; ///< Clears loop bounds.
   std::unique_ptr<FocusManager> focusManager;
   std::unique_ptr<PlaybackOverlay> playbackOverlay;
 

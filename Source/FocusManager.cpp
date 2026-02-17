@@ -10,9 +10,9 @@ FocusTarget FocusManager::getCurrentTarget() const
     const auto& mouseHandler = owner.getMouseHandler();
 
     // Priority 1: Dragging a handle (Highest Priority)
-    if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::In)
+    if (mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::In)
         return FocusTarget::LoopIn;
-    if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out)
+    if (mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::Out)
         return FocusTarget::LoopOut;
 
     // Priority 2: MouseManual (Active Scrubbing/Right-click Placement)

@@ -96,8 +96,8 @@ if (NOT BUILD_TESTS_ONLY)
 
             Source/LoopButtonPresenter.h
             Source/LoopButtonPresenter.cpp
-            Source/LoopResetPresenter.h
-            Source/LoopResetPresenter.cpp
+            Source/CutResetPresenter.h
+            Source/CutResetPresenter.cpp
             Source/LoopButton.h
             Source/LoopButton.cpp
             Source/PlaybackLoopController.h

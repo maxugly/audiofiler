@@ -5,7 +5,7 @@
 #include "TransportPresenter.h"
 #include "SilenceDetectionPresenter.h"
 #include "LoopPresenter.h"
-#include "LoopResetPresenter.h"
+#include "CutResetPresenter.h"
 #include "MouseHandler.h"
 #include "SilenceDetector.h"
 
@@ -212,15 +212,15 @@ void ControlButtonsPresenter::initialiseClearButtons()
     owner.clearLoopInButton.setButtonText(ControlPanelCopy::clearButtonText());
     owner.clearLoopInButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
     owner.clearLoopInButton.onClick = [this] {
-        if (owner.loopResetPresenter != nullptr)
-            owner.loopResetPresenter->clearLoopIn();
+        if (owner.cutResetPresenter != nullptr)
+            owner.cutResetPresenter->clearLoopIn();
     };
 
     owner.addAndMakeVisible(owner.clearLoopOutButton);
     owner.clearLoopOutButton.setButtonText(ControlPanelCopy::clearButtonText());
     owner.clearLoopOutButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
     owner.clearLoopOutButton.onClick = [this] {
-        if (owner.loopResetPresenter != nullptr)
-            owner.loopResetPresenter->clearLoopOut();
+        if (owner.cutResetPresenter != nullptr)
+            owner.cutResetPresenter->clearLoopOut();
     };
 }

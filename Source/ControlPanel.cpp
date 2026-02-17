@@ -9,7 +9,7 @@
 #include "LoopButtonPresenter.h"
 
 #include "LoopPresenter.h"
-#include "LoopResetPresenter.h"
+#include "CutResetPresenter.h"
 #include "MainComponent.h" // Full header required for MainComponent access (e.g., getAudioPlayer)
 #include "PlaybackOverlay.h"
 #include "PlaybackTextPresenter.h"
@@ -111,7 +111,7 @@ void ControlPanel::initialiseLookAndFeel() {
  */
 void ControlPanel::initialiseLoopEditors() {
 
-  loopResetPresenter = std::make_unique<LoopResetPresenter>(*this);
+  cutResetPresenter = std::make_unique<CutResetPresenter>(*this);
 
   addAndMakeVisible(silenceDetector->getInSilenceThresholdEditor());
   addAndMakeVisible(silenceDetector->getOutSilenceThresholdEditor());
@@ -174,9 +174,9 @@ void ControlPanel::setZKeyDown(bool isDown) {
   if (m_isZKeyDown) {
     // If we are dragging a handle, zoom to that handle
     auto dragged = mouseHandler->getDraggedHandle();
-    if (dragged == MouseHandler::LoopMarkerHandle::In)
+    if (dragged == MouseHandler::CutMarkerHandle::In)
       m_activeZoomPoint = ActiveZoomPoint::In;
-    else if (dragged == MouseHandler::LoopMarkerHandle::Out)
+    else if (dragged == MouseHandler::CutMarkerHandle::Out)
       m_activeZoomPoint = ActiveZoomPoint::Out;
   } else {
     // On release, we only stop zooming if we aren't hovering/focusing a loop

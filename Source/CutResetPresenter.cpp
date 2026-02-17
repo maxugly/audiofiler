@@ -1,4 +1,4 @@
-#include "LoopResetPresenter.h"
+#include "CutResetPresenter.h"
 
 #include "ControlPanel.h"
 #include "ControlPanelCopy.h"
@@ -6,12 +6,12 @@
 #include "SilenceDetector.h"
 #include "AudioPlayer.h"
 
-LoopResetPresenter::LoopResetPresenter(ControlPanel& ownerPanel)
+CutResetPresenter::CutResetPresenter(ControlPanel& ownerPanel)
     : owner(ownerPanel)
 {
 }
 
-void LoopResetPresenter::clearLoopIn()
+void CutResetPresenter::clearLoopIn()
 {
     owner.setLoopInPosition(0.0);
     owner.ensureLoopOrder();
@@ -21,7 +21,7 @@ void LoopResetPresenter::clearLoopIn()
     owner.repaint();
 }
 
-void LoopResetPresenter::clearLoopOut()
+void CutResetPresenter::clearLoopOut()
 {
     owner.setLoopOutPosition(owner.getAudioPlayer().getThumbnail().getTotalLength());
     owner.ensureLoopOrder();

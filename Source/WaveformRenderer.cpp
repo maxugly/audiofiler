@@ -249,16 +249,16 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
     g.fillRect(outX - (Config::Layout::Glow::loopLineGlowThickness * Config::Layout::Glow::offsetFactor - 0.5f), (float)waveformBounds.getY() + boxHeight, Config::Layout::Glow::loopLineGlowThickness, (float)waveformBounds.getHeight() - (2.0f * boxHeight));
 
     g.setColour(Config::Colors::loopLine);
-    auto drawCutMarker = [&](float x, MouseHandler::LoopMarkerHandle handleType) {
+    auto drawCutMarker = [&](float x, MouseHandler::CutMarkerHandle handleType) {
         const auto& mouseHandler = controlPanel.getMouseHandler();
         const auto& silenceDetector = controlPanel.getSilenceDetector();
         
         juce::Colour markerColor = Config::Colors::loopLine;
         
         // Base color based on Auto-Cut status
-        if (handleType == MouseHandler::LoopMarkerHandle::In && silenceDetector.getIsAutoCutInActive())
+        if (handleType == MouseHandler::CutMarkerHandle::In && silenceDetector.getIsAutoCutInActive())
             markerColor = Config::Colors::loopMarkerAuto;
-        else if (handleType == MouseHandler::LoopMarkerHandle::Out && silenceDetector.getIsAutoCutOutActive())
+        else if (handleType == MouseHandler::CutMarkerHandle::Out && silenceDetector.getIsAutoCutOutActive())
             markerColor = Config::Colors::loopMarkerAuto;
 
         float thickness = Config::Layout::Glow::loopBoxOutlineThickness;
@@ -292,19 +292,19 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
                    (float)waveformBounds.getHeight() - (2.0f * boxHeight));
     };
 
-    drawCutMarker(inX, MouseHandler::LoopMarkerHandle::In);
-    drawCutMarker(outX, MouseHandler::LoopMarkerHandle::Out);
+    drawCutMarker(inX, MouseHandler::CutMarkerHandle::In);
+    drawCutMarker(outX, MouseHandler::CutMarkerHandle::Out);
 
     const auto& mouseHandler = controlPanel.getMouseHandler();
     juce::Colour hollowColor = Config::Colors::loopLine;
     float thickness = Config::Layout::Glow::loopBoxOutlineThickness;
 
-    if (mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Full)
+    if (mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::Full)
     {
         hollowColor = Config::Colors::loopMarkerDrag;
         thickness = Config::Layout::Glow::loopBoxOutlineThicknessInteracting;
     }
-    else if (mouseHandler.getHoveredHandle() == MouseHandler::LoopMarkerHandle::Full)
+    else if (mouseHandler.getHoveredHandle() == MouseHandler::CutMarkerHandle::Full)
     {
         hollowColor = Config::Colors::loopMarkerHover;
         thickness = Config::Layout::Glow::loopBoxOutlineThicknessInteracting;
@@ -558,8 +558,8 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
         }
     };
 
-    bool isDraggingCutIn = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::In;
-    bool isDraggingCutOut = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out;
+    bool isDraggingCutIn = mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::In;
+    bool isDraggingCutOut = mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::Out;
 
     // Draw Cut Lines (Fine)
     drawFineLine(cutIn, Config::Colors::loopLine, 1.0f);

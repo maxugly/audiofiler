@@ -131,10 +131,10 @@ public:
      */
     void setCurrentPlacementMode(AppEnums::PlacementMode mode) { currentPlacementMode = mode; }
 
-    /** @enum LoopMarkerHandle
-     *  @brief Identifies which loop marker handle is being interacted with.
+    /** @enum CutMarkerHandle
+     *  @brief Identifies which cut marker handle is being interacted with.
      */
-    enum class LoopMarkerHandle {
+    enum class CutMarkerHandle {
         None,
         In,
         Out,
@@ -142,10 +142,10 @@ public:
     };
 
     /** @brief Gets the handle currently under the mouse. */
-    LoopMarkerHandle getHoveredHandle() const { return hoveredHandle; }
+    CutMarkerHandle getHoveredHandle() const { return hoveredHandle; }
 
     /** @brief Gets the handle currently being dragged. */
-    LoopMarkerHandle getDraggedHandle() const { return draggedHandle; }
+    CutMarkerHandle getDraggedHandle() const { return draggedHandle; }
 
     /** @brief Checks if the mouse is actively scrubbing the waveform (dragging without a handle). */
     bool isScrubbing() const { return isScrubbingState; }
@@ -162,11 +162,11 @@ private:
     bool isDragging = false;                    ///< True if the mouse is currently dragging for seeking.
     double currentPlaybackPosOnDragStart = 0.0; ///< Playback position when a drag operation began.
     int mouseDragStartX = 0;                    ///< X-coordinate where a mouse drag operation began.
-    AppEnums::PlacementMode currentPlacementMode = AppEnums::PlacementMode::None; ///< Tracks if the user is in a mode to place a loop point.
+    AppEnums::PlacementMode currentPlacementMode = AppEnums::PlacementMode::None; ///< Tracks if the user is in a mode to place a cut point.
 
-    LoopMarkerHandle hoveredHandle = LoopMarkerHandle::None;
-    LoopMarkerHandle draggedHandle = LoopMarkerHandle::None;
-    double dragStartLoopLength = 0.0;
+    CutMarkerHandle hoveredHandle = CutMarkerHandle::None;
+    CutMarkerHandle draggedHandle = CutMarkerHandle::None;
+    double dragStartCutLength = 0.0;
     double dragStartMouseOffset = 0.0;
     bool interactionStartedInZoom = false;
     bool isScrubbingState = false;
@@ -181,11 +181,11 @@ private:
      */
 
     /**
-     * @brief Identifies which loop marker handle is at a given pixel position.
+     * @brief Identifies which cut marker handle is at a given pixel position.
      * @param pos The position relative to the ControlPanel.
-     * @return The handle found, or LoopMarkerHandle::None.
+     * @return The handle found, or CutMarkerHandle::None.
      */
-    LoopMarkerHandle getHandleAtPosition(juce::Point<int> pos) const;
+    CutMarkerHandle getHandleAtPosition(juce::Point<int> pos) const;
 
     /**
      * @brief Handles right-click events specifically for entering loop point placement modes.
