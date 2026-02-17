@@ -111,7 +111,7 @@ public:
 
     /**
      * @brief Checks if cutModeActive is enabled for the current playback.
-     * @return True if playback will loop when it reaches the end of the current loop region, false otherwise.
+     * @return True if playback will loop when it reaches the end of the current cut region, false otherwise.
      */
     bool isCutModeActive() const;
 
