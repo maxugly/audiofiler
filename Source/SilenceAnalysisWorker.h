@@ -2,32 +2,67 @@
 #define AUDIOFILER_SILENCEANALYSISWORKER_H
 
 #include <JuceHeader.h>
-
-class ControlPanel;
+#include <atomic>
+#include <memory>
+#include "SilenceWorkerClient.h"
 
 /**
  * @class SilenceAnalysisWorker
- * @brief Handles the heavy lifting for detecting leading/trailing silence.
+ * @brief Handles background processing for silence detection.
  *
- * SilenceDetector delegates to this helper so scanning logic (buffer allocation,
- * threshold comparisons, and loop updates) is isolated from UI concerns.
+ * Runs the heavy mathematical scanning (delegated to SilenceAnalysisAlgorithms)
+ * on a background thread to prevent UI freezing. It manages the thread lifecycle
+ * and communicates results back to the SilenceWorkerClient (ControlPanel) on the message thread.
  */
-class SilenceAnalysisWorker
+class SilenceAnalysisWorker : public juce::Thread
 {
 public:
     /**
-     * @brief Runs silence-in detection and updates loop start if a hit is found.
-     * @param ownerPanel ControlPanel providing access to AudioPlayer and UI feedback.
-     * @param threshold Normalized threshold (0-1) for detecting sound.
+     * @brief Constructs the worker thread.
+     * @param client The component that owns this worker and receives updates (e.g., ControlPanel).
      */
-    static void detectInSilence(ControlPanel& ownerPanel, float threshold);
+    explicit SilenceAnalysisWorker(SilenceWorkerClient& client);
 
     /**
-     * @brief Runs silence-out detection and updates loop end if a hit is found.
-     * @param ownerPanel ControlPanel providing access to AudioPlayer and UI feedback.
-     * @param threshold Normalized threshold (0-1) for detecting sound.
+     * @brief Destructor.
+     * Ensures the thread is stopped before destruction.
      */
-    static void detectOutSilence(ControlPanel& ownerPanel, float threshold);
+    ~SilenceAnalysisWorker() override;
+
+    /**
+     * @brief Starts an asynchronous silence analysis scan.
+     *
+     * If a scan is already in progress, this method returns immediately without
+     * starting a new one. It handles pausing playback on the main thread before
+     * launching the background task.
+     *
+     * @param threshold The normalized amplitude threshold (0-1).
+     * @param detectingIn True to find the start of sound (In), false for end (Out).
+     */
+    void startAnalysis(float threshold, bool detectingIn);
+
+    /**
+     * @brief Checks if the worker is currently running a scan.
+     * @return True if busy, false otherwise.
+     */
+    bool isBusy() const;
+
+private:
+    /**
+     * @brief The thread body that performs the scanning.
+     */
+    void run() override;
+
+    SilenceWorkerClient& client;
+    std::atomic<float> threshold { 0.0f };
+    std::atomic<bool> detectingIn { true };
+    std::atomic<bool> busy { false };
+    bool wasPlayingBeforeScan = false;
+
+    // Token to ensure safe async callbacks
+    std::shared_ptr<bool> lifeToken;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SilenceAnalysisWorker)
 };
 
 #endif // AUDIOFILER_SILENCEANALYSISWORKER_H

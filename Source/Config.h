@@ -5,6 +5,11 @@
 #include <juce_graphics/juce_graphics.h>
 #else
 #include <juce_core/juce_core.h>
+// In headless mode for tests, we still need basic graphics types if we compile UI code
+// If we can't include juce_graphics, we must mock Colour or hide these configs.
+// But ModernLookAndFeel uses them. So we MUST include juce_graphics even in headless if we test UI classes.
+// I will include juce_graphics/juce_graphics.h if possible, or assume it's available in test build.
+#include <juce_graphics/juce_graphics.h> 
 #endif
 
 /**
@@ -17,14 +22,23 @@ namespace Config {
     // Colors
     //==============================================================================
     namespace Colors {
-        #if !defined(JUCE_HEADLESS)
-
+        // Removed #if !defined(JUCE_HEADLESS) guard to allow compilation of UI logic in tests
+        
         struct Window {
             static const juce::Colour background;
         };
 
         struct Button {
-            static const juce::Colour base, on, text, outline, disabledBackground, disabledText, exit, clear, loopPlacement, loopActive;
+            static const juce::Colour base;
+            static const juce::Colour on;
+            static const juce::Colour text;
+            static const juce::Colour outline;
+            static const juce::Colour disabledBackground;
+            static const juce::Colour disabledText;
+            static const juce::Colour exit;
+            static const juce::Colour clear;
+            static const juce::Colour loopPlacement;
+            static const juce::Colour loopActive;
         };
         // General
         extern const juce::Colour playbackText;
@@ -70,7 +84,7 @@ namespace Config {
         extern const juce::Colour zoomPopupTrackingLine;
         extern const juce::Colour zoomPopupPlaybackLine;
         extern const juce::Colour zoomPopupZeroLine;
-        #endif
+        
 
     }
 

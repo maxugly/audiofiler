@@ -28,7 +28,8 @@
 SilenceDetector::SilenceDetector(ControlPanel& ownerPanel)
     : owner(ownerPanel),
       currentInSilenceThreshold(Config::Audio::silenceThresholdIn),
-      currentOutSilenceThreshold(Config::Audio::silenceThresholdOut)
+      currentOutSilenceThreshold(Config::Audio::silenceThresholdOut),
+      worker(ownerPanel)
 {
     thresholdPresenter = std::make_unique<SilenceThresholdPresenter>(*this, owner);
 }
@@ -53,7 +54,8 @@ SilenceDetector::~SilenceDetector() = default;
  */
 void SilenceDetector::detectInSilence()
 {
-    SilenceAnalysisWorker::detectInSilence(owner, currentInSilenceThreshold);
+    // Delegate the heavy lifting to the worker thread to keep the UI responsive
+    worker.startAnalysis(currentInSilenceThreshold, true);
 }
 
 
@@ -69,17 +71,6 @@ void SilenceDetector::detectInSilence()
  */
 void SilenceDetector::detectOutSilence()
 {
-    SilenceAnalysisWorker::detectOutSilence(owner, currentOutSilenceThreshold);
+    // Delegate the heavy lifting to the worker thread to keep the UI responsive
+    worker.startAnalysis(currentOutSilenceThreshold, false);
 }
-
-
-/**
- * @brief Provides real-time visual feedback as the user types in a threshold editor.
- * @param editor The TextEditor that has changed.
- *
- * This callback is triggered on every keystroke within the threshold editors. It checks if the
- * entered value (as a percentage) is within the valid range of 1-99. If it is, the text color
- * is normal. If not, the color changes to an "out of range" color. This immediate feedback
- * improves usability by guiding the user toward valid input without waiting for them to press
- * Enter or lose focus.
- */

@@ -4,6 +4,21 @@ namespace Config {
 
     namespace Colors {
         #if !defined(JUCE_HEADLESS)
+        // Window
+        const juce::Colour Window::background { juce::Colours::black };
+
+        // Button
+        const juce::Colour Button::base { 0xff5a5a5a };
+        const juce::Colour Button::on { 0xff00bfff };
+        const juce::Colour Button::text { 0xFFFFFFFF };
+        const juce::Colour Button::outline { 0xff808080 };
+        const juce::Colour Button::disabledBackground { 0xff2a2a2a };
+        const juce::Colour Button::disabledText { 0xff4a4a4a };
+        const juce::Colour Button::exit { juce::Colours::darkred };
+        const juce::Colour Button::clear { juce::Colours::red };
+        const juce::Colour Button::loopPlacement { 0xffff1493 };
+        const juce::Colour Button::loopActive { 0xff0066cc };
+
         // General
         const juce::Colour playbackText = juce::Colour(0xFF34FA11); // Bright green
 
@@ -77,18 +92,3 @@ namespace Config {
     }
 
 }
-
-// Refactored definitions
-#if !defined(JUCE_HEADLESS)
-const juce::Colour Config::Colors::Window::background { juce::Colours::black };
-const juce::Colour Config::Colors::Button::base { 0xff5a5a5a };
-const juce::Colour Config::Colors::Button::on { 0xff00bfff };
-const juce::Colour Config::Colors::Button::text { 0xFFFFFFFF };
-const juce::Colour Config::Colors::Button::outline { 0xff808080 };
-const juce::Colour Config::Colors::Button::disabledBackground { 0xff2a2a2a };
-const juce::Colour Config::Colors::Button::disabledText { 0xff4a4a4a };
-const juce::Colour Config::Colors::Button::exit { juce::Colours::darkred };
-const juce::Colour Config::Colors::Button::clear { juce::Colours::red };
-const juce::Colour Config::Colors::Button::loopPlacement { 0xffff1493 };
-const juce::Colour Config::Colors::Button::loopActive { 0xff0066cc };
-#endif

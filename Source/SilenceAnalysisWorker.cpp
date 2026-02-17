@@ -1,112 +1,130 @@
 #include "SilenceAnalysisWorker.h"
 #include "SilenceAnalysisAlgorithms.h"
-
-#include "ControlPanel.h"
 #include "AudioPlayer.h"
 #include "SilenceDetectionLogger.h"
-#include <limits>
+
 #include <algorithm>
 #include <cmath>
 
-namespace
+SilenceAnalysisWorker::SilenceAnalysisWorker(SilenceWorkerClient& owner)
+    : Thread("SilenceWorker"), client(owner)
 {
-    void resumeIfNeeded(AudioPlayer& player, bool wasPlaying)
-    {
-        if (wasPlaying)
-            player.getTransportSource().start();
-    }
+    lifeToken = std::make_shared<bool>(true);
 }
 
-void SilenceAnalysisWorker::detectInSilence(ControlPanel& ownerPanel, float threshold)
+SilenceAnalysisWorker::~SilenceAnalysisWorker()
 {
-    AudioPlayer& audioPlayer = ownerPanel.getAudioPlayer();
-    const bool wasPlaying = audioPlayer.isPlaying();
-    if (wasPlaying)
-        audioPlayer.getTransportSource().stop();
-
-    juce::AudioFormatReader* reader = audioPlayer.getAudioFormatReader();
-    if (reader == nullptr)
-    {
-        SilenceDetectionLogger::logNoAudioLoaded(ownerPanel);
-        resumeIfNeeded(audioPlayer, wasPlaying);
-        return;
-    }
-
-    const juce::int64 lengthInSamples = reader->lengthInSamples;
-    SilenceDetectionLogger::logReadingSamples(ownerPanel, "In", lengthInSamples);
-
-    // Security Fix: Check for invalid length to prevent processing errors
-    if (lengthInSamples <= 0)
-    {
-        SilenceDetectionLogger::logZeroLength(ownerPanel);
-        resumeIfNeeded(audioPlayer, wasPlaying);
-        return;
-    }
-
-    // Note: DoS check for kMaxAnalyzableSamples removed as chunking handles large files safely
-
-    const juce::int64 result = SilenceAnalysisAlgorithms::findSilenceIn(*reader, threshold);
-
-    if (result != -1)
-    {
-        ownerPanel.setLoopInPosition((double)result / reader->sampleRate);
-        SilenceDetectionLogger::logLoopStartSet(ownerPanel, result, reader->sampleRate);
-
-        // Move playhead to the new loop-in position in cut mode
-        if (ownerPanel.isCutModeActive())
-            audioPlayer.getTransportSource().setPosition(ownerPanel.getLoopInPosition());
-    }
-    else
-    {
-        SilenceDetectionLogger::logNoSoundFound(ownerPanel, "start");
-    }
-
-    resumeIfNeeded(audioPlayer, wasPlaying);
+    stopThread(4000);
 }
 
-void SilenceAnalysisWorker::detectOutSilence(ControlPanel& ownerPanel, float threshold)
+bool SilenceAnalysisWorker::isBusy() const
 {
-    AudioPlayer& audioPlayer = ownerPanel.getAudioPlayer();
-    const bool wasPlaying = audioPlayer.isPlaying();
-    if (wasPlaying)
+    return busy.load() || isThreadRunning();
+}
+
+void SilenceAnalysisWorker::startAnalysis(float thresholdVal, bool isIn)
+{
+    if (isBusy())
+        return;
+
+    threshold.store(thresholdVal);
+    detectingIn.store(isIn);
+
+    // Pause audio on the main thread before starting background work
+    AudioPlayer& audioPlayer = client.getAudioPlayer();
+    wasPlayingBeforeScan = audioPlayer.isPlaying();
+    
+    if (wasPlayingBeforeScan)
         audioPlayer.getTransportSource().stop();
 
+    startThread();
+}
+
+void SilenceAnalysisWorker::run()
+{
+    busy.store(true);
+
+    // Capture necessary state
+    // Note: We assume the file is not unloaded during scan.
+    AudioPlayer& audioPlayer = client.getAudioPlayer();
     juce::AudioFormatReader* reader = audioPlayer.getAudioFormatReader();
-    if (reader == nullptr)
+    
+    juce::int64 result = -1;
+    bool success = false;
+    juce::int64 sampleRate = 0;
+    juce::int64 lengthInSamples = 0;
+
+    if (reader != nullptr)
     {
-        SilenceDetectionLogger::logNoAudioLoaded(ownerPanel);
-        resumeIfNeeded(audioPlayer, wasPlaying);
-        return;
+        sampleRate = (juce::int64)reader->sampleRate;
+        lengthInSamples = reader->lengthInSamples;
+
+        // Run the heavy algorithm
+        if (detectingIn.load())
+        {
+            result = SilenceAnalysisAlgorithms::findSilenceIn(*reader, threshold.load());
+        }
+        else
+        {
+            result = SilenceAnalysisAlgorithms::findSilenceOut(*reader, threshold.load());
+        }
+        success = true;
     }
 
-    const juce::int64 lengthInSamples = reader->lengthInSamples;
-    SilenceDetectionLogger::logReadingSamples(ownerPanel, "Out", lengthInSamples);
+    // Prepare a weak pointer to our life token
+    std::weak_ptr<bool> weakToken = lifeToken;
 
-    // Security Fix: Check for invalid length
-    if (lengthInSamples <= 0)
+    // Report back to the UI thread
+    juce::MessageManager::callAsync([this, weakToken, result, success, sampleRate, lengthInSamples]()
     {
-        SilenceDetectionLogger::logZeroLength(ownerPanel);
-        resumeIfNeeded(audioPlayer, wasPlaying);
-        return;
-    }
+        // Check if the worker is still alive
+        if (auto token = weakToken.lock())
+        {
+            // Worker is alive, so client is guaranteed to be alive (assuming client owns worker)
+            AudioPlayer& player = client.getAudioPlayer();
 
-    // Note: DoS check for kMaxAnalyzableSamples removed as chunking handles large files safely
+            if (!success || lengthInSamples <= 0)
+            {
+                 if (lengthInSamples <= 0 && success) 
+                     client.logStatusMessage("Error: Audio file has zero length.", true);
+                 else
+                     client.logStatusMessage("No audio loaded.", true);
+            }
+            else
+            {
+                 client.logStatusMessage(juce::String("Reading ") + (detectingIn.load() ? "start" : "end") + " of sample...");
 
-    const juce::int64 result = SilenceAnalysisAlgorithms::findSilenceOut(*reader, threshold);
+                 if (result != -1)
+                 {
+                     if (detectingIn.load())
+                     {
+                         client.setLoopInPosition((double)result / (double)sampleRate);
+                         client.logStatusMessage(juce::String("Loop start set to sample ") + juce::String(result));
 
-    if (result != -1)
-    {
-        const juce::int64 tailSamples = (juce::int64) (reader->sampleRate * 0.05); // 50ms tail
-        const juce::int64 endPoint64 = result + tailSamples;
-        const juce::int64 finalEndPoint = std::min(endPoint64, lengthInSamples);
+                         if (client.isCutModeActive())
+                             player.getTransportSource().setPosition(client.getLoopInPosition());
+                     }
+                     else
+                     {
+                         const juce::int64 tailSamples = (juce::int64)(sampleRate * 0.05); // 50ms tail
+                         const juce::int64 endPoint64 = result + tailSamples;
+                         const juce::int64 finalEndPoint = std::min(endPoint64, lengthInSamples);
 
-        ownerPanel.setLoopOutPosition((double)finalEndPoint / reader->sampleRate);
-        SilenceDetectionLogger::logLoopEndSet(ownerPanel, finalEndPoint, reader->sampleRate);
-    }
-    else
-    {
-        SilenceDetectionLogger::logNoSoundFound(ownerPanel, "end");
-    }
+                         client.setLoopOutPosition((double)finalEndPoint / (double)sampleRate);
+                         client.logStatusMessage(juce::String("Loop end set to sample ") + juce::String(finalEndPoint));
+                     }
+                 }
+                 else
+                 {
+                     client.logStatusMessage("No silence found.");
+                 }
+            }
 
-    resumeIfNeeded(audioPlayer, wasPlaying);
+            // Resume playback if it was playing
+            if (wasPlayingBeforeScan)
+                player.getTransportSource().start();
+
+            busy.store(false);
+        }
+    });
 }
