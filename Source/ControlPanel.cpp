@@ -47,7 +47,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent)
       mouseHandler(std::make_unique<MouseHandler>(*this)),
       layoutManager(std::make_unique<LayoutManager>(*this)),
       waveformRenderer(std::make_unique<WaveformRenderer>(*this)),
-      focusManager(std::make_unique<FocusManager>(*this)), m_shouldAutoplay(sessionState.autoplay) {
+      focusManager(std::make_unique<FocusManager>(*this)), m_shouldAutoplay(sessionState.autoplay), cutModeActive(sessionState.cutModeActive) {
   initialiseLookAndFeel();
   statsPresenter = std::make_unique<StatsPresenter>(*this);
   silenceDetectionPresenter =
