@@ -263,9 +263,10 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
                 double offset = (currentPlacementMode == AppEnums::PlacementMode::None) ? dragStartMouseOffset : 0.0;
                 
                 if (draggedHandle == LoopMarkerHandle::In)
-                    owner.setLoopInPosition(zoomedTime - offset);
+                    owner.getAudioPlayer().setCutIn(zoomedTime - offset);
                 else if (draggedHandle == LoopMarkerHandle::Out)
-                    owner.setLoopOutPosition(zoomedTime - offset);
+                    owner.getAudioPlayer().setCutOut(zoomedTime - offset);
+                owner.ensureLoopOrder();
             }
             else if (isDragging)
             {
@@ -294,11 +295,11 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
 
             if (draggedHandle == LoopMarkerHandle::In)
             {
-                owner.setLoopInPosition(mouseTime);
+                owner.getAudioPlayer().setCutIn(mouseTime);
             }
             else if (draggedHandle == LoopMarkerHandle::Out)
             {
-                owner.setLoopOutPosition(mouseTime);
+                owner.getAudioPlayer().setCutOut(mouseTime);
             }
             else if (draggedHandle == LoopMarkerHandle::Full)
             {
@@ -317,14 +318,15 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
                     newIn = audioLength - dragStartLoopLength;
                 }
                 
-                owner.setLoopInPosition(newIn);
-                owner.setLoopOutPosition(newOut);
+                owner.getAudioPlayer().setCutIn(newIn);
+                owner.getAudioPlayer().setCutOut(newOut);
 
                 // Ensure cursor stays in the moving loop
                 audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
                                                    newIn, newOut);
             }
 
+            owner.ensureLoopOrder();
             owner.updateLoopLabels();
             owner.repaint();
         }

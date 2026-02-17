@@ -154,7 +154,7 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
     const auto waveformBounds = controlPanel.getWaveformBounds();
     const auto& silenceDetector = controlPanel.getSilenceDetector();
 
-    auto drawThresholdVisualisation = [&](double loopPos, float threshold)
+    auto drawThresholdVisualisation = [&](double cutPos, float threshold)
     {
         if (audioLength <= 0.0f)
             return;
@@ -169,7 +169,7 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
         topThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), topThresholdY);
         bottomThresholdY = juce::jlimit((float)waveformBounds.getY(), (float)waveformBounds.getBottom(), bottomThresholdY);
 
-        const float xPos = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (loopPos / audioLength);
+        const float xPos = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (cutPos / audioLength);
         const float halfThresholdLineWidth = Config::Animation::thresholdLineWidth / 2.0f;
         float lineStartX = xPos - halfThresholdLineWidth;
         float lineEndX = xPos + halfThresholdLineWidth;
@@ -194,11 +194,13 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
         g.drawHorizontalLine((int)bottomThresholdY, lineStartX, lineEndX);
     };
 
-    drawThresholdVisualisation(controlPanel.getLoopInPosition(), silenceDetector.getCurrentInSilenceThreshold());
-    drawThresholdVisualisation(controlPanel.getLoopOutPosition(), silenceDetector.getCurrentOutSilenceThreshold());
+    const double cutIn = audioPlayer.getCutIn();
+    const double cutOut = audioPlayer.getCutOut();
+    drawThresholdVisualisation(cutIn, silenceDetector.getCurrentInSilenceThreshold());
+    drawThresholdVisualisation(cutOut, silenceDetector.getCurrentOutSilenceThreshold());
 
-    const double actualIn = juce::jmin(controlPanel.getLoopInPosition(), controlPanel.getLoopOutPosition());
-    const double actualOut = juce::jmax(controlPanel.getLoopInPosition(), controlPanel.getLoopOutPosition());
+    const double actualIn = juce::jmin(cutIn, cutOut);
+    const double actualOut = juce::jmax(cutIn, cutOut);
     const float inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
     const float outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
     const float fadeLength = waveformBounds.getWidth() * Config::Layout::Waveform::loopRegionFadeProportion;
@@ -214,7 +216,7 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
         g.setColour(juce::Colours::black);
         g.fillRect(solidBlackLeft);
 
-        // 2. Fade from blue loop color to black
+        // 2. Fade from blue cut color to black
         juce::Rectangle<float> fadeAreaLeft(inX - actualFade, (float)waveformBounds.getY(), actualFade, (float)waveformBounds.getHeight());
         juce::ColourGradient leftFadeGradient(Config::Colors::loopRegion, inX, leftRegion.getCentreY(),
                                               juce::Colours::black, inX - actualFade, leftRegion.getCentreY(), false);
@@ -233,7 +235,7 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
         g.setColour(juce::Colours::black);
         g.fillRect(solidBlackRight);
 
-        // 2. Fade from blue loop color to black
+        // 2. Fade from blue cut color to black
         juce::Rectangle<float> fadeAreaRight(outX, (float)waveformBounds.getY(), actualFade, (float)waveformBounds.getHeight());
         juce::ColourGradient rightFadeGradient(Config::Colors::loopRegion, outX, rightRegion.getCentreY(),
                                                juce::Colours::black, outX + actualFade, rightRegion.getCentreY(), false);
@@ -247,7 +249,7 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
     g.fillRect(outX - (Config::Layout::Glow::loopLineGlowThickness * Config::Layout::Glow::offsetFactor - 0.5f), (float)waveformBounds.getY() + boxHeight, Config::Layout::Glow::loopLineGlowThickness, (float)waveformBounds.getHeight() - (2.0f * boxHeight));
 
     g.setColour(Config::Colors::loopLine);
-    auto drawLoopMarker = [&](float x, MouseHandler::LoopMarkerHandle handleType) {
+    auto drawCutMarker = [&](float x, MouseHandler::LoopMarkerHandle handleType) {
         const auto& mouseHandler = controlPanel.getMouseHandler();
         const auto& silenceDetector = controlPanel.getSilenceDetector();
         
@@ -290,8 +292,8 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
                    (float)waveformBounds.getHeight() - (2.0f * boxHeight));
     };
 
-    drawLoopMarker(inX, MouseHandler::LoopMarkerHandle::In);
-    drawLoopMarker(outX, MouseHandler::LoopMarkerHandle::Out);
+    drawCutMarker(inX, MouseHandler::LoopMarkerHandle::In);
+    drawCutMarker(outX, MouseHandler::LoopMarkerHandle::Out);
 
     const auto& mouseHandler = controlPanel.getMouseHandler();
     juce::Colour hollowColor = Config::Colors::loopLine;
@@ -470,9 +472,9 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
 // Determine current time point for the indicator (the setting being adjusted)
     double indicatorTime = 0.0;
     if (activePoint == ControlPanel::ActiveZoomPoint::In)
-        indicatorTime = controlPanel.getLoopInPosition();
+        indicatorTime = audioPlayer.getCutIn();
     else if (activePoint == ControlPanel::ActiveZoomPoint::Out)
-        indicatorTime = controlPanel.getLoopOutPosition();
+        indicatorTime = audioPlayer.getCutOut();
     else
         indicatorTime = audioPlayer.getTransportSource().getCurrentPosition();
 
@@ -533,12 +535,12 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
         g.fillRect(x1, (float)popupBounds.getY(), x2 - x1, (float)popupBounds.getHeight());
     };
 
-    const double loopIn = controlPanel.getLoopInPosition();
-    const double loopOut = controlPanel.getLoopOutPosition();
+    const double cutIn = audioPlayer.getCutIn();
+    const double cutOut = audioPlayer.getCutOut();
 
-    // Shadow regions outside the loop
-    drawShadow(startTime, loopIn, juce::Colours::black.withAlpha(0.5f));
-    drawShadow(loopOut, endTime, juce::Colours::black.withAlpha(0.5f));
+    // Shadow regions outside the cut
+    drawShadow(startTime, cutIn, juce::Colours::black.withAlpha(0.5f));
+    drawShadow(cutOut, endTime, juce::Colours::black.withAlpha(0.5f));
 
     // Shadow regions outside the file (solid black)
     if (startTime < 0.0)
@@ -556,19 +558,19 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
         }
     };
 
-    bool isDraggingIn = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::In;
-    bool isDraggingOut = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out;
+    bool isDraggingCutIn = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::In;
+    bool isDraggingCutOut = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out;
 
-    // Draw Loop Lines (Fine)
-    drawFineLine(loopIn, Config::Colors::loopLine, 1.0f);
-    drawFineLine(loopOut, Config::Colors::loopLine, 1.0f);
+    // Draw Cut Lines (Fine)
+    drawFineLine(cutIn, Config::Colors::loopLine, 1.0f);
+    drawFineLine(cutOut, Config::Colors::loopLine, 1.0f);
     
     // Draw Playback Cursor (Fine)
     drawFineLine(audioPlayer.getTransportSource().getCurrentPosition(), Config::Colors::playbackCursor, 1.0f);
 
     // Draw the "Tracking" line (the one we are centered on) with more prominence
-    if (isDraggingIn || isDraggingOut)
-        drawFineLine(isDraggingIn ? loopIn : loopOut, Config::Colors::zoomPopupTrackingLine, 2.0f); // Blue tracking
+    if (isDraggingCutIn || isDraggingCutOut)
+        drawFineLine(isDraggingCutIn ? cutIn : cutOut, Config::Colors::zoomPopupTrackingLine, 2.0f); // Blue tracking
     else
         drawFineLine(audioPlayer.getTransportSource().getCurrentPosition(), Config::Colors::zoomPopupPlaybackLine, 2.0f); // Green tracking
 
