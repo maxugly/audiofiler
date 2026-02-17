@@ -23,12 +23,12 @@ void ControlButtonsPresenter::initialiseAllButtons()
     initialiseQualityButton();
     initialiseExitButton();
     initialiseStatsButton();
-    initialiseLoopButton();
+    initialiseCutModeButton();
     initialiseAutoplayButton();
     initialiseAutoCutInButton();
     initialiseAutoCutOutButton();
     initialiseCutButton();
-    initialiseLoopButtons();
+    initialiseCutModeButtons();
     initialiseClearButtons();
 }
 
@@ -116,14 +116,14 @@ void ControlButtonsPresenter::initialiseStatsButton()
     };
 }
 
-void ControlButtonsPresenter::initialiseLoopButton()
+void ControlButtonsPresenter::initialiseCutModeButton()
 {
-    owner.addAndMakeVisible(owner.loopButton);
-    owner.loopButton.setButtonText(ControlPanelCopy::loopButtonText());
-    owner.loopButton.setClickingTogglesState(true);
-    owner.loopButton.onClick = [this] {
+    owner.addAndMakeVisible(owner.cutModeButton);
+    owner.cutModeButton.setButtonText(ControlPanelCopy::cutModeButtonText());
+    owner.cutModeButton.setClickingTogglesState(true);
+    owner.cutModeButton.onClick = [this] {
         if (owner.transportPresenter != nullptr)
-            owner.transportPresenter->handleLoopToggle(owner.loopButton.getToggleState());
+            owner.transportPresenter->handleCutModeToggle(owner.cutModeButton.getToggleState());
     };
 }
 
@@ -166,59 +166,59 @@ void ControlButtonsPresenter::initialiseCutButton()
     owner.addAndMakeVisible(owner.cutButton);
     owner.cutButton.setButtonText(ControlPanelCopy::cutButtonText());
     owner.cutButton.setClickingTogglesState(true);
-    owner.cutButton.setToggleState(owner.m_isCutModeActive, juce::dontSendNotification);
+    owner.cutButton.setToggleState(owner.cutModeActive, juce::dontSendNotification);
     owner.cutButton.onClick = [this] {
         if (owner.transportPresenter != nullptr)
             owner.transportPresenter->handleCutModeToggle(owner.cutButton.getToggleState());
     };
 }
 
-void ControlButtonsPresenter::initialiseLoopButtons()
+void ControlButtonsPresenter::initialiseCutModeButtons()
 {
-    owner.addAndMakeVisible(owner.loopInButton);
-    owner.loopInButton.setButtonText(ControlPanelCopy::loopInButtonText());
-    owner.loopInButton.onLeftClick = [this] {
-        owner.setLoopInPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
-        owner.ensureLoopOrder();
-        owner.updateLoopButtonColors();
+    owner.addAndMakeVisible(owner.cutInSetButton);
+    owner.cutInSetButton.setButtonText(ControlPanelCopy::cutInSetButtonText());
+    owner.cutInSetButton.onLeftClick = [this] {
+        owner.setCutInPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
+        owner.ensureCutOrder();
+        owner.updateCutButtonColors();
         owner.silenceDetector->setIsAutoCutInActive(false);
         owner.repaint();
     };
-    owner.loopInButton.onRightClick = [this] {
+    owner.cutInSetButton.onRightClick = [this] {
         owner.mouseHandler->setCurrentPlacementMode(AppEnums::PlacementMode::LoopIn);
-        owner.updateLoopButtonColors();
+        owner.updateCutButtonColors();
         owner.repaint();
     };
 
-    owner.addAndMakeVisible(owner.loopOutButton);
-    owner.loopOutButton.setButtonText(ControlPanelCopy::loopOutButtonText());
-    owner.loopOutButton.onLeftClick = [this] {
-        owner.setLoopOutPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
-        owner.ensureLoopOrder();
-        owner.updateLoopButtonColors();
+    owner.addAndMakeVisible(owner.cutOutSetButton);
+    owner.cutOutSetButton.setButtonText(ControlPanelCopy::cutOutSetButtonText());
+    owner.cutOutSetButton.onLeftClick = [this] {
+        owner.setCutOutPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
+        owner.ensureCutOrder();
+        owner.updateCutButtonColors();
         owner.repaint();
     };
-    owner.loopOutButton.onRightClick = [this] {
+    owner.cutOutSetButton.onRightClick = [this] {
         owner.mouseHandler->setCurrentPlacementMode(AppEnums::PlacementMode::LoopOut);
-        owner.updateLoopButtonColors();
+        owner.updateCutButtonColors();
         owner.repaint();
     };
 }
 
 void ControlButtonsPresenter::initialiseClearButtons()
 {
-    owner.addAndMakeVisible(owner.clearLoopInButton);
-    owner.clearLoopInButton.setButtonText(ControlPanelCopy::clearButtonText());
-    owner.clearLoopInButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
-    owner.clearLoopInButton.onClick = [this] {
+    owner.addAndMakeVisible(owner.cutInClearButton);
+    owner.cutInClearButton.setButtonText(ControlPanelCopy::clearButtonText());
+    owner.cutInClearButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
+    owner.cutInClearButton.onClick = [this] {
         if (owner.loopResetPresenter != nullptr)
             owner.loopResetPresenter->clearLoopIn();
     };
 
-    owner.addAndMakeVisible(owner.clearLoopOutButton);
-    owner.clearLoopOutButton.setButtonText(ControlPanelCopy::clearButtonText());
-    owner.clearLoopOutButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
-    owner.clearLoopOutButton.onClick = [this] {
+    owner.addAndMakeVisible(owner.cutOutClearButton);
+    owner.cutOutClearButton.setButtonText(ControlPanelCopy::clearButtonText());
+    owner.cutOutClearButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
+    owner.cutOutClearButton.onClick = [this] {
         if (owner.loopResetPresenter != nullptr)
             owner.loopResetPresenter->clearLoopOut();
     };

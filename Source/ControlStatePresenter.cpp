@@ -20,7 +20,7 @@ void ControlStatePresenter::refreshStates()
     const bool enabled = owner.getAudioPlayer().getThumbnail().getTotalLength() > 0.0;
 
     updateGeneralButtonStates(enabled);
-    updateCutModeControlStates(owner.m_isCutModeActive, enabled);
+    owner.updateCutUI();
 }
 
 
@@ -33,7 +33,7 @@ void ControlStatePresenter::updateGeneralButtonStates(bool enabled)
 {
     owner.openButton.setEnabled(true);
     owner.exitButton.setEnabled(true);
-    owner.loopButton.setEnabled(true);
+    owner.cutModeButton.setEnabled(true);
     owner.autoplayButton.setEnabled(true);
     owner.cutButton.setEnabled(true);
 
@@ -57,40 +57,7 @@ void ControlStatePresenter::updateGeneralButtonStates(bool enabled)
 
 
 /**
- * @brief Updates the state of cut-mode specific controls (looping, silence detection).
+ * @brief Updates the state of cut-mode specific controls (cutModeActive, silence detection).
  * @param isCutModeActive True if the UI is in Cut Mode.
  * @param enabled True if an audio file is loaded.
  */
-void ControlStatePresenter::updateCutModeControlStates(bool isCutModeActive, bool enabled)
-{
-    owner.loopInButton.setEnabled(enabled && isCutModeActive);
-    owner.loopInEditor.setEnabled(enabled && isCutModeActive);
-    owner.clearLoopInButton.setEnabled(enabled && isCutModeActive);
-
-    owner.loopOutButton.setEnabled(enabled && isCutModeActive);
-    owner.loopOutEditor.setEnabled(enabled && isCutModeActive);
-    owner.clearLoopOutButton.setEnabled(enabled && isCutModeActive);
-
-    owner.loopLengthEditor.setEnabled(enabled && isCutModeActive);
-    owner.loopLengthEditor.setVisible(isCutModeActive);
-
-    owner.autoCutInButton.setEnabled(isCutModeActive);
-    owner.autoCutOutButton.setEnabled(isCutModeActive);
-
-    owner.autoCutInButton.setToggleState(owner.silenceDetector->getIsAutoCutInActive(), juce::dontSendNotification);
-    owner.autoCutOutButton.setToggleState(owner.silenceDetector->getIsAutoCutOutActive(), juce::dontSendNotification);
-
-    owner.silenceDetector->getInSilenceThresholdEditor().setEnabled(isCutModeActive);
-    owner.silenceDetector->getOutSilenceThresholdEditor().setEnabled(isCutModeActive);
-
-    owner.loopInButton.setVisible(isCutModeActive);
-    owner.loopOutButton.setVisible(isCutModeActive);
-    owner.loopInEditor.setVisible(isCutModeActive);
-    owner.loopOutEditor.setVisible(isCutModeActive);
-    owner.clearLoopInButton.setVisible(isCutModeActive);
-    owner.clearLoopOutButton.setVisible(isCutModeActive);
-    owner.silenceDetector->getInSilenceThresholdEditor().setVisible(isCutModeActive);
-    owner.silenceDetector->getOutSilenceThresholdEditor().setVisible(isCutModeActive);
-    owner.autoCutInButton.setVisible(isCutModeActive);
-    owner.autoCutOutButton.setVisible(isCutModeActive);
-}

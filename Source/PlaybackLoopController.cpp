@@ -16,27 +16,27 @@ void PlaybackLoopController::tick()
 
 void PlaybackLoopController::enforceLoopBounds() const
 {
-    const double loopIn = controlPanel.getLoopInPosition();
-    const double loopOut = controlPanel.getLoopOutPosition();
+    const double cutIn = controlPanel.getCutInPosition();
+    const double cutOut = controlPanel.getCutOutPosition();
 
-    if (loopOut <= loopIn)
+    if (cutOut <= cutIn)
         return;
 
     auto& transport = audioPlayer.getTransportSource();
     const double currentPosition = transport.getCurrentPosition();
 
-    if (currentPosition < loopOut)
+    if (currentPosition < cutOut)
         return;
 
     if (controlPanel.isCutModeActive())
     {
         if (controlPanel.getShouldLoop())
-            transport.setPosition(loopIn);
+            transport.setPosition(cutIn);
         else
             transport.stop();
         return;
     }
 
     if (controlPanel.getShouldLoop())
-        transport.setPosition(loopIn);
+        transport.setPosition(cutIn);
 }

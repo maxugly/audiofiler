@@ -14,7 +14,7 @@ PlaybackTextPresenter::PlaybackTextPresenter(ControlPanel &ownerPanel)
 PlaybackTextPresenter::~PlaybackTextPresenter() {
   owner.elapsedTimeEditor.removeListener(this);
   owner.remainingTimeEditor.removeListener(this);
-  owner.loopLengthEditor.removeListener(this);
+  owner.cutLengthEditor.removeListener(this);
 }
 
 void PlaybackTextPresenter::initialiseEditors() {
@@ -39,7 +39,7 @@ void PlaybackTextPresenter::initialiseEditors() {
 
   configure(owner.elapsedTimeEditor, juce::Justification::left);
   configure(owner.remainingTimeEditor, juce::Justification::right);
-  configure(owner.loopLengthEditor, juce::Justification::centred);
+  configure(owner.cutLengthEditor, juce::Justification::centred);
 }
 
 void PlaybackTextPresenter::updateEditors() {
@@ -58,12 +58,12 @@ void PlaybackTextPresenter::updateEditors() {
     syncEditorToPosition(owner.remainingTimeEditor, remaining, true);
   }
 
-  if (!isEditingLoopLength && !owner.loopLengthEditor.hasKeyboardFocus(true)) {
+  if (!isEditingLoopLength && !owner.cutLengthEditor.hasKeyboardFocus(true)) {
     double length =
-        std::abs(owner.getLoopOutPosition() - owner.getLoopInPosition());
+        std::abs(owner.getCutOutPosition() - owner.getCutInPosition());
     juce::String newText = owner.formatTime(length);
-    if (owner.loopLengthEditor.getText() != newText)
-      owner.loopLengthEditor.setText(newText, juce::dontSendNotification);
+    if (owner.cutLengthEditor.getText() != newText)
+      owner.cutLengthEditor.setText(newText, juce::dontSendNotification);
   }
 }
 
@@ -80,7 +80,7 @@ void PlaybackTextPresenter::layoutEditors() {
                                       Config::Layout::Text::playbackHeight);
 
   // The center is special because it's shared with total time which is static
-  owner.loopLengthEditor.setBounds(centreX, textY,
+  owner.cutLengthEditor.setBounds(centreX, textY,
                                    Config::Layout::Text::playbackWidth / 2,
                                    Config::Layout::Text::playbackHeight);
 }
@@ -100,8 +100,8 @@ void PlaybackTextPresenter::render(juce::Graphics &g) const {
   juce::String totalTimeStr = " / " + getTotalTimeStaticString();
 
   // Position it relative to the loop length editor
-  int loopLenX = owner.loopLengthEditor.getX();
-  int loopLenW = owner.loopLengthEditor.getWidth();
+  int loopLenX = owner.cutLengthEditor.getX();
+  int loopLenW = owner.cutLengthEditor.getWidth();
 
   // We want to draw it centered-ish with the loop length
   // But since loopLength is its own editor, let's just draw totalTime to the
@@ -117,7 +117,7 @@ void PlaybackTextPresenter::textEditorTextChanged(juce::TextEditor &editor) {
     isEditingElapsed = true;
   else if (&editor == &owner.remainingTimeEditor)
     isEditingRemaining = true;
-  else if (&editor == &owner.loopLengthEditor)
+  else if (&editor == &owner.cutLengthEditor)
     isEditingLoopLength = true;
 
   const double totalLength =
@@ -131,7 +131,7 @@ void PlaybackTextPresenter::textEditorReturnKeyPressed(
     isEditingElapsed = false;
   else if (&editor == &owner.remainingTimeEditor)
     isEditingRemaining = false;
-  else if (&editor == &owner.loopLengthEditor)
+  else if (&editor == &owner.cutLengthEditor)
     isEditingLoopLength = false;
 
   applyTimeEdit(editor);
@@ -144,7 +144,7 @@ void PlaybackTextPresenter::textEditorEscapeKeyPressed(
     isEditingElapsed = false;
   else if (&editor == &owner.remainingTimeEditor)
     isEditingRemaining = false;
-  else if (&editor == &owner.loopLengthEditor)
+  else if (&editor == &owner.cutLengthEditor)
     isEditingLoopLength = false;
 
   updateEditors(); // Reset to current state
@@ -156,7 +156,7 @@ void PlaybackTextPresenter::textEditorFocusLost(juce::TextEditor &editor) {
     isEditingElapsed = false;
   else if (&editor == &owner.remainingTimeEditor)
     isEditingRemaining = false;
-  else if (&editor == &owner.loopLengthEditor)
+  else if (&editor == &owner.cutLengthEditor)
     isEditingLoopLength = false;
 
   applyTimeEdit(editor);
@@ -176,11 +176,11 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
   } else if (&editor == &owner.remainingTimeEditor) {
     transport.setPosition(
         juce::jlimit(0.0, totalLength, totalLength - newTime));
-  } else if (&editor == &owner.loopLengthEditor) {
+  } else if (&editor == &owner.cutLengthEditor) {
     // Adjust loop out based on loop in
-    double currentIn = owner.getLoopInPosition();
+    double currentIn = owner.getCutInPosition();
 
-    // Clamp length to total length to prevent issues if loopIn is 0
+    // Clamp length to total length to prevent issues if cutIn is 0
     newTime = juce::jlimit(0.0, totalLength, newTime);
 
     double proposedOut = currentIn + newTime;
@@ -189,14 +189,14 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
       // Shift In backwards so that [In, Out] has length newTime and Out <=
       // totalLength
       double newIn = totalLength - newTime;
-      owner.setLoopInPosition(newIn);
-      owner.setLoopOutPosition(totalLength);
+      owner.setCutInPosition(newIn);
+      owner.setCutOutPosition(totalLength);
     } else {
-      owner.setLoopOutPosition(proposedOut);
+      owner.setCutOutPosition(proposedOut);
     }
 
-    owner.ensureLoopOrder();
-    owner.updateLoopLabels();
+    owner.ensureCutOrder();
+    owner.updateCutLabels();
   }
 
   updateEditors();
@@ -209,7 +209,7 @@ void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor &editor,
   if (editor.hasKeyboardFocus(true) ||
       (&editor == &owner.elapsedTimeEditor && isEditingElapsed) ||
       (&editor == &owner.remainingTimeEditor && isEditingRemaining) ||
-      (&editor == &owner.loopLengthEditor && isEditingLoopLength)) {
+      (&editor == &owner.cutLengthEditor && isEditingLoopLength)) {
     return;
   }
 
@@ -227,7 +227,7 @@ void PlaybackTextPresenter::mouseDown(const juce::MouseEvent &event) {
       isEditingElapsed = true;
     else if (editor == &owner.remainingTimeEditor)
       isEditingRemaining = true;
-    else if (editor == &owner.loopLengthEditor)
+    else if (editor == &owner.cutLengthEditor)
       isEditingLoopLength = true;
   }
 }
@@ -244,7 +244,7 @@ void PlaybackTextPresenter::mouseUp(const juce::MouseEvent &event) {
     isEditingElapsed = true;
   else if (editor == &owner.remainingTimeEditor)
     isEditingRemaining = true;
-  else if (editor == &owner.loopLengthEditor)
+  else if (editor == &owner.cutLengthEditor)
     isEditingLoopLength = true;
 
   // Check if it's remaining time (starts with '-')
@@ -292,7 +292,7 @@ void PlaybackTextPresenter::mouseWheelMove(
   if (editor->hasKeyboardFocus(true) ||
       (editor == &owner.elapsedTimeEditor && isEditingElapsed) ||
       (editor == &owner.remainingTimeEditor && isEditingRemaining) ||
-      (editor == &owner.loopLengthEditor && isEditingLoopLength))
+      (editor == &owner.cutLengthEditor && isEditingLoopLength))
     return;
 
   double currentVal = TimeUtils::parseTime(editor->getText());
@@ -323,10 +323,10 @@ void PlaybackTextPresenter::mouseWheelMove(
   } else if (editor == &owner.remainingTimeEditor) {
     double total = owner.getAudioPlayer().getThumbnail().getTotalLength();
     owner.getAudioPlayer().getTransportSource().setPosition(total - newVal);
-  } else if (editor == &owner.loopLengthEditor) {
-    owner.setLoopOutPosition(owner.getLoopInPosition() + newVal);
-    owner.ensureLoopOrder();
-    owner.updateLoopLabels();
+  } else if (editor == &owner.cutLengthEditor) {
+    owner.setCutOutPosition(owner.getCutInPosition() + newVal);
+    owner.ensureCutOrder();
+    owner.updateCutLabels();
   }
 
   updateEditors();

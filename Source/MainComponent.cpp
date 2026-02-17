@@ -95,7 +95,7 @@ void MainComponent::timerCallback()
     controlPanel->setZKeyDown(isZDown);
 
     // Keep editors in sync
-    controlPanel->updateLoopLabels();
+    controlPanel->updateCutLabels();
 
     // Update only the cursor/overlays to avoid full repaint
     controlPanel->updateCursorPosition();
@@ -118,9 +118,9 @@ void MainComponent::openButtonClicked()
             if (result.wasOk())
             {
                 controlPanel->setTotalTimeStaticString(TimeUtils::formatTime(audioPlayer->getThumbnail().getTotalLength()));
-                controlPanel->setLoopInPosition(0.0);
-                controlPanel->setLoopOutPosition(audioPlayer->getThumbnail().getTotalLength());
-                controlPanel->updateLoopLabels();
+                controlPanel->setCutInPosition(0.0);
+                controlPanel->setCutOutPosition(audioPlayer->getThumbnail().getTotalLength());
+                controlPanel->updateCutLabels();
                 controlPanel->updateComponentStates();
                 controlPanel->updateStatsFromAudio();
 
@@ -150,8 +150,8 @@ void MainComponent::seekToPosition(int x)
         auto newPosition = juce::jlimit(0.0, 1.0, proportion) * audioPlayer->getThumbnail().getTotalLength();
         
         audioPlayer->setPositionConstrained(newPosition,
-                                           controlPanel->getLoopInPosition(),
-                                           controlPanel->getLoopOutPosition());
+                                           controlPanel->getCutInPosition(),
+                                           controlPanel->getCutOutPosition());
     }
 }
 

@@ -81,9 +81,9 @@ namespace Config {
         const juce::String qualityLow = "[Q]ual L";
         const juce::String exitButton = "[E]xit";
         const juce::String statsButton = "[S]tats";
-        const juce::String loopButton = "[L]oop";
-        const juce::String loopInButton = "[I]n";
-        const juce::String loopOutButton = "[O]ut";
+        const juce::String cutModeButton = "[L]oop";
+        const juce::String cutInSetButton = "[I]n";
+        const juce::String cutOutSetButton = "[O]ut";
         const juce::String clearButton = "X";
         const juce::String autoplayButton = "[A]utoPlay";
         const juce::String autoCutInButton = "[AC In]";

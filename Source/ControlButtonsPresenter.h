@@ -28,12 +28,12 @@ private:
     void initialiseQualityButton();
     void initialiseExitButton();
     void initialiseStatsButton();
-    void initialiseLoopButton();
+    void initialiseCutModeButton();
     void initialiseAutoplayButton();
     void initialiseAutoCutInButton();
     void initialiseAutoCutOutButton();
     void initialiseCutButton();
-    void initialiseLoopButtons();
+    void initialiseCutModeButtons();
     void initialiseClearButtons();
 
     ControlPanel& owner;

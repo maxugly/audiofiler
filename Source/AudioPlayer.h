@@ -25,7 +25,7 @@
  * This class serves as the core audio engine for the application, handling all
  * aspects of audio playback. It is responsible for:
  * - Loading audio files from disk.
- * - Controlling playback (start, stop, pause, looping).
+ * - Controlling playback (start, stop, pause, cutModeActive).
  * - Managing the audio transport (position, length).
  * - Providing audio data to the JUCE audio callback system (`juce::AudioSource`).
  * - Generating and managing an audio thumbnail for visual representation of the waveform.
@@ -62,10 +62,10 @@ public:
     /**
      * @brief Sets the playback position, constrained by provided loop points.
      * @param newPosition The desired new position in seconds.
-     * @param loopIn The loop-in position in seconds.
-     * @param loopOut The loop-out position in seconds.
+     * @param cutIn The loop-in position in seconds.
+     * @param cutOut The loop-out position in seconds.
      */
-    void setPositionConstrained(double newPosition, double loopIn, double loopOut);
+    void setPositionConstrained(double newPosition, double cutIn, double cutOut);
 
     /** @} */
     //==============================================================================
@@ -110,16 +110,16 @@ public:
      */
 
     /**
-     * @brief Checks if looping is enabled for the current playback.
-     * @return True if playback will loop when it reaches the end of the current loop region, false otherwise.
+     * @brief Checks if cutModeActive is enabled for the current playback.
+     * @return True if playback will loop when it reaches the end of the current cut region, false otherwise.
      */
-    bool isLooping() const;
+    bool isCutModeActive() const;
 
     /**
-     * @brief Enables or disables looping for playback.
-     * @param shouldLoop True to enable looping, false to disable.
+     * @brief Enables or disables cutModeActive for playback.
+     * @param isCutModeActive True to enable cutModeActive, false to disable.
      */
-    void setLooping(bool shouldLoop);
+    void setCutModeActive(bool isCutModeActive);
 
     /** @} */
     //==============================================================================
@@ -221,7 +221,7 @@ public:
      * @brief Callback method triggered when an observed `juce::ChangeBroadcaster` changes state.
      *
      * This `AudioPlayer` listens to its `transportSource` to detect when it stops
-     * (e.g., reaching the end of the file) and can then handle looping or re-broadcasting
+     * (e.g., reaching the end of the file) and can then handle cutModeActive or re-broadcasting
      * the change.
      * @param source A pointer to the `juce::ChangeBroadcaster` that initiated the change.
      */
@@ -249,7 +249,7 @@ private:
 
     juce::File loadedFile;                                  ///< Stores the currently loaded audio file.
 
-    bool looping = false;                                   ///< Flag indicating if playback should loop.
+    bool cutModeActive = false;                                   ///< Flag indicating if playback should loop.
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPlayer) ///< Macro to prevent copying and detect memory leaks.
 

@@ -28,7 +28,6 @@ public:
 
 private:
     void updateGeneralButtonStates(bool enabled);
-    void updateCutModeControlStates(bool isCutModeActive, bool enabled);
 
     ControlPanel& owner;
 };

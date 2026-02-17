@@ -24,9 +24,9 @@ public:
 
     /**
      * @brief Handles the loop button toggle event.
-     * @param shouldLoop True if looping should be enabled.
+     * @param cutModeActive True if looping should be enabled.
      */
-    void handleLoopToggle(bool shouldLoop);
+    void handleCutModeToggle(bool cutModeActive);
 
     /**
      * @brief Handles the autoplay button toggle event.
@@ -38,7 +38,6 @@ public:
      * @brief Handles the cut mode button toggle event.
      * @param enableCutMode True to enable cut mode, false to disable.
      */
-    void handleCutModeToggle(bool enableCutMode);
 
 private:
     void enforceCutLoopBounds() const;

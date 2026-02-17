@@ -194,11 +194,11 @@ void WaveformRenderer::drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audio
         g.drawHorizontalLine((int)bottomThresholdY, lineStartX, lineEndX);
     };
 
-    drawThresholdVisualisation(controlPanel.getLoopInPosition(), silenceDetector.getCurrentInSilenceThreshold());
-    drawThresholdVisualisation(controlPanel.getLoopOutPosition(), silenceDetector.getCurrentOutSilenceThreshold());
+    drawThresholdVisualisation(controlPanel.getCutInPosition(), silenceDetector.getCurrentInSilenceThreshold());
+    drawThresholdVisualisation(controlPanel.getCutOutPosition(), silenceDetector.getCurrentOutSilenceThreshold());
 
-    const double actualIn = juce::jmin(controlPanel.getLoopInPosition(), controlPanel.getLoopOutPosition());
-    const double actualOut = juce::jmax(controlPanel.getLoopInPosition(), controlPanel.getLoopOutPosition());
+    const double actualIn = juce::jmin(controlPanel.getCutInPosition(), controlPanel.getCutOutPosition());
+    const double actualOut = juce::jmax(controlPanel.getCutInPosition(), controlPanel.getCutOutPosition());
     const float inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualIn / audioLength);
     const float outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (actualOut / audioLength);
     const float fadeLength = waveformBounds.getWidth() * Config::Layout::Waveform::loopRegionFadeProportion;
@@ -472,9 +472,9 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
 // Determine current time point for the indicator (the setting being adjusted)
     double indicatorTime = 0.0;
     if (activePoint == ControlPanel::ActiveZoomPoint::In)
-        indicatorTime = controlPanel.getLoopInPosition();
+        indicatorTime = controlPanel.getCutInPosition();
     else if (activePoint == ControlPanel::ActiveZoomPoint::Out)
-        indicatorTime = controlPanel.getLoopOutPosition();
+        indicatorTime = controlPanel.getCutOutPosition();
     else
         indicatorTime = audioPlayer.getTransportSource().getCurrentPosition();
 
@@ -535,12 +535,12 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
         g.fillRect(x1, (float)popupBounds.getY(), x2 - x1, (float)popupBounds.getHeight());
     };
 
-    const double loopIn = controlPanel.getLoopInPosition();
-    const double loopOut = controlPanel.getLoopOutPosition();
+    const double cutIn = controlPanel.getCutInPosition();
+    const double cutOut = controlPanel.getCutOutPosition();
 
     // Shadow regions outside the loop
-    drawShadow(startTime, loopIn, juce::Colours::black.withAlpha(0.5f));
-    drawShadow(loopOut, endTime, juce::Colours::black.withAlpha(0.5f));
+    drawShadow(startTime, cutIn, juce::Colours::black.withAlpha(0.5f));
+    drawShadow(cutOut, endTime, juce::Colours::black.withAlpha(0.5f));
 
     // Shadow regions outside the file (solid black)
     if (startTime < 0.0)
@@ -562,15 +562,15 @@ void WaveformRenderer::drawZoomPopup(juce::Graphics& g) const
     bool isDraggingOut = mouseHandler.getDraggedHandle() == MouseHandler::LoopMarkerHandle::Out;
 
     // Draw Loop Lines (Fine)
-    drawFineLine(loopIn, Config::Colors::loopLine, 1.0f);
-    drawFineLine(loopOut, Config::Colors::loopLine, 1.0f);
+    drawFineLine(cutIn, Config::Colors::loopLine, 1.0f);
+    drawFineLine(cutOut, Config::Colors::loopLine, 1.0f);
     
     // Draw Playback Cursor (Fine)
     drawFineLine(audioPlayer.getTransportSource().getCurrentPosition(), Config::Colors::playbackCursor, 1.0f);
 
     // Draw the "Tracking" line (the one we are centered on) with more prominence
     if (isDraggingIn || isDraggingOut)
-        drawFineLine(isDraggingIn ? loopIn : loopOut, Config::Colors::zoomPopupTrackingLine, 2.0f); // Blue tracking
+        drawFineLine(isDraggingIn ? cutIn : cutOut, Config::Colors::zoomPopupTrackingLine, 2.0f); // Blue tracking
     else
         drawFineLine(audioPlayer.getTransportSource().getCurrentPosition(), Config::Colors::zoomPopupPlaybackLine, 2.0f); // Green tracking
 

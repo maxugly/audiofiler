@@ -12,14 +12,14 @@
 
 LoopPresenter::LoopPresenter(ControlPanel &ownerPanel,
                              SilenceDetector &detector,
-                             juce::TextEditor &loopIn,
-                             juce::TextEditor &loopOut)
-    : owner(ownerPanel), silenceDetector(detector), loopInEditor(loopIn),
-      loopOutEditor(loopOut) {
-  loopInEditor.addListener(this);
-  loopOutEditor.addListener(this);
-  loopInEditor.addMouseListener(this, false);
-  loopOutEditor.addMouseListener(this, false);
+                             juce::TextEditor &cutIn,
+                             juce::TextEditor &cutOut)
+    : owner(ownerPanel), silenceDetector(detector), cutInEditor(cutIn),
+      cutOutEditor(cutOut) {
+  cutInEditor.addListener(this);
+  cutOutEditor.addListener(this);
+  cutInEditor.addMouseListener(this, false);
+  cutOutEditor.addMouseListener(this, false);
 }
 
 void LoopPresenter::initialiseEditors() {
@@ -38,83 +38,83 @@ void LoopPresenter::initialiseEditors() {
     editor.setSelectAllWhenFocused(true);
   };
 
-  owner.addAndMakeVisible(loopInEditor);
-  configure(loopInEditor);
+  owner.addAndMakeVisible(cutInEditor);
+  configure(cutInEditor);
 
-  owner.addAndMakeVisible(loopOutEditor);
-  configure(loopOutEditor);
+  owner.addAndMakeVisible(cutOutEditor);
+  configure(cutOutEditor);
 }
 
 LoopPresenter::~LoopPresenter() {
-  loopInEditor.removeListener(this);
-  loopOutEditor.removeListener(this);
-  loopInEditor.removeMouseListener(this);
-  loopOutEditor.removeMouseListener(this);
+  cutInEditor.removeListener(this);
+  cutOutEditor.removeListener(this);
+  cutInEditor.removeMouseListener(this);
+  cutOutEditor.removeMouseListener(this);
 }
 
-void LoopPresenter::setLoopInPosition(double positionSeconds) {
+void LoopPresenter::setCutInPosition(double positionSeconds) {
   const double totalLength = getAudioTotalLength();
   const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
 
   // Crossing Logic: If we manually move In past an Auto-Out, turn off Auto-Out
-  if (!silenceDetector.getIsAutoCutInActive() && newPos >= loopOutPosition &&
+  if (!silenceDetector.getIsAutoCutInActive() && newPos >= cutOutPosition &&
       silenceDetector.getIsAutoCutOutActive()) {
     silenceDetector.setIsAutoCutOutActive(false);
     owner.updateComponentStates();
   }
 
-  loopInPosition = newPos;
+  cutInPosition = newPos;
 
   // Push Logic: If In crosses Out and AC In is active
   if (silenceDetector.getIsAutoCutInActive() &&
-      loopInPosition >= loopOutPosition) {
+      cutInPosition >= cutOutPosition) {
     // Push Out to the end, then re-detect if AC Out is active
-    setLoopOutPosition(totalLength);
+    setCutOutPosition(totalLength);
     if (silenceDetector.getIsAutoCutOutActive())
       silenceDetector.detectOutSilence();
   }
 
-  // Constrain playback head if it's outside new loopIn
+  // Constrain playback head if it's outside new cutIn
   auto &audioPlayer = owner.getAudioPlayer();
   audioPlayer.setPositionConstrained(
-      audioPlayer.getTransportSource().getCurrentPosition(), loopInPosition,
-      loopOutPosition);
-  ensureLoopOrder();
+      audioPlayer.getTransportSource().getCurrentPosition(), cutInPosition,
+      cutOutPosition);
+  ensureCutOrder();
 }
 
-void LoopPresenter::setLoopOutPosition(double positionSeconds) {
+void LoopPresenter::setCutOutPosition(double positionSeconds) {
   const double totalLength = getAudioTotalLength();
   const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
 
   // Crossing Logic: If we manually move Out past an Auto-In, turn off Auto-In
-  if (!silenceDetector.getIsAutoCutOutActive() && newPos <= loopInPosition &&
+  if (!silenceDetector.getIsAutoCutOutActive() && newPos <= cutInPosition &&
       silenceDetector.getIsAutoCutInActive()) {
     silenceDetector.setIsAutoCutInActive(false);
     owner.updateComponentStates();
   }
 
-  loopOutPosition = newPos;
+  cutOutPosition = newPos;
 
   // Pull Logic: If Out crosses In and AC Out is active
   if (silenceDetector.getIsAutoCutOutActive() &&
-      loopOutPosition <= loopInPosition) {
+      cutOutPosition <= cutInPosition) {
     // Pull In to the start, then re-detect if AC In is active
-    setLoopInPosition(0.0);
+    setCutInPosition(0.0);
     if (silenceDetector.getIsAutoCutInActive())
       silenceDetector.detectInSilence();
   }
 
-  // Constrain playback head if it's outside new loopOut
+  // Constrain playback head if it's outside new cutOut
   auto &audioPlayer = owner.getAudioPlayer();
   audioPlayer.setPositionConstrained(
-      audioPlayer.getTransportSource().getCurrentPosition(), loopInPosition,
-      loopOutPosition);
-  ensureLoopOrder();
+      audioPlayer.getTransportSource().getCurrentPosition(), cutInPosition,
+      cutOutPosition);
+  ensureCutOrder();
 }
 
-void LoopPresenter::ensureLoopOrder() {
-  if (loopInPosition > loopOutPosition) {
-    std::swap(loopInPosition, loopOutPosition);
+void LoopPresenter::ensureCutOrder() {
+  if (cutInPosition > cutOutPosition) {
+    std::swap(cutInPosition, cutOutPosition);
 
     // Swap Auto-Cut states as well so the "Auto" property follows the detected
     // value
@@ -128,74 +128,74 @@ void LoopPresenter::ensureLoopOrder() {
   }
 }
 
-void LoopPresenter::updateLoopLabels() {
+void LoopPresenter::updateCutLabels() {
   // Guard against timer overwriting while editing OR focused
-  if (!isEditingIn && !loopInEditor.hasKeyboardFocus(true)) {
-    syncEditorToPosition(loopInEditor, loopInPosition);
+  if (!isEditingCutIn && !cutInEditor.hasKeyboardFocus(true)) {
+    syncEditorToPosition(cutInEditor, cutInPosition);
   }
 
-  if (!isEditingOut && !loopOutEditor.hasKeyboardFocus(true)) {
-    syncEditorToPosition(loopOutEditor, loopOutPosition);
+  if (!isEditingCutOut && !cutOutEditor.hasKeyboardFocus(true)) {
+    syncEditorToPosition(cutOutEditor, cutOutPosition);
   }
 }
 
-void LoopPresenter::setLoopStartFromSample(int sampleIndex) {
+void LoopPresenter::setCutStartFromSample(int sampleIndex) {
   AudioPlayer &audioPlayer = owner.getAudioPlayer();
   if (audioPlayer.getAudioFormatReader() != nullptr) {
     const double sampleRate = audioPlayer.getAudioFormatReader()->sampleRate;
-    setLoopInPosition((double)sampleIndex / sampleRate);
-    ensureLoopOrder();
-    updateLoopLabels();
+    setCutInPosition((double)sampleIndex / sampleRate);
+    ensureCutOrder();
+    updateCutLabels();
     owner.repaint();
   }
 }
 
-void LoopPresenter::setLoopEndFromSample(int sampleIndex) {
+void LoopPresenter::setCutEndFromSample(int sampleIndex) {
   AudioPlayer &audioPlayer = owner.getAudioPlayer();
   if (audioPlayer.getAudioFormatReader() != nullptr) {
     const double sampleRate = audioPlayer.getAudioFormatReader()->sampleRate;
-    setLoopOutPosition((double)sampleIndex / sampleRate);
-    ensureLoopOrder();
-    updateLoopLabels();
+    setCutOutPosition((double)sampleIndex / sampleRate);
+    ensureCutOrder();
+    updateCutLabels();
     owner.repaint();
   }
 }
 
 void LoopPresenter::textEditorTextChanged(juce::TextEditor &editor) {
-  if (&editor == &loopInEditor)
-    isEditingIn = true;
-  else if (&editor == &loopOutEditor)
-    isEditingOut = true;
+  if (&editor == &cutInEditor)
+    isEditingCutIn = true;
+  else if (&editor == &cutOutEditor)
+    isEditingCutOut = true;
 
   const double totalLength = getAudioTotalLength();
   TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }
 
 void LoopPresenter::textEditorReturnKeyPressed(juce::TextEditor &editor) {
-  if (&editor == &loopInEditor)
-    isEditingIn = false;
-  if (&editor == &loopOutEditor)
-    isEditingOut = false;
+  if (&editor == &cutInEditor)
+    isEditingCutIn = false;
+  if (&editor == &cutOutEditor)
+    isEditingCutOut = false;
 
   const double newPosition = TimeUtils::parseTime(editor.getText());
-  if (&editor == &loopInEditor) {
-    applyLoopInFromEditor(newPosition, editor);
-  } else if (&editor == &loopOutEditor) {
-    applyLoopOutFromEditor(newPosition, editor);
+  if (&editor == &cutInEditor) {
+    applyCutInFromEditor(newPosition, editor);
+  } else if (&editor == &cutOutEditor) {
+    applyCutOutFromEditor(newPosition, editor);
   }
   editor.giveAwayKeyboardFocus();
 }
 
 void LoopPresenter::textEditorEscapeKeyPressed(juce::TextEditor &editor) {
-  if (&editor == &loopInEditor)
-    isEditingIn = false;
-  if (&editor == &loopOutEditor)
-    isEditingOut = false;
+  if (&editor == &cutInEditor)
+    isEditingCutIn = false;
+  if (&editor == &cutOutEditor)
+    isEditingCutOut = false;
 
-  if (&editor == &loopInEditor) {
-    syncEditorToPosition(editor, loopInPosition);
-  } else if (&editor == &loopOutEditor) {
-    syncEditorToPosition(editor, loopOutPosition);
+  if (&editor == &cutInEditor) {
+    syncEditorToPosition(editor, cutInPosition);
+  } else if (&editor == &cutOutEditor) {
+    syncEditorToPosition(editor, cutOutPosition);
   }
   editor.setColour(juce::TextEditor::textColourId,
                    Config::Colors::playbackText);
@@ -203,16 +203,16 @@ void LoopPresenter::textEditorEscapeKeyPressed(juce::TextEditor &editor) {
 }
 
 void LoopPresenter::textEditorFocusLost(juce::TextEditor &editor) {
-  if (&editor == &loopInEditor)
-    isEditingIn = false;
-  if (&editor == &loopOutEditor)
-    isEditingOut = false;
+  if (&editor == &cutInEditor)
+    isEditingCutIn = false;
+  if (&editor == &cutOutEditor)
+    isEditingCutOut = false;
 
   const double newPosition = TimeUtils::parseTime(editor.getText());
-  if (&editor == &loopInEditor) {
-    applyLoopInFromEditor(newPosition, editor);
-  } else if (&editor == &loopOutEditor) {
-    applyLoopOutFromEditor(newPosition, editor);
+  if (&editor == &cutInEditor) {
+    applyCutInFromEditor(newPosition, editor);
+  } else if (&editor == &cutOutEditor) {
+    applyCutOutFromEditor(newPosition, editor);
   }
 
   // Clear zoom on focus lost
@@ -221,10 +221,10 @@ void LoopPresenter::textEditorFocusLost(juce::TextEditor &editor) {
 }
 
 void LoopPresenter::mouseDown(const juce::MouseEvent &event) {
-  if (event.eventComponent == &loopInEditor)
-    isEditingIn = true;
-  else if (event.eventComponent == &loopOutEditor)
-    isEditingOut = true;
+  if (event.eventComponent == &cutInEditor)
+    isEditingCutIn = true;
+  else if (event.eventComponent == &cutOutEditor)
+    isEditingCutOut = true;
 }
 
 
@@ -232,13 +232,13 @@ double LoopPresenter::getAudioTotalLength() const {
   return owner.getAudioPlayer().getThumbnail().getTotalLength();
 }
 
-bool LoopPresenter::applyLoopInFromEditor(double newPosition,
+bool LoopPresenter::applyCutInFromEditor(double newPosition,
                                           juce::TextEditor &editor) {
   const double totalLength = getAudioTotalLength();
   if (newPosition >= 0.0 && newPosition <= totalLength) {
 
-    setLoopInPosition(newPosition);
-    owner.updateLoopButtonColors();
+    setCutInPosition(newPosition);
+    owner.updateCutButtonColors();
     silenceDetector.setIsAutoCutInActive(false);
     owner.updateComponentStates();
 
@@ -248,29 +248,29 @@ bool LoopPresenter::applyLoopInFromEditor(double newPosition,
     editor.setColour(juce::TextEditor::textColourId,
                      Config::Colors::playbackText);
     owner.repaint();
-    updateLoopLabels();
+    updateCutLabels();
     return true;
   }
 
-  syncEditorToPosition(editor, loopInPosition);
+  syncEditorToPosition(editor, cutInPosition);
   editor.setColour(juce::TextEditor::textColourId,
                    Config::Colors::textEditorError);
   owner.repaint();
   return false;
 }
 
-bool LoopPresenter::applyLoopOutFromEditor(double newPosition,
+bool LoopPresenter::applyCutOutFromEditor(double newPosition,
                                            juce::TextEditor &editor) {
   const double totalLength = getAudioTotalLength();
   if (newPosition >= 0.0 && newPosition <= totalLength) {
     AudioPlayer &audioPlayer = owner.getAudioPlayer();
     auto &transport = audioPlayer.getTransportSource();
     if (owner.getShouldLoop() &&
-        transport.getCurrentPosition() >= loopOutPosition)
-      transport.setPosition(loopInPosition);
+        transport.getCurrentPosition() >= cutOutPosition)
+      transport.setPosition(cutInPosition);
 
-    setLoopOutPosition(newPosition);
-    owner.updateLoopButtonColors();
+    setCutOutPosition(newPosition);
+    owner.updateCutButtonColors();
     silenceDetector.setIsAutoCutOutActive(false);
     owner.updateComponentStates();
 
@@ -280,11 +280,11 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition,
     editor.setColour(juce::TextEditor::textColourId,
                      Config::Colors::playbackText);
     owner.repaint();
-    updateLoopLabels();
+    updateCutLabels();
     return true;
   }
 
-  syncEditorToPosition(editor, loopOutPosition);
+  syncEditorToPosition(editor, cutOutPosition);
   editor.setColour(juce::TextEditor::textColourId,
                    Config::Colors::textEditorError);
   owner.repaint();
@@ -295,8 +295,8 @@ void LoopPresenter::syncEditorToPosition(juce::TextEditor &editor,
                                          double positionSeconds) {
   // Multi-layered guard: Check flags AND OS-level focus
   if (editor.hasKeyboardFocus(true) ||
-      (&editor == &loopInEditor && isEditingIn) ||
-      (&editor == &loopOutEditor && isEditingOut)) {
+      (&editor == &cutInEditor && isEditingCutIn) ||
+      (&editor == &cutOutEditor && isEditingCutOut)) {
     return;
   }
 
@@ -308,9 +308,9 @@ void LoopPresenter::syncEditorToPosition(juce::TextEditor &editor,
 void LoopPresenter::mouseEnter(const juce::MouseEvent &event) {
   // Don't switch if 'z' key is already holding a zoom point
 
-  if (event.eventComponent == &loopInEditor)
+  if (event.eventComponent == &cutInEditor)
     owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
-  else if (event.eventComponent == &loopOutEditor)
+  else if (event.eventComponent == &cutOutEditor)
     owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
 }
 
@@ -331,10 +331,10 @@ void LoopPresenter::mouseUp(const juce::MouseEvent &event) {
   // Set flags to block timer. 
   // CRITICAL: Do NOT call grabKeyboardFocus here; let juce::TextEditor's internal logic 
   // handle the click/focus sequence to avoid selection reset bugs.
-  if (editor == &loopInEditor)
-    isEditingIn = true;
-  else if (editor == &loopOutEditor)
-    isEditingOut = true;
+  if (editor == &cutInEditor)
+    isEditingCutIn = true;
+  else if (editor == &cutOutEditor)
+    isEditingCutOut = true;
 
   int charIndex = editor->getTextIndexAt(event.getPosition());
   if (charIndex < 0)
@@ -369,8 +369,8 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
   if (editor != nullptr) {
     // NEW GUARD: If typing or focused, ignore the wheel
     if (editor->hasKeyboardFocus(true) ||
-        (editor == &loopInEditor && isEditingIn) ||
-        (editor == &loopOutEditor && isEditingOut))
+        (editor == &cutInEditor && isEditingCutIn) ||
+        (editor == &cutOutEditor && isEditingCutOut))
       return;
   }
 
@@ -402,26 +402,26 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
   const double direction = (wheel.deltaY > 0) ? 1.0 : -1.0;
   const double delta = direction * step;
 
-  if (editor == &loopInEditor) {
-    double newPos = juce::jlimit(0.0, totalLength, loopInPosition + delta);
-    if (newPos != loopInPosition) {
-      setLoopInPosition(newPos);
+  if (editor == &cutInEditor) {
+    double newPos = juce::jlimit(0.0, totalLength, cutInPosition + delta);
+    if (newPos != cutInPosition) {
+      setCutInPosition(newPos);
       silenceDetector.setIsAutoCutInActive(false);
       owner.updateComponentStates();
       owner.setNeedsJumpToLoopIn(true);
-      ensureLoopOrder();
-      updateLoopLabels();
+      ensureCutOrder();
+      updateCutLabels();
       owner.repaint();
     }
-  } else if (editor == &loopOutEditor) {
-    double newPos = juce::jlimit(0.0, totalLength, loopOutPosition + delta);
-    if (newPos != loopOutPosition) {
-      setLoopOutPosition(newPos);
+  } else if (editor == &cutOutEditor) {
+    double newPos = juce::jlimit(0.0, totalLength, cutOutPosition + delta);
+    if (newPos != cutOutPosition) {
+      setCutOutPosition(newPos);
       silenceDetector.setIsAutoCutOutActive(false);
       owner.updateComponentStates();
       owner.setNeedsJumpToLoopIn(true);
-      ensureLoopOrder();
-      updateLoopLabels();
+      ensureCutOrder();
+      updateCutLabels();
       owner.repaint();
     }
   }

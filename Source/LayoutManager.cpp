@@ -39,7 +39,7 @@ void LayoutManager::layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHei
     controlPanel.autoplayButton.setBounds(topRow.removeFromLeft(buttonWidth));
     topRow.removeFromLeft(margin);
 
-    controlPanel.loopButton.setBounds(topRow.removeFromLeft(buttonWidth));
+    controlPanel.cutModeButton.setBounds(topRow.removeFromLeft(buttonWidth));
     topRow.removeFromLeft(margin);
 
     controlPanel.cutButton.setBounds(topRow.removeFromLeft(buttonWidth));
@@ -60,11 +60,11 @@ void LayoutManager::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int r
     auto loopRow = bounds.removeFromTop(rowHeight).reduced(margin);
     
     // Group "In" controls
-    controlPanel.loopInButton.setBounds(loopRow.removeFromLeft(buttonWidth));
+    controlPanel.cutInSetButton.setBounds(loopRow.removeFromLeft(buttonWidth));
     loopRow.removeFromLeft(margin);
-    controlPanel.loopInEditor.setBounds(loopRow.removeFromLeft(loopTextWidth));
+    controlPanel.cutInEditor.setBounds(loopRow.removeFromLeft(loopTextWidth));
     loopRow.removeFromLeft(margin / 2);
-    controlPanel.clearLoopInButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
+    controlPanel.cutInClearButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
     loopRow.removeFromLeft(margin);
     controlPanel.silenceDetector->getInSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(thresholdEditorWidth));
     loopRow.removeFromLeft(margin / 2);
@@ -74,11 +74,11 @@ void LayoutManager::layoutLoopAndCutControls(juce::Rectangle<int>& bounds, int r
     loopRow.removeFromLeft(margin * 3);
     
     // Group "Out" controls
-    controlPanel.loopOutButton.setBounds(loopRow.removeFromLeft(buttonWidth));
+    controlPanel.cutOutSetButton.setBounds(loopRow.removeFromLeft(buttonWidth));
     loopRow.removeFromLeft(margin);
-    controlPanel.loopOutEditor.setBounds(loopRow.removeFromLeft(loopTextWidth));
+    controlPanel.cutOutEditor.setBounds(loopRow.removeFromLeft(loopTextWidth));
     loopRow.removeFromLeft(margin / 2);
-    controlPanel.clearLoopOutButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
+    controlPanel.cutOutClearButton.setBounds(loopRow.removeFromLeft(clearButtonWidth));
     loopRow.removeFromLeft(margin);
     controlPanel.silenceDetector->getOutSilenceThresholdEditor().setBounds(loopRow.removeFromLeft(thresholdEditorWidth));
     loopRow.removeFromLeft(margin / 2);

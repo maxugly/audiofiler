@@ -13,10 +13,10 @@ LoopResetPresenter::LoopResetPresenter(ControlPanel& ownerPanel)
 
 void LoopResetPresenter::clearLoopIn()
 {
-    owner.setLoopInPosition(0.0);
-    owner.ensureLoopOrder();
-    owner.updateLoopButtonColors();
-    owner.updateLoopLabels();
+    owner.setCutInPosition(0.0);
+    owner.ensureCutOrder();
+    owner.updateCutButtonColors();
+    owner.updateCutLabels();
     owner.silenceDetector->setIsAutoCutInActive(false);
     owner.updateComponentStates();
     owner.repaint();
@@ -24,10 +24,10 @@ void LoopResetPresenter::clearLoopIn()
 
 void LoopResetPresenter::clearLoopOut()
 {
-    owner.setLoopOutPosition(owner.getAudioPlayer().getThumbnail().getTotalLength());
-    owner.ensureLoopOrder();
-    owner.updateLoopButtonColors();
-    owner.updateLoopLabels();
+    owner.setCutOutPosition(owner.getAudioPlayer().getThumbnail().getTotalLength());
+    owner.ensureCutOrder();
+    owner.updateCutButtonColors();
+    owner.updateCutLabels();
     owner.silenceDetector->setIsAutoCutOutActive(false);
     owner.updateComponentStates();
     owner.repaint();

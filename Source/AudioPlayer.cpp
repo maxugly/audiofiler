@@ -116,24 +116,24 @@ bool AudioPlayer::isPlaying() const
 }
 
 /**
- * @brief Checks if looping is enabled.
- * @return True if the internal `looping` flag is set, false otherwise.
+ * @brief Checks if cutModeActive is enabled.
+ * @return True if the internal `cutModeActive` flag is set, false otherwise.
  */
-bool AudioPlayer::isLooping() const
+bool AudioPlayer::isCutModeActive() const
 {
-    return looping;
+    return cutModeActive;
 }
 
 /**
- * @brief Enables or disables looping.
- * @param shouldLoop True to enable looping, false to disable.
+ * @brief Enables or disables cutModeActive.
+ * @param isCutModeActive True to enable cutModeActive, false to disable.
  *
- * This method updates an internal flag. The actual looping logic is handled
+ * This method updates an internal flag. The actual cutModeActive logic is handled
  * within `getNextAudioBlock` when the stream finishes.
  */
-void AudioPlayer::setLooping(bool shouldLoop)
+void AudioPlayer::setCutModeActive(bool isCutModeActive)
 {
-    looping = shouldLoop;
+    cutModeActive = isCutModeActive;
 }
 
 /**
@@ -193,7 +193,7 @@ void AudioPlayer::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
  *
  * This is the main audio callback method where audio data is requested from
  * the `transportSource` and sent to the audio output device. It also contains
- * the logic to handle looping: if the stream finishes and `isLooping()` is true,
+ * the logic to handle cutModeActive: if the stream finishes and `isCutModeActive()` is true,
  * the playback position is reset to the beginning.
  */
 void AudioPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
@@ -256,13 +256,13 @@ juce::AudioFormatReader* AudioPlayer::getAudioFormatReader() const
 /**
  * @brief Sets the playback position, constrained by provided loop points.
  * @param newPosition The desired new position in seconds.
- * @param loopIn The loop-in position in seconds.
- * @param loopOut The loop-out position in seconds.
+ * @param cutIn The loop-in position in seconds.
+ * @param cutOut The loop-out position in seconds.
  *
  * This method ensures that the playback position is always within the
  * specified loop-in and loop-out bounds.
  */
-void AudioPlayer::setPositionConstrained(double newPosition, double loopIn, double loopOut)
+void AudioPlayer::setPositionConstrained(double newPosition, double cutIn, double cutOut)
 {
-    transportSource.setPosition(PlaybackHelpers::constrainPosition(newPosition, loopIn, loopOut));
+    transportSource.setPosition(PlaybackHelpers::constrainPosition(newPosition, cutIn, cutOut));
 }

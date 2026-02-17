@@ -6,7 +6,7 @@
 class PlaybackHelpers
 {
 public:
-    static double constrainPosition(double position, double loopIn, double loopOut);
+    static double constrainPosition(double position, double cutIn, double cutOut);
 };
 
 #endif

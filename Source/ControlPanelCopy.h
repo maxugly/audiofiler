@@ -19,13 +19,13 @@ inline const juce::String& qualityMediumText() { return Config::Labels::qualityM
 inline const juce::String& qualityLowText() { return Config::Labels::qualityLow; }
 inline const juce::String& exitButtonText() { return Config::Labels::exitButton; }
 inline const juce::String& statsButtonText() { return Config::Labels::statsButton; }
-inline const juce::String& loopButtonText() { return Config::Labels::loopButton; }
+inline const juce::String& cutModeButtonText() { return Config::Labels::cutModeButton; }
 inline const juce::String& autoplayButtonText() { return Config::Labels::autoplayButton; }
 inline const juce::String& autoCutInButtonText() { return Config::Labels::autoCutInButton; }
 inline const juce::String& autoCutOutButtonText() { return Config::Labels::autoCutOutButton; }
 inline const juce::String& cutButtonText() { return Config::Labels::cutButton; }
-inline const juce::String& loopInButtonText() { return Config::Labels::loopInButton; }
-inline const juce::String& loopOutButtonText() { return Config::Labels::loopOutButton; }
+inline const juce::String& cutInSetButtonText() { return Config::Labels::cutInSetButton; }
+inline const juce::String& cutOutSetButtonText() { return Config::Labels::cutOutSetButton; }
 inline const juce::String& clearButtonText() { return Config::Labels::clearButton; }
 
 inline const juce::String& silenceThresholdInTooltip()

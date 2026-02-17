@@ -112,7 +112,7 @@ public:
   }
 
   void jumpToLoopIn();
-  void setNeedsJumpToLoopIn(bool needs) { m_needsJumpToLoopIn = needs; }
+  void setNeedsJumpToLoopIn(bool needs) { m_needsJumpToCutIn = needs; }
   void performDelayedJumpIfNeeded();
   /** @} */
 
@@ -162,10 +162,10 @@ public:
   void updatePlayButtonText(bool isPlaying);
 
   /**
-   * @brief Updates the text in the `loopInEditor` and `loopOutEditor` based on
+   * @brief Updates the text in the `cutInEditor` and `cutOutEditor` based on
    * current loop positions.
    */
-  void updateLoopLabels();
+  void updateCutLabels();
 
   /**
    * @brief Updates the enabled/disabled and visible states of all interactive
@@ -177,13 +177,13 @@ public:
   void updateComponentStates();
 
   /**
-   * @brief Updates the colors of the `loopInButton` and `loopOutButton` based
+   * @brief Updates the colors of the `cutInSetButton` and `cutOutSetButton` based
    * on the current `PlacementMode`.
    *
    * This provides visual feedback to the user about which loop point, if any,
    * is currently being set interactively.
    */
-  void updateLoopButtonColors();
+  void updateCutButtonColors();
 
   /** @} */
   //==============================================================================
@@ -193,46 +193,46 @@ public:
    *  @{
    */
 
-  /** @brief Checks if looping is enabled.
+  /** @brief Checks if cutModeActive is enabled.
    *  @return True if the loop feature is active, false otherwise.
    */
-  bool getShouldLoop() const { return shouldLoop; }
+  bool getShouldLoop() const { return cutModeActive; }
 
   /**
    * @brief Sets whether audio playback should loop.
-   * @param shouldLoopParam True to enable looping, false to disable.
+   * @param cutModeActiveParam True to enable cutModeActive, false to disable.
    */
-  void setShouldLoop(bool shouldLoopParam);
+  void setCutModeActive(bool cutModeActiveParam);
 
   /** @brief Gets the current loop-in position.
    *  @return The loop-in position in seconds.
    */
-  double getLoopInPosition() const;
+  double getCutInPosition() const;
 
   /** @brief Gets the current loop-out position.
    *  @return The loop-out position in seconds.
    */
-  double getLoopOutPosition() const;
+  double getCutOutPosition() const;
 
   /**
    * @brief Sets the loop-in position.
    * @param pos The new loop-in position in seconds.
    */
-  void setLoopInPosition(double pos);
+  void setCutInPosition(double pos);
 
   /**
    * @brief Sets the loop-out position.
    * @param pos The new loop-out position in seconds.
    */
-  void setLoopOutPosition(double pos);
+  void setCutOutPosition(double pos);
 
   /**
-   * @brief Ensures that `loopInPosition` is logically before or at
-   * `loopOutPosition`.
+   * @brief Ensures that `cutInPosition` is logically before or at
+   * `cutOutPosition`.
    *
-   * If `loopInPosition` is greater than `loopOutPosition`, they are swapped.
+   * If `cutInPosition` is greater than `cutOutPosition`, they are swapped.
    */
-  void ensureLoopOrder();
+  void ensureCutOrder();
 
   /** @} */
   //==============================================================================
@@ -259,7 +259,7 @@ public:
   void triggerChannelViewButton();
 
   /** @brief Triggers the action associated with the main loop button, toggling
-   * global looping on/off. */
+   * global cutModeActive on/off. */
   void triggerLoopButton();
 
   /** @brief Programmatically "clicks" the clear loop in button to reset the
@@ -333,7 +333,7 @@ public:
   /** @brief Returns whether "Cut Mode" is currently active.
    *  @return True if Cut Mode is active, false otherwise.
    */
-  bool isCutModeActive() const { return m_isCutModeActive; }
+  bool isCutModeActive() const { return cutModeActive; }
 
   /** @} */
   //==============================================================================
@@ -422,19 +422,19 @@ public:
    * @brief Sets the loop-in position using a sample index.
    *
    * This method converts the sample index to a time in seconds and updates
-   * the `loopInPosition` and its corresponding UI editor.
+   * the `cutInPosition` and its corresponding UI editor.
    * @param sampleIndex The sample index to set as the loop-in point.
    */
-  void setLoopStart(int sampleIndex);
+  void setCutStart(int sampleIndex);
 
   /**
    * @brief Sets the loop-out position using a sample index.
    *
    * This method converts the sample index to a time in seconds and updates
-   * the `loopOutPosition` and its corresponding UI editor.
+   * the `cutOutPosition` and its corresponding UI editor.
    * @param sampleIndex The sample index to set as the loop-out point.
    */
-  void setLoopEnd(int sampleIndex);
+  void setCutEnd(int sampleIndex);
 
   /**
    * @brief Formats a time in seconds into a human-readable string
@@ -569,7 +569,7 @@ private:
   std::unique_ptr<ControlButtonsPresenter>
       buttonPresenter; ///< Handles button initialization.
   std::unique_ptr<LoopButtonPresenter>
-      loopButtonPresenter; ///< Handles loop button colouring.
+      cutModeButtonPresenter; ///< Handles loop button colouring.
   std::unique_ptr<LoopResetPresenter>
       loopResetPresenter; ///< Clears loop bounds.
   std::unique_ptr<FocusManager> focusManager;
@@ -577,17 +577,17 @@ private:
 
   // --- UI Components ---
   juce::TextButton openButton, playStopButton, modeButton, exitButton,
-      statsButton, loopButton, channelViewButton,
+      statsButton, cutModeButton, channelViewButton,
       qualityButton; ///< Standard TextButtons for various actions.
-  juce::TextButton clearLoopInButton,
-      clearLoopOutButton; ///< Small buttons to clear specific loop points.
-  juce::TextEditor loopInEditor,
-      loopOutEditor; ///< TextEditors for displaying statistics and editing loop
+  juce::TextButton cutInClearButton,
+      cutOutClearButton; ///< Small buttons to clear specific loop points.
+  juce::TextEditor cutInEditor,
+      cutOutEditor; ///< TextEditors for displaying statistics and editing loop
                      ///< points.
   juce::TextEditor elapsedTimeEditor, remainingTimeEditor,
-      loopLengthEditor; ///< Editors for playback and loop length.
-  LoopButton loopInButton,
-      loopOutButton; ///< Custom buttons for 'in' and 'out' loop point setting,
+      cutLengthEditor; ///< Editors for playback and loop length.
+  LoopButton cutInSetButton,
+      cutOutSetButton; ///< Custom buttons for 'in' and 'out' loop point setting,
                      ///< with distinct left/right click behavior.
   juce::TextButton autoplayButton, autoCutInButton, autoCutOutButton,
       cutButton; ///< Buttons for automation features.
@@ -606,24 +606,23 @@ private:
       AppEnums::ThumbnailQuality::Low; ///< The currently selected waveform
                                        ///< thumbnail quality.
 
-  bool shouldLoop = false; ///< Flag indicating if audio playback should loop.
+  bool cutModeActive = false; ///< Flag indicating if audio playback should loop.
 
-  juce::String loopInDisplayString,
-      loopOutDisplayString; ///< Formatted strings for loop in/out display.
-  int loopInTextX = 0, loopOutTextX = 0,
-      loopTextY = 0; ///< Coordinates for loop point text displays.
+  juce::String cutInDisplayString,
+      cutOutDisplayString; ///< Formatted strings for loop in/out display.
+  int cutInTextX = 0, cutOutTextX = 0,
+      cutTextY = 0; ///< Coordinates for loop point text displays.
 
   bool m_shouldAutoplay =
       false; ///< Flag indicating if autoplay is currently enabled.
   float glowAlpha =
       0.0f; ///< Alpha value for animation effects (e.g., pulsing lines).
-  bool m_isCutModeActive =
-      false; ///< Flag indicating if Cut Mode is currently active.
+
   ActiveZoomPoint m_activeZoomPoint =
       ActiveZoomPoint::None;              ///< Currently zoomed loop point.
   float m_zoomFactor = 10.0f;             ///< Dynamic zoom factor.
   bool m_isZKeyDown = false;              ///< State of the 'z' key.
-  bool m_needsJumpToLoopIn = false;       ///< Flag for delayed playback jump.
+  bool m_needsJumpToCutIn = false;       ///< Flag for delayed playback jump.
   juce::Rectangle<int> m_zoomPopupBounds; ///< Cached bounds of the zoom popup.
   std::pair<double, double>
       m_zoomTimeRange; ///< Cached time range of the zoom popup.
@@ -643,8 +642,8 @@ private:
   /** @brief Initializes the custom `ModernLookAndFeel` for this component. */
   void initialiseLookAndFeel();
   /** @brief Initializes the `juce::TextEditor` instances for loop point display
-   * (`loopInEditor`, `loopOutEditor`). */
-  void initialiseLoopEditors();
+   * (`cutInEditor`, `cutOutEditor`). */
+  void initialiseCutEditors();
   void invokeOwnerOpenDialog();
   /** @brief Performs final setup steps after all components are initialized. */
   void finaliseSetup();
@@ -661,6 +660,8 @@ private:
   /** @brief Updates the text displayed on the quality button based on the
    * `currentQuality` setting. */
   void updateQualityButtonText();
+  /** @brief Centralises visibility and enabled state logic for Cut Mode controls. */
+  void updateCutUI();
 
   /** @} */
   //==============================================================================

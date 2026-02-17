@@ -235,9 +235,9 @@ namespace Config {
         extern const juce::String qualityLow;
         extern const juce::String exitButton;
         extern const juce::String statsButton;
-        extern const juce::String loopButton;
-        extern const juce::String loopInButton;
-        extern const juce::String loopOutButton;
+        extern const juce::String cutModeButton;
+        extern const juce::String cutInSetButton;
+        extern const juce::String cutOutSetButton;
         extern const juce::String clearButton;
         extern const juce::String autoplayButton;
         extern const juce::String autoCutInButton;

@@ -25,11 +25,11 @@ public:
    * (repaint, colours, audio).
    * @param detector Reference to the SilenceDetector so manual edits can
    * disable auto-cut modes.
-   * @param loopIn Reference to the loop-in TextEditor UI.
-   * @param loopOut Reference to the loop-out TextEditor UI.
+   * @param cutIn Reference to the loop-in TextEditor UI.
+   * @param cutOut Reference to the loop-out TextEditor UI.
    */
   LoopPresenter(ControlPanel &ownerPanel, SilenceDetector &detector,
-                juce::TextEditor &loopIn, juce::TextEditor &loopOut);
+                juce::TextEditor &cutIn, juce::TextEditor &cutOut);
 
   /**
    * @brief Configures the loop editors (fonts, colors, etc.) and makes them
@@ -46,49 +46,49 @@ public:
    * @brief Retrieves the loop-in position in seconds.
    * @return Current loop-in value.
    */
-  double getLoopInPosition() const noexcept { return loopInPosition; }
+  double getCutInPosition() const noexcept { return cutInPosition; }
 
   /**
    * @brief Retrieves the loop-out position in seconds.
    * @return Current loop-out value.
    */
-  double getLoopOutPosition() const noexcept { return loopOutPosition; }
+  double getCutOutPosition() const noexcept { return cutOutPosition; }
 
   /**
    * @brief Directly sets the loop-in position without additional validation.
    * @param positionSeconds The desired loop-in position in seconds.
    */
-  void setLoopInPosition(double positionSeconds);
+  void setCutInPosition(double positionSeconds);
 
   /**
    * @brief Directly sets the loop-out position without additional validation.
    * @param positionSeconds The desired loop-out position in seconds.
    */
-  void setLoopOutPosition(double positionSeconds);
+  void setCutOutPosition(double positionSeconds);
 
   /**
    * @brief Swaps loop-in/out values if they are inverted.
    */
-  void ensureLoopOrder();
+  void ensureCutOrder();
 
   /**
    * @brief Refreshes the editor text to match the cached positions.
    */
-  void updateLoopLabels();
+  void updateCutLabels();
 
   /**
    * @brief Converts a sample index to seconds and stores it as the loop-in
    * position.
    * @param sampleIndex Sample index relative to the loaded file.
    */
-  void setLoopStartFromSample(int sampleIndex);
+  void setCutStartFromSample(int sampleIndex);
 
   /**
    * @brief Converts a sample index to seconds and stores it as the loop-out
    * position.
    * @param sampleIndex Sample index relative to the loaded file.
    */
-  void setLoopEndFromSample(int sampleIndex);
+  void setCutEndFromSample(int sampleIndex);
 
 private:
   // juce::TextEditor::Listener overrides
@@ -105,18 +105,18 @@ private:
   void mouseUp(const juce::MouseEvent &event) override;
 
   double getAudioTotalLength() const;
-  bool applyLoopInFromEditor(double newPosition, juce::TextEditor &editor);
-  bool applyLoopOutFromEditor(double newPosition, juce::TextEditor &editor);
+  bool applyCutInFromEditor(double newPosition, juce::TextEditor &editor);
+  bool applyCutOutFromEditor(double newPosition, juce::TextEditor &editor);
   void syncEditorToPosition(juce::TextEditor &editor, double positionSeconds);
 
   ControlPanel &owner;
   SilenceDetector &silenceDetector;
-  juce::TextEditor &loopInEditor;
-  juce::TextEditor &loopOutEditor;
-  double loopInPosition{-1.0};
-  double loopOutPosition{-1.0};
-  bool isEditingIn{false};
-  bool isEditingOut{false};
+  juce::TextEditor &cutInEditor;
+  juce::TextEditor &cutOutEditor;
+  double cutInPosition{-1.0};
+  double cutOutPosition{-1.0};
+  bool isEditingCutIn{false};
+  bool isEditingCutOut{false};
 
   void mouseDown(const juce::MouseEvent &event) override;
 };

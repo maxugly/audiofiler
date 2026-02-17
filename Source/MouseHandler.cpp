@@ -100,13 +100,13 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                 owner.setNeedsJumpToLoopIn(true);
                 if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
                 {
-                    owner.setLoopInPosition(zoomedTime);
+                    owner.setCutInPosition(zoomedTime);
                     owner.getSilenceDetector().setIsAutoCutInActive(false);
                     owner.updateComponentStates();
                 }
                 else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
                 {
-                    owner.setLoopOutPosition(zoomedTime);
+                    owner.setCutOutPosition(zoomedTime);
                     owner.getSilenceDetector().setIsAutoCutOutActive(false);
                     owner.updateComponentStates();
                 }
@@ -114,7 +114,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                 {
                     // NOT ARMED: Drag or Seek like the main waveform
                     double loopPointTime = (owner.getActiveZoomPoint() == ControlPanel::ActiveZoomPoint::In)
-                                           ? owner.getLoopInPosition() : owner.getLoopOutPosition();
+                                           ? owner.getCutInPosition() : owner.getCutOutPosition();
                     
                     // Check if click is near the indicator (within 20 pixels)
                     float indicatorX = (float)zoomBounds.getX();
@@ -138,8 +138,8 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                     else
                     {
                         // Seek playback in zoom popup - CONSTRAINED TO LOOP
-                        double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
-                        double effectiveLoopOut = owner.getLoopOutPosition();
+                        double effectiveLoopIn = juce::jmax(0.0, owner.getCutInPosition());
+                        double effectiveLoopOut = owner.getCutOutPosition();
                         double constrainedTime = juce::jlimit(effectiveLoopIn, effectiveLoopOut, zoomedTime);
 
                         owner.getAudioPlayer().getTransportSource().setPosition(constrainedTime);
@@ -195,7 +195,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
         // Initialize drag operations
         if (draggedHandle == LoopMarkerHandle::Full)
         {
-            dragStartLoopLength = std::abs(owner.getLoopOutPosition() - owner.getLoopInPosition());
+            dragStartLoopLength = std::abs(owner.getCutOutPosition() - owner.getCutInPosition());
             
             const auto waveformBounds = owner.getWaveformBounds();
             AudioPlayer& audioPlayer = owner.getAudioPlayer();
@@ -203,7 +203,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
             float proportion = (float)(event.x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
             double mouseTime = proportion * audioLength;
             
-            dragStartMouseOffset = mouseTime - owner.getLoopInPosition();
+            dragStartMouseOffset = mouseTime - owner.getCutInPosition();
             owner.repaint();
         }
         else if (draggedHandle == LoopMarkerHandle::None)
@@ -269,20 +269,20 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
                 double offset = (currentPlacementMode == AppEnums::PlacementMode::None) ? dragStartMouseOffset : 0.0;
                 
                 if (draggedHandle == LoopMarkerHandle::In)
-                    owner.setLoopInPosition(zoomedTime - offset);
+                    owner.setCutInPosition(zoomedTime - offset);
                 else if (draggedHandle == LoopMarkerHandle::Out)
-                    owner.setLoopOutPosition(zoomedTime - offset);
+                    owner.setCutOutPosition(zoomedTime - offset);
             }
             else if (isDragging)
             {
-                double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
-                double effectiveLoopOut = owner.getLoopOutPosition();
+                double effectiveLoopIn = juce::jmax(0.0, owner.getCutInPosition());
+                double effectiveLoopOut = owner.getCutOutPosition();
                 double constrainedTime = juce::jlimit(effectiveLoopIn, effectiveLoopOut, zoomedTime);
                 
                 owner.getAudioPlayer().getTransportSource().setPosition(constrainedTime);
             }
 
-            owner.updateLoopLabels();
+            owner.updateCutLabels();
             owner.repaint();
             return;
         }
@@ -300,11 +300,11 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
 
             if (draggedHandle == LoopMarkerHandle::In)
             {
-                owner.setLoopInPosition(mouseTime);
+                owner.setCutInPosition(mouseTime);
             }
             else if (draggedHandle == LoopMarkerHandle::Out)
             {
-                owner.setLoopOutPosition(mouseTime);
+                owner.setCutOutPosition(mouseTime);
             }
             else if (draggedHandle == LoopMarkerHandle::Full)
             {
@@ -323,15 +323,15 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
                     newIn = audioLength - dragStartLoopLength;
                 }
                 
-                owner.setLoopInPosition(newIn);
-                owner.setLoopOutPosition(newOut);
+                owner.setCutInPosition(newIn);
+                owner.setCutOutPosition(newOut);
 
                 // Ensure cursor stays in the moving loop
                 audioPlayer.setPositionConstrained(audioPlayer.getTransportSource().getCurrentPosition(),
                                                    newIn, newOut);
             }
 
-            owner.updateLoopLabels();
+            owner.updateCutLabels();
             owner.repaint();
         }
     }
@@ -358,7 +358,7 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
         if (currentPlacementMode != AppEnums::PlacementMode::None)
         {
             currentPlacementMode = AppEnums::PlacementMode::None;
-            owner.updateLoopButtonColors();
+            owner.updateCutButtonColors();
         }
         isDragging = false;
     isScrubbingState = false;
@@ -389,22 +389,22 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
 
                 if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
                 {
-                    owner.setLoopInPosition(time);
+                    owner.setCutInPosition(time);
                     owner.getSilenceDetector().setIsAutoCutInActive(false);
                     owner.updateComponentStates();
                 }
                 else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
                 {
-                    owner.setLoopOutPosition(time);
+                    owner.setCutOutPosition(time);
                     owner.getSilenceDetector().setIsAutoCutOutActive(false);
                     owner.updateComponentStates();
                 }
-                owner.ensureLoopOrder();
-                owner.updateLoopLabels();
+                owner.ensureCutOrder();
+                owner.updateCutLabels();
                 owner.jumpToLoopIn(); // Immediate jump on waveform placement
             }
             currentPlacementMode = AppEnums::PlacementMode::None; // Reset placement mode
-            owner.updateLoopButtonColors(); // Update button colours
+            owner.updateCutButtonColors(); // Update button colours
             owner.repaint();
         }
         // If it was a click (not a drag) then seek to position.
@@ -469,8 +469,8 @@ void MouseHandler::mouseWheelMove(const juce::MouseEvent& event, const juce::Mou
     double newPos = currentPos + (direction * step);
 
     // Constrain to loop
-    double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
-    double effectiveLoopOut = owner.getLoopOutPosition();
+    double effectiveLoopIn = juce::jmax(0.0, owner.getCutInPosition());
+    double effectiveLoopOut = owner.getCutOutPosition();
     if (effectiveLoopOut <= 0.0) effectiveLoopOut = audioLength;
 
     transport.setPosition(juce::jlimit(effectiveLoopIn, effectiveLoopOut, newPos));
@@ -497,18 +497,18 @@ void MouseHandler::handleRightClickForLoopPlacement(int x)
 
     if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
     {
-        owner.setLoopInPosition(time);
+        owner.setCutInPosition(time);
         owner.getSilenceDetector().setIsAutoCutInActive(false);
     }
     else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
     {
-        owner.setLoopOutPosition(time);
+        owner.setCutOutPosition(time);
         owner.getSilenceDetector().setIsAutoCutOutActive(false);
     }
     owner.updateComponentStates();
-    owner.ensureLoopOrder();
-    owner.updateLoopButtonColors();
-    owner.updateLoopLabels();
+    owner.ensureCutOrder();
+    owner.updateCutButtonColors();
+    owner.updateCutLabels();
     owner.repaint();
 }
 
@@ -530,19 +530,19 @@ void MouseHandler::seekToMousePosition(int x)
     float proportion = (float)(x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
     double time = proportion * audioLength;
 
-    double effectiveLoopIn = owner.getLoopInPosition();
+    double effectiveLoopIn = owner.getCutInPosition();
     if (effectiveLoopIn < 0.0)
     {
         effectiveLoopIn = 0.0;
     }
 
-    double effectiveLoopOut = owner.getLoopOutPosition();
-    if (effectiveLoopOut < 0.0 || effectiveLoopOut > audioLength) // If loopOut is not set or beyond file length, use file length
+    double effectiveLoopOut = owner.getCutOutPosition();
+    if (effectiveLoopOut < 0.0 || effectiveLoopOut > audioLength) // If cutOut is not set or beyond file length, use file length
     {
         effectiveLoopOut = audioLength;
     }
     
-    // Ensure loopIn is not greater than loopOut
+    // Ensure cutIn is not greater than cutOut
     if (effectiveLoopIn > effectiveLoopOut) {
         effectiveLoopIn = 0.0; // Fallback to 0 if invalid
         effectiveLoopOut = audioLength; // Fallback to full length if invalid
@@ -604,14 +604,14 @@ MouseHandler::LoopMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int
         return hitStrip.contains(pos);
     };
 
-    if (checkHandle(owner.getLoopInPosition())) return LoopMarkerHandle::In;
-    if (checkHandle(owner.getLoopOutPosition())) return LoopMarkerHandle::Out;
+    if (checkHandle(owner.getCutInPosition())) return LoopMarkerHandle::In;
+    if (checkHandle(owner.getCutOutPosition())) return LoopMarkerHandle::Out;
 
     // Check for Full loop handle (top/bottom box areas between markers)
-    const double loopIn = owner.getLoopInPosition();
-    const double loopOut = owner.getLoopOutPosition();
-    const double actualIn = juce::jmin(loopIn, loopOut);
-    const double actualOut = juce::jmax(loopIn, loopOut);
+    const double cutIn = owner.getCutInPosition();
+    const double cutOut = owner.getCutOutPosition();
+    const double actualIn = juce::jmin(cutIn, cutOut);
+    const double actualOut = juce::jmax(cutIn, cutOut);
     
     float inX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (float)(actualIn / audioLength);
     float outX = (float)waveformBounds.getX() + (float)waveformBounds.getWidth() * (float)(actualOut / audioLength);
