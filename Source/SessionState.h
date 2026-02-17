@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MainDomain.h"
-#include <JuceHeader.h>
+#include <juce_core/juce_core.h>
 
 class SessionState {
 public:
