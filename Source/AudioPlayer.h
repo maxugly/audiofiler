@@ -62,8 +62,8 @@ public:
     /**
      * @brief Sets the playback position, constrained by provided loop points.
      * @param newPosition The desired new position in seconds.
-     * @param cutIn The loop-in position in seconds.
-     * @param cutOut The loop-out position in seconds.
+     * @param cutIn The cut-in position in seconds.
+     * @param cutOut The cut-out position in seconds.
      */
     void setPositionConstrained(double newPosition, double cutIn, double cutOut);
 
