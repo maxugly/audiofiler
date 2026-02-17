@@ -36,10 +36,10 @@ AudioPlayer::AudioPlayer(SessionState& state)
     readAheadThread.startThread(); // Start background thread for file reading
     transportSource.addChangeListener(this); // Listen to transportSource for changes (e.g., playback finished)
 
-    lastAutoCutThresholdIn = sessionState.cutPrefs.autoCut.thresholdIn;
-    lastAutoCutThresholdOut = sessionState.cutPrefs.autoCut.thresholdOut;
-    lastAutoCutInActive = sessionState.cutPrefs.autoCut.inActive;
-    lastAutoCutOutActive = sessionState.cutPrefs.autoCut.outActive;
+    lastAutoCutThresholdIn = sessionState.getCutPrefs().autoCut.thresholdIn;
+    lastAutoCutThresholdOut = sessionState.getCutPrefs().autoCut.thresholdOut;
+    lastAutoCutInActive = sessionState.getCutPrefs().autoCut.inActive;
+    lastAutoCutOutActive = sessionState.getCutPrefs().autoCut.outActive;
 }
 
 /**
@@ -79,17 +79,17 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
             ? reader->lengthInSamples / reader->sampleRate
             : 0.0;
 
-        if (sessionState.cutPrefs.autoCut.inActive)
+        if (sessionState.getCutPrefs().autoCut.inActive)
         {
             const auto sampleIndex = SilenceAnalysisAlgorithms::findSilenceIn(
-                *reader, sessionState.cutPrefs.autoCut.thresholdIn);
+                *reader, sessionState.getCutPrefs().autoCut.thresholdIn);
             if (sampleIndex >= 0 && reader->sampleRate > 0.0)
                 cutIn = static_cast<double>(sampleIndex) / reader->sampleRate;
         }
-        if (sessionState.cutPrefs.autoCut.outActive)
+        if (sessionState.getCutPrefs().autoCut.outActive)
         {
             const auto sampleIndex = SilenceAnalysisAlgorithms::findSilenceOut(
-                *reader, sessionState.cutPrefs.autoCut.thresholdOut);
+                *reader, sessionState.getCutPrefs().autoCut.thresholdOut);
             if (sampleIndex >= 0 && reader->sampleRate > 0.0)
             {
                 const auto tailSamples = static_cast<juce::int64>(reader->sampleRate * 0.05);
@@ -98,10 +98,10 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
             }
         }
 
-        lastAutoCutThresholdIn = sessionState.cutPrefs.autoCut.thresholdIn;
-        lastAutoCutThresholdOut = sessionState.cutPrefs.autoCut.thresholdOut;
-        lastAutoCutInActive = sessionState.cutPrefs.autoCut.inActive;
-        lastAutoCutOutActive = sessionState.cutPrefs.autoCut.outActive;
+        lastAutoCutThresholdIn = sessionState.getCutPrefs().autoCut.thresholdIn;
+        lastAutoCutThresholdOut = sessionState.getCutPrefs().autoCut.thresholdOut;
+        lastAutoCutInActive = sessionState.getCutPrefs().autoCut.inActive;
+        lastAutoCutOutActive = sessionState.getCutPrefs().autoCut.outActive;
 
         loadedFile = file; // Store the loaded file for later reference
         {
@@ -282,7 +282,7 @@ void AudioPlayer::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void AudioPlayer::updateFromSession()
 {
-    const auto& autoCut = sessionState.cutPrefs.autoCut;
+    const auto& autoCut = sessionState.getCutPrefs().autoCut;
     const bool inThresholdChanged = autoCut.thresholdIn != lastAutoCutThresholdIn;
     const bool outThresholdChanged = autoCut.thresholdOut != lastAutoCutThresholdOut;
     const bool inActiveChanged = autoCut.inActive != lastAutoCutInActive;
@@ -374,7 +374,7 @@ void AudioPlayer::setPlayheadPosition(double seconds)
 
     double effectiveIn = 0.0;
     double effectiveOut = totalDuration;
-    if (sessionState.cutPrefs.active)
+    if (sessionState.getCutPrefs().active)
     {
         effectiveIn = juce::jmin(cutIn, cutOut);
         effectiveOut = juce::jmax(cutIn, cutOut);
