@@ -231,7 +231,7 @@ void ControlPanel::updateComponentStates() {
 }
 
 void ControlPanel::updateUIFromState() {
-  const auto &autoCut = sessionState.cutPrefs.autoCut;
+  const auto &autoCut = sessionState.getCutPrefs().autoCut;
   autoCutInButton.setToggleState(autoCut.inActive, juce::dontSendNotification);
   autoCutOutButton.setToggleState(autoCut.outActive, juce::dontSendNotification);
   silenceDetector->setIsAutoCutInActive(autoCut.inActive);
@@ -246,7 +246,7 @@ void ControlPanel::updateUIFromState() {
 }
 
 void ControlPanel::setAutoCutInActive(bool isActive) {
-  sessionState.cutPrefs.autoCut.inActive = isActive;
+  sessionState.setAutoCutInActive(isActive);
   autoCutInButton.setToggleState(isActive, juce::dontSendNotification);
   silenceDetector->setIsAutoCutInActive(isActive);
   updateComponentStates();
@@ -255,7 +255,7 @@ void ControlPanel::setAutoCutInActive(bool isActive) {
 }
 
 void ControlPanel::setAutoCutOutActive(bool isActive) {
-  sessionState.cutPrefs.autoCut.outActive = isActive;
+  sessionState.setAutoCutOutActive(isActive);
   autoCutOutButton.setToggleState(isActive, juce::dontSendNotification);
   silenceDetector->setIsAutoCutOutActive(isActive);
   updateComponentStates();

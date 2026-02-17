@@ -1,12 +1,35 @@
 #pragma once
 
 #include "MainDomain.h"
+#include <juce_core/juce_core.h>
 
 class SessionState {
 public:
+    class Listener {
+    public:
+        virtual ~Listener() = default;
+        virtual void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) = 0;
+    };
+
     SessionState();
 
-    MainDomain::CutPreferences cutPrefs;
+    void addListener(Listener* listener);
+    void removeListener(Listener* listener);
+
+    // Getters
+    const MainDomain::CutPreferences& getCutPrefs() const { return cutPrefs; }
+
+    // Setters
+    void setCutActive(bool active);
+    void setAutoCutInActive(bool active);
+    void setAutoCutOutActive(bool active);
+    void setThresholdIn(float threshold);
+    void setThresholdOut(float threshold);
+
     bool isLooping;
     bool autoplay;
+
+private:
+    MainDomain::CutPreferences cutPrefs;
+    juce::ListenerList<Listener> listeners;
 };

@@ -10,7 +10,7 @@ SilenceThresholdPresenter::SilenceThresholdPresenter(SilenceDetector& detectorIn
     : detector(detectorIn),
       owner(ownerPanel)
 {
-    auto& autoCut = owner.getSessionState().cutPrefs.autoCut;
+    const auto& autoCut = owner.getSessionState().getCutPrefs().autoCut;
     detector.currentInSilenceThreshold = autoCut.thresholdIn;
     detector.currentOutSilenceThreshold = autoCut.thresholdOut;
 
@@ -104,7 +104,7 @@ void SilenceThresholdPresenter::updateThresholdFromEditorIfValid(juce::TextEdito
         if (detector.currentInSilenceThreshold == normalized)
             return;
         detector.currentInSilenceThreshold = normalized;
-        owner.getSessionState().cutPrefs.autoCut.thresholdIn = normalized;
+        owner.getSessionState().setThresholdIn(normalized);
         if (detector.getIsAutoCutInActive())
             detector.detectInSilence();
     }
@@ -113,7 +113,7 @@ void SilenceThresholdPresenter::updateThresholdFromEditorIfValid(juce::TextEdito
         if (detector.currentOutSilenceThreshold == normalized)
             return;
         detector.currentOutSilenceThreshold = normalized;
-        owner.getSessionState().cutPrefs.autoCut.thresholdOut = normalized;
+        owner.getSessionState().setThresholdOut(normalized);
         if (detector.getIsAutoCutOutActive())
             detector.detectOutSilence();
     }
