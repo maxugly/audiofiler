@@ -10,6 +10,7 @@ class FocusManager;
 #include "ModernLookAndFeel.h" // Added include for ModernLookAndFeel
 #include "MouseHandler.h"      // Include the new MouseHandler class
 #include "SilenceDetector.h"   // Include the new SilenceDetector class
+#include "SilenceWorkerClient.h"
 #include <JuceHeader.h>
 #include <memory> // Required for std::unique_ptr
 #include <tuple>
@@ -47,7 +48,9 @@ class PlaybackOverlay;
  * `AudioPlayer`. It also integrates a `SilenceDetector` for automatic loop
  * point setting.
  */
-class ControlPanel final : public juce::Component, public juce::ChangeListener {
+class ControlPanel final : public juce::Component,
+                           public juce::ChangeListener,
+                           public SilenceWorkerClient {
 public:
   //==============================================================================
   /** @name Constructors and Destructors
@@ -298,6 +301,8 @@ public:
    */
   void setStatsDisplayText(const juce::String &text,
                            juce::Colour color = Config::Colors::statsText);
+  void logStatusMessage(const juce::String &message,
+                        bool isError = false) override;
 
   /**
    * @brief Pulls the latest audio statistics via the StatsPresenter and updates
@@ -349,6 +354,7 @@ public:
    * `MainComponent`.
    *  @return A reference to the `AudioPlayer` object.
    */
+  AudioPlayer &getAudioPlayer() override;
   AudioPlayer &getAudioPlayer() const;
 
   /**

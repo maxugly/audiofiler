@@ -308,6 +308,12 @@ void ControlPanel::setStatsDisplayText(const juce::String &text,
     statsPresenter->setDisplayText(text, color);
 }
 
+void ControlPanel::logStatusMessage(const juce::String &message, bool isError) {
+  const auto color =
+      isError ? Config::Colors::statsErrorText : Config::Colors::statsText;
+  setStatsDisplayText(message, color);
+}
+
 void ControlPanel::updateStatsFromAudio() {
   if (statsPresenter != nullptr)
     statsPresenter->updateStats();
@@ -340,6 +346,8 @@ void ControlPanel::updateLoopButtonColors() {
 AudioPlayer &ControlPanel::getAudioPlayer() const {
   return *owner.getAudioPlayer();
 }
+
+AudioPlayer &ControlPanel::getAudioPlayer() { return *owner.getAudioPlayer(); }
 
 juce::TextEditor &ControlPanel::getStatsDisplay() {
   jassert(statsPresenter != nullptr);

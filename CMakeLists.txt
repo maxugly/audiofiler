@@ -159,6 +159,7 @@ target_link_libraries(tests PRIVATE
     juce::juce_audio_basics
     juce::juce_audio_formats
     juce::juce_audio_devices
+    juce::juce_graphics
     juce::juce_events
 )
 
