@@ -24,6 +24,6 @@ void CutPresenter::cutPreferenceChanged(const MainDomain::CutPreferences&)
 
 void CutPresenter::refreshMarkersVisibility()
 {
-    const bool isActive = sessionState.getCutPrefs().active;
-    cutLayerView.setMarkersVisible(isActive);
+    const auto prefs = sessionState.getCutPrefs();
+    cutLayerView.setMarkersVisible(prefs.active);
 }

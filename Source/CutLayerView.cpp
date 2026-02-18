@@ -64,11 +64,8 @@ void CutLayerView::paint(juce::Graphics& g)
 
     const double cutIn = sessionState.getCutIn();
     const double cutOut = sessionState.getCutOut();
-    if (sessionState.getCurrentMetadata().isAnalyzed)
-    {
-        drawThresholdVisualisation(cutIn, silenceDetector.getCurrentInSilenceThreshold());
-        drawThresholdVisualisation(cutOut, silenceDetector.getCurrentOutSilenceThreshold());
-    }
+    drawThresholdVisualisation(cutIn, silenceDetector.getCurrentInSilenceThreshold());
+    drawThresholdVisualisation(cutOut, silenceDetector.getCurrentOutSilenceThreshold());
 
     const double actualIn = juce::jmin(cutIn, cutOut);
     const double actualOut = juce::jmax(cutIn, cutOut);

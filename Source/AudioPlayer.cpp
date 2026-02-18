@@ -83,16 +83,14 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
         if (sessionState.hasMetadataForFile(filePath))
         {
             const FileMetadata cached = sessionState.getMetadataForFile(filePath);
-            if (cached.isAnalyzed)
-                sessionState.setMetadataForFile(filePath, cached);
-            else
-                sessionState.setMetadataForFile(filePath, cached);
+            sessionState.setMetadataForFile(filePath, cached);
         }
         else
         {
             FileMetadata metadata;
             if (reader->sampleRate > 0.0)
                 metadata.cutOut = reader->lengthInSamples / reader->sampleRate;
+            // Initialize the Cut Workspace to the full track on first load.
             sessionState.setMetadataForFile(filePath, metadata);
         }
 
