@@ -300,41 +300,13 @@ void AudioPlayer::cutPreferenceChanged(const MainDomain::CutPreferences& prefs)
     const bool inActiveChanged = autoCut.inActive != lastAutoCutInActive;
     const bool outActiveChanged = autoCut.outActive != lastAutoCutOutActive;
 
-    if ((inThresholdChanged || outThresholdChanged || inActiveChanged || outActiveChanged))
-    {
-        std::lock_guard<std::mutex> lock(readerMutex);
-        if (readerSource == nullptr)
-        {
-            lastAutoCutThresholdIn = autoCut.thresholdIn;
-            lastAutoCutThresholdOut = autoCut.thresholdOut;
-            lastAutoCutInActive = autoCut.inActive;
-            lastAutoCutOutActive = autoCut.outActive;
-            return;
-        }
+    const bool shouldAnalyzeIn = (inThresholdChanged || inActiveChanged) && autoCut.inActive;
+    const bool shouldAnalyzeOut = (outThresholdChanged || outActiveChanged) && autoCut.outActive;
 
-        if (auto* reader = readerSource->getAudioFormatReader())
-        {
-            if ((inThresholdChanged || inActiveChanged) && autoCut.inActive)
-            {
-                const auto sampleIndex =
-                    SilenceAnalysisAlgorithms::findSilenceIn(*reader, autoCut.thresholdIn);
-                if (sampleIndex >= 0 && reader->sampleRate > 0.0)
-                    sessionState.setCutIn(static_cast<double>(sampleIndex) / reader->sampleRate);
-            }
-
-            if ((outThresholdChanged || outActiveChanged) && autoCut.outActive)
-            {
-                const auto sampleIndex =
-                    SilenceAnalysisAlgorithms::findSilenceOut(*reader, autoCut.thresholdOut);
-                if (sampleIndex >= 0 && reader->sampleRate > 0.0)
-                {
-                    const auto tailSamples = static_cast<juce::int64>(reader->sampleRate * 0.05);
-                    const auto endPoint = std::min(sampleIndex + tailSamples, reader->lengthInSamples);
-                    sessionState.setCutOut(static_cast<double>(endPoint) / reader->sampleRate);
-                }
-            }
-        }
-    }
+    if (shouldAnalyzeIn)
+        startSilenceAnalysis(autoCut.thresholdIn, true);
+    else if (shouldAnalyzeOut)
+        startSilenceAnalysis(autoCut.thresholdOut, false);
 
     lastAutoCutThresholdIn = autoCut.thresholdIn;
     lastAutoCutThresholdOut = autoCut.thresholdOut;
