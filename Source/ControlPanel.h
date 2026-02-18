@@ -142,6 +142,9 @@ public:
   /** @brief Renders the dynamic overlays (cursors, etc.). Called by
    * PlaybackOverlay. */
   void renderOverlays(juce::Graphics &g);
+  void drawMouseCursorOverlays(juce::Graphics &g);
+  void drawZoomPopup(juce::Graphics &g);
+  void drawCutModeOverlays(juce::Graphics &g);
   /** @brief Updates only the cursor/overlay part of the UI. */
   void updateCursorPosition();
 

@@ -2,10 +2,9 @@
 #define AUDIOFILER_WAVEFORMRENDERER_H
 
 #include <JuceHeader.h>
-#include "PlaybackCursorGlow.h"
+#include "AppEnums.h"
+#include "Config.h"
 
-class ControlPanel;
-class AudioPlayer;
 class SessionState;
 class WaveformManager;
 
@@ -22,9 +21,10 @@ public:
     void invalidateWaveformCache();
     /**
      * @brief Constructs a renderer bound to a ControlPanel.
-     * @param controlPanel Reference to the owning ControlPanel for accessing state and helpers.
+     * @param sessionState Reference to the session state for Cut points.
+     * @param waveformManager Reference to the waveform manager for thumbnail access.
      */
-    explicit WaveformRenderer(ControlPanel& controlPanel, SessionState& sessionState, WaveformManager& waveformManager);
+    explicit WaveformRenderer(SessionState& sessionState, WaveformManager& waveformManager);
     ~WaveformRenderer() override;
 
     /**
@@ -35,13 +35,10 @@ public:
      * @brief Paints the cached waveform (static).
      * @param g Graphics context supplied by ControlPanel::paint.
      */
-    void renderWaveform(juce::Graphics& g);
-
-    /**
-     * @brief Paints the dynamic overlays (cursors, zoom, etc.).
-     * @param g Graphics context supplied by PlaybackOverlay::paint.
-     */
-    void renderOverlays(juce::Graphics& g);
+    void renderWaveform(juce::Graphics& g,
+                        const juce::Rectangle<int>& bounds,
+                        AppEnums::ThumbnailQuality quality,
+                        AppEnums::ChannelViewMode channelMode);
 
 private:
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
@@ -52,14 +49,15 @@ private:
     mutable float lastScale = 1.0f;
     mutable int lastQuality = -1;
     mutable int lastChannelMode = -1;
-    void drawWaveform(juce::Graphics& g, AudioPlayer& audioPlayer) const;
-    void drawReducedQualityWaveform(juce::Graphics& g, AudioPlayer& audioPlayer, int channel, int pixelsPerSample) const;
-    void drawCutModeOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
-    void drawPlaybackCursor(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
-    void drawMouseCursorOverlays(juce::Graphics& g, AudioPlayer& audioPlayer, float audioLength) const;
-    void drawZoomPopup(juce::Graphics& g) const;
-
-    ControlPanel& controlPanel;
+    void drawWaveform(juce::Graphics& g,
+                      const juce::Rectangle<int>& bounds,
+                      AppEnums::ThumbnailQuality quality,
+                      AppEnums::ChannelViewMode channelMode) const;
+    void drawReducedQualityWaveform(juce::Graphics& g,
+                                    juce::AudioThumbnail& thumbnail,
+                                    const juce::Rectangle<int>& bounds,
+                                    int channel,
+                                    int pixelsPerSample) const;
     SessionState& sessionState;
     WaveformManager& waveformManager;
 };

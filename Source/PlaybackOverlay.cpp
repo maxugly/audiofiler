@@ -1,5 +1,7 @@
 #include "PlaybackOverlay.h"
 #include "ControlPanel.h"
+#include "PlaybackCursorGlow.h"
+#include "Config.h"
 
 PlaybackOverlay::PlaybackOverlay(ControlPanel& ownerPanel)
     : owner(ownerPanel)
@@ -17,4 +19,15 @@ void PlaybackOverlay::paint(juce::Graphics& g)
     g.setOrigin(-getX(), -getY());
 
     owner.renderOverlays(g);
+
+    auto& audioPlayer = owner.getAudioPlayer();
+    const double audioLength = audioPlayer.getWaveformManager().getThumbnail().getTotalLength();
+    if (audioLength <= 0.0)
+        return;
+
+    const auto waveformBounds = owner.getWaveformBounds();
+    const float drawPosition = (float)audioPlayer.getTransportSource().getCurrentPosition();
+    const float x = (drawPosition / (float)audioLength) * (float)waveformBounds.getWidth() + (float)waveformBounds.getX();
+
+    PlaybackCursorGlow::renderGlow(g, (int)x, waveformBounds.getY(), waveformBounds.getBottom(), Config::Colors::playbackText);
 }
