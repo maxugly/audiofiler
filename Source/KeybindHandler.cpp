@@ -76,7 +76,7 @@ bool KeybindHandler::handleUIToggleKeybinds(const juce::KeyPress& key)
     if (keyChar == 'v' || keyChar == 'V') { controlPanel.triggerModeButton(); return true; }
     if (keyChar == 'c' || keyChar == 'C') { controlPanel.triggerChannelViewButton(); return true; }
     if (keyChar == 'q' || keyChar == 'Q') { controlPanel.triggerQualityButton(); return true; }
-    if (keyChar == 'l' || keyChar == 'L') { controlPanel.triggerRepeatButton(); return true; }
+    if (keyChar == 'r' || keyChar == 'R') { controlPanel.triggerRepeatButton(); return true; }
     return false;
 }
 

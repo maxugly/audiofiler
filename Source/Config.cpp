@@ -60,7 +60,7 @@ namespace Config {
         const juce::String qualityLow = "[Q]ual L";
         const juce::String exitButton = "[E]xit";
         const juce::String statsButton = "[S]tats";
-        const juce::String repeatButton = "[L]oop";
+        const juce::String repeatButton = "[R]epeat";
         const juce::String cutInButton = "[I]n";
         const juce::String cutOutButton = "[O]ut";
         const juce::String clearButton = "X";
