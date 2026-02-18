@@ -66,7 +66,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
                                                   cutInEditor, cutOutEditor);
   loopPresenter->initialiseEditors();
 
-  initialiseLoopEditors(); // Contains remaining init logic (reset presenter,
+  initialiseCutEditors(); // Contains remaining init logic (reset presenter,
                            // thresholds)
 
   controlStatePresenter = std::make_unique<ControlStatePresenter>(*this);
@@ -106,10 +106,10 @@ void ControlPanel::initialiseLookAndFeel() {
 }
 
 /**
- * @brief Initializes the loop editors (`cutInEditor`, `cutOutEditor`) and
+ * @brief Initializes the cut editors (`cutInEditor`, `cutOutEditor`) and
  * threshold editors.
  */
-void ControlPanel::initialiseLoopEditors() {
+void ControlPanel::initialiseCutEditors() {
 
   cutResetPresenter = std::make_unique<CutResetPresenter>(*this);
 
@@ -128,7 +128,7 @@ void ControlPanel::invokeOwnerOpenDialog() { owner.openButtonClicked(); }
 void ControlPanel::finaliseSetup() {
   if (playbackTextPresenter != nullptr)
     playbackTextPresenter->initialiseEditors();
-  updateLoopLabels();
+  updateCutLabels();
   updateComponentStates();
 }
 
@@ -189,14 +189,14 @@ void ControlPanel::setZKeyDown(bool isDown) {
   repaint();
 }
 
-void ControlPanel::jumpToLoopIn() {
+void ControlPanel::jumpToCutIn() {
   getAudioPlayer().setPlayheadPosition(getCutInPosition());
-  m_needsJumpToLoopIn = false;
+  m_needsJumpToCutIn = false;
 }
 
 void ControlPanel::performDelayedJumpIfNeeded() {
-  if (m_needsJumpToLoopIn)
-    jumpToLoopIn();
+  if (m_needsJumpToCutIn)
+    jumpToCutIn();
 }
 
 double ControlPanel::getCutInPosition() const {
@@ -217,9 +217,9 @@ void ControlPanel::setCutOutPosition(double pos) {
     loopPresenter->setCutOutPosition(pos);
 }
 
-void ControlPanel::updateLoopLabels() {
+void ControlPanel::updateCutLabels() {
   if (loopPresenter != nullptr)
-    loopPresenter->updateLoopLabels();
+    loopPresenter->updateCutLabels();
 
   if (playbackTextPresenter != nullptr)
     playbackTextPresenter->updateEditors();
@@ -389,14 +389,14 @@ juce::TextEditor &ControlPanel::getStatsDisplay() {
   return statsPresenter->getDisplay();
 }
 
-void ControlPanel::setLoopStart(int sampleIndex) {
+void ControlPanel::setCutStart(int sampleIndex) {
   if (loopPresenter != nullptr)
-    loopPresenter->setLoopStartFromSample(sampleIndex);
+    loopPresenter->setCutStartFromSample(sampleIndex);
 }
 
-void ControlPanel::setLoopEnd(int sampleIndex) {
+void ControlPanel::setCutEnd(int sampleIndex) {
   if (loopPresenter != nullptr)
-    loopPresenter->setLoopEndFromSample(sampleIndex);
+    loopPresenter->setCutEndFromSample(sampleIndex);
 }
 
 juce::String ControlPanel::formatTime(double seconds) const {

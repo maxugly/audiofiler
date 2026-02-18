@@ -20,6 +20,6 @@ void CutButtonPresenter::updateColours()
         placementMode == AppEnums::PlacementMode::LoopOut
             ? Config::Colors::Button::loopPlacement
             : Config::Colors::Button::loopActive);
-    owner.updateLoopLabels();
+    owner.updateCutLabels();
 }
 

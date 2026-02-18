@@ -97,7 +97,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
             
             if (event.mods.isLeftButtonDown())
             {
-                owner.setNeedsJumpToLoopIn(true);
+                owner.setNeedsJumpToCutIn(true);
                 if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
                 {
                     owner.setCutInPosition(zoomedTime);
@@ -277,7 +277,7 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
                 owner.getAudioPlayer().setPlayheadPosition(constrainedTime);
             }
 
-            owner.updateLoopLabels();
+            owner.updateCutLabels();
             owner.repaint();
             return;
         }
@@ -326,7 +326,7 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
             }
 
             owner.ensureLoopOrder();
-            owner.updateLoopLabels();
+            owner.updateCutLabels();
             owner.repaint();
         }
     }
@@ -368,7 +368,7 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
     isDragging = false;
     isScrubbingState = false;
     draggedHandle = CutMarkerHandle::None;
-    owner.jumpToLoopIn(); // Jump after regular drag
+    owner.jumpToCutIn(); // Jump after regular drag
     
     const auto waveformBounds = owner.getWaveformBounds();
     if (waveformBounds.contains(event.getPosition()) && event.mods.isLeftButtonDown())
@@ -393,8 +393,8 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
                     owner.setAutoCutOutActive(false);
                 }
                 owner.ensureLoopOrder();
-                owner.updateLoopLabels();
-                owner.jumpToLoopIn(); // Immediate jump on waveform placement
+                owner.updateCutLabels();
+                owner.jumpToCutIn(); // Immediate jump on waveform placement
             }
             currentPlacementMode = AppEnums::PlacementMode::None; // Reset placement mode
             owner.updateLoopButtonColors(); // Update button colours
@@ -500,7 +500,7 @@ void MouseHandler::handleRightClickForLoopPlacement(int x)
     }
     owner.ensureLoopOrder();
     owner.updateLoopButtonColors();
-    owner.updateLoopLabels();
+    owner.updateCutLabels();
     owner.repaint();
 }
 

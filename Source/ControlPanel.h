@@ -110,8 +110,8 @@ public:
     m_zoomTimeRange = {start, end};
   }
 
-  void jumpToLoopIn();
-  void setNeedsJumpToLoopIn(bool needs) { m_needsJumpToLoopIn = needs; }
+  void jumpToCutIn();
+  void setNeedsJumpToCutIn(bool needs) { m_needsJumpToCutIn = needs; }
   void performDelayedJumpIfNeeded();
   /** @} */
 
@@ -164,7 +164,7 @@ public:
    * @brief Updates the text in the `cutInEditor` and `cutOutEditor` based on
    * current loop positions.
    */
-  void updateLoopLabels();
+  void updateCutLabels();
 
   /**
    * @brief Updates the enabled/disabled and visible states of all interactive
@@ -430,7 +430,7 @@ public:
    * the `cutInPosition` and its corresponding UI editor.
    * @param sampleIndex The sample index to set as the loop-in point.
    */
-  void setLoopStart(int sampleIndex);
+  void setCutStart(int sampleIndex);
 
   /**
    * @brief Sets the loop-out position using a sample index.
@@ -439,7 +439,7 @@ public:
    * the `cutOutPosition` and its corresponding UI editor.
    * @param sampleIndex The sample index to set as the loop-out point.
    */
-  void setLoopEnd(int sampleIndex);
+  void setCutEnd(int sampleIndex);
 
   /**
    * @brief Formats a time in seconds into a human-readable string
@@ -628,7 +628,7 @@ private:
       ActiveZoomPoint::None;              ///< Currently zoomed loop point.
   float m_zoomFactor = 10.0f;             ///< Dynamic zoom factor.
   bool m_isZKeyDown = false;              ///< State of the 'z' key.
-  bool m_needsJumpToLoopIn = false;       ///< Flag for delayed playback jump.
+  bool m_needsJumpToCutIn = false;       ///< Flag for delayed playback jump.
   juce::Rectangle<int> m_zoomPopupBounds; ///< Cached bounds of the zoom popup.
   std::pair<double, double>
       m_zoomTimeRange; ///< Cached time range of the zoom popup.
@@ -649,7 +649,7 @@ private:
   void initialiseLookAndFeel();
   /** @brief Initializes the `juce::TextEditor` instances for loop point display
    * (`cutInEditor`, `cutOutEditor`). */
-  void initialiseLoopEditors();
+  void initialiseCutEditors();
   void invokeOwnerOpenDialog();
   /** @brief Performs final setup steps after all components are initialized. */
   void finaliseSetup();

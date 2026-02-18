@@ -137,7 +137,7 @@ void LoopPresenter::ensureLoopOrder() {
   }
 }
 
-void LoopPresenter::updateLoopLabels() {
+void LoopPresenter::updateCutLabels() {
   const double currentIn = owner.getAudioPlayer().getCutIn();
   const double currentOut = owner.getAudioPlayer().getCutOut();
   // Guard against timer overwriting while editing OR focused
@@ -150,7 +150,7 @@ void LoopPresenter::updateLoopLabels() {
   }
 }
 
-void LoopPresenter::setLoopStartFromSample(int sampleIndex) {
+void LoopPresenter::setCutStartFromSample(int sampleIndex) {
   AudioPlayer &audioPlayer = owner.getAudioPlayer();
   double sampleRate = 0.0;
   juce::int64 length = 0;
@@ -159,11 +159,11 @@ void LoopPresenter::setLoopStartFromSample(int sampleIndex) {
 
   setCutInPosition((double)sampleIndex / sampleRate);
   ensureLoopOrder();
-  updateLoopLabels();
+  updateCutLabels();
   owner.repaint();
 }
 
-void LoopPresenter::setLoopEndFromSample(int sampleIndex) {
+void LoopPresenter::setCutEndFromSample(int sampleIndex) {
   AudioPlayer &audioPlayer = owner.getAudioPlayer();
   double sampleRate = 0.0;
   juce::int64 length = 0;
@@ -172,7 +172,7 @@ void LoopPresenter::setLoopEndFromSample(int sampleIndex) {
 
   setCutOutPosition((double)sampleIndex / sampleRate);
   ensureLoopOrder();
-  updateLoopLabels();
+  updateCutLabels();
   owner.repaint();
 }
 
@@ -257,12 +257,12 @@ bool LoopPresenter::applyLoopInFromEditor(double newPosition,
     owner.setAutoCutInActive(false);
 
     if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
-      owner.setNeedsJumpToLoopIn(true);
+      owner.setNeedsJumpToCutIn(true);
 
     editor.setColour(juce::TextEditor::textColourId,
                      Config::Colors::playbackText);
     owner.repaint();
-    updateLoopLabels();
+    updateCutLabels();
     return true;
   }
 
@@ -288,12 +288,12 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition,
     owner.setAutoCutOutActive(false);
 
     if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
-      owner.setNeedsJumpToLoopIn(true);
+      owner.setNeedsJumpToCutIn(true);
 
     editor.setColour(juce::TextEditor::textColourId,
                      Config::Colors::playbackText);
     owner.repaint();
-    updateLoopLabels();
+    updateCutLabels();
     return true;
   }
 
@@ -421,9 +421,9 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
     if (newPos != currentIn) {
       setCutInPosition(newPos);
       owner.setAutoCutInActive(false);
-      owner.setNeedsJumpToLoopIn(true);
+      owner.setNeedsJumpToCutIn(true);
       ensureLoopOrder();
-      updateLoopLabels();
+      updateCutLabels();
       owner.repaint();
     }
   } else if (editor == &cutOutEditor) {
@@ -432,9 +432,9 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
     if (newPos != currentOut) {
       setCutOutPosition(newPos);
       owner.setAutoCutOutActive(false);
-      owner.setNeedsJumpToLoopIn(true);
+      owner.setNeedsJumpToCutIn(true);
       ensureLoopOrder();
-      updateLoopLabels();
+      updateCutLabels();
       owner.repaint();
     }
   }

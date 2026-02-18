@@ -74,21 +74,21 @@ public:
   /**
    * @brief Refreshes the editor text to match the cached positions.
    */
-  void updateLoopLabels();
+  void updateCutLabels();
 
   /**
-   * @brief Converts a sample index to seconds and stores it as the loop-in
+   * @brief Converts a sample index to seconds and stores it as the cut-in
    * position.
    * @param sampleIndex Sample index relative to the loaded file.
    */
-  void setLoopStartFromSample(int sampleIndex);
+  void setCutStartFromSample(int sampleIndex);
 
   /**
-   * @brief Converts a sample index to seconds and stores it as the loop-out
+   * @brief Converts a sample index to seconds and stores it as the cut-out
    * position.
    * @param sampleIndex Sample index relative to the loaded file.
    */
-  void setLoopEndFromSample(int sampleIndex);
+  void setCutEndFromSample(int sampleIndex);
 
 private:
   // juce::TextEditor::Listener overrides

@@ -95,7 +95,7 @@ void MainComponent::timerCallback()
     controlPanel->setZKeyDown(isZDown);
 
     // Keep editors in sync
-    controlPanel->updateLoopLabels();
+    controlPanel->updateCutLabels();
 
     // Update only the cursor/overlays to avoid full repaint
     controlPanel->updateCursorPosition();
@@ -120,7 +120,7 @@ void MainComponent::openButtonClicked()
                 controlPanel->setTotalTimeStaticString(TimeUtils::formatTime(audioPlayer->getThumbnail().getTotalLength()));
                 controlPanel->setCutInPosition(0.0);
                 controlPanel->setCutOutPosition(audioPlayer->getThumbnail().getTotalLength());
-                controlPanel->updateLoopLabels();
+                controlPanel->updateCutLabels();
                 controlPanel->updateComponentStates();
                 controlPanel->updateStatsFromAudio();
 

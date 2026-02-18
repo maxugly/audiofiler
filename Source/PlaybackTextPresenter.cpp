@@ -198,7 +198,7 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
     }
 
     owner.ensureLoopOrder();
-    owner.updateLoopLabels();
+    owner.updateCutLabels();
   }
 
   updateEditors();
@@ -328,7 +328,7 @@ void PlaybackTextPresenter::mouseWheelMove(
   } else if (editor == &owner.loopLengthEditor) {
     owner.setCutOutPosition(owner.getCutInPosition() + newVal);
     owner.ensureLoopOrder();
-    owner.updateLoopLabels();
+    owner.updateCutLabels();
   }
 
   updateEditors();
