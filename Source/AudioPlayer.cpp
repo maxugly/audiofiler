@@ -78,6 +78,8 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
     if (reader != nullptr)
     {
         FileMetadata metadata;
+        if (reader->sampleRate > 0.0)
+            metadata.cutOut = reader->lengthInSamples / reader->sampleRate;
         sessionState.updateCurrentMetadata(metadata);
 
         lastAutoCutThresholdIn = sessionState.getCutPrefs().autoCut.thresholdIn;
