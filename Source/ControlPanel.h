@@ -518,6 +518,7 @@ public:
   void mouseWheelMove(const juce::MouseEvent &event,
                       const juce::MouseWheelDetails &wheel) override;
   void changeListenerCallback(juce::ChangeBroadcaster *source) override;
+  void timerCallback() override;
 
   /** @} */
   //==============================================================================

@@ -76,17 +76,15 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
 
     if (reader != nullptr)
     {
-        cutIn = 0.0;
-        cutOut = reader->sampleRate > 0.0
-            ? reader->lengthInSamples / reader->sampleRate
-            : 0.0;
+        sessionState.setCutIn(0.0);
+        sessionState.setCutOut(reader->sampleRate > 0.0 ? reader->lengthInSamples / reader->sampleRate : 0.0);
 
         if (sessionState.getCutPrefs().autoCut.inActive)
         {
             const auto sampleIndex = SilenceAnalysisAlgorithms::findSilenceIn(
                 *reader, sessionState.getCutPrefs().autoCut.thresholdIn);
             if (sampleIndex >= 0 && reader->sampleRate > 0.0)
-                cutIn = static_cast<double>(sampleIndex) / reader->sampleRate;
+                sessionState.setCutIn(static_cast<double>(sampleIndex) / reader->sampleRate);
         }
         if (sessionState.getCutPrefs().autoCut.outActive)
         {
@@ -96,7 +94,7 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
             {
                 const auto tailSamples = static_cast<juce::int64>(reader->sampleRate * 0.05);
                 const auto endPoint = std::min(sampleIndex + tailSamples, reader->lengthInSamples);
-                cutOut = static_cast<double>(endPoint) / reader->sampleRate;
+                sessionState.setCutOut(static_cast<double>(endPoint) / reader->sampleRate);
             }
         }
 
@@ -116,7 +114,7 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
             #endif
             readerSource.reset(newSource.release()); // Transfer ownership to unique_ptr
         }
-        setPlayheadPosition(cutIn);
+        setPlayheadPosition(sessionState.getCutPrefs().cutIn);
         return juce::Result::ok();
     }
 
@@ -160,24 +158,24 @@ bool AudioPlayer::isPlaying() const
 }
 
 /**
- * @brief Checks if looping is enabled.
- * @return True if the internal `looping` flag is set, false otherwise.
+ * @brief Checks if repeating is enabled.
+ * @return True if the internal `repeating` flag is set, false otherwise.
  */
-bool AudioPlayer::isLooping() const
+bool AudioPlayer::isRepeating() const
 {
-    return looping;
+    return repeating;
 }
 
 /**
- * @brief Enables or disables looping.
- * @param shouldLoop True to enable looping, false to disable.
+ * @brief Enables or disables repeating.
+ * @param shouldRepeat True to enable repeating, false to disable.
  *
- * This method updates an internal flag. The actual looping logic is handled
+ * This method updates an internal flag. The actual repeating logic is handled
  * within `getNextAudioBlock` when the stream finishes.
  */
-void AudioPlayer::setLooping(bool shouldLoop)
+void AudioPlayer::setRepeating(bool shouldRepeat)
 {
-    looping = shouldLoop;
+    repeating = shouldRepeat;
 }
 
 /**
@@ -237,7 +235,7 @@ void AudioPlayer::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
  *
  * This is the main audio callback method where audio data is requested from
  * the `transportSource` and sent to the audio output device. It also contains
- * the logic to handle looping: if the stream finishes and `isLooping()` is true,
+ * the logic to handle repeating: if the stream finishes and `isRepeating()` is true,
  * the playback position is reset to the beginning.
  */
 void AudioPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
@@ -251,15 +249,20 @@ void AudioPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
 
     // Request the next block of audio from the transport source
     transportSource.getNextAudioBlock(bufferToFill);
+
+    if (sessionState.getCutPrefs().active)
+    {
+        const double currentPos = transportSource.getCurrentPosition();
+        if (currentPos >= sessionState.getCutPrefs().cutOut)
+        {
+            if (repeating)
+                setPlayheadPosition(sessionState.getCutPrefs().cutIn);
+            else
+                transportSource.stop();
+        }
+    }
 }
 
-/**
- * @brief Releases any audio resources held by the source.
- *
- * This method is called by the audio device when playback stops or when the
- * audio device is shut down, ensuring that resources held by `transportSource`
- * are properly freed.
- */
 void AudioPlayer::releaseResources()
 {
     transportSource.releaseResources();
@@ -309,7 +312,7 @@ void AudioPlayer::cutPreferenceChanged(const MainDomain::CutPreferences& prefs)
                 const auto sampleIndex =
                     SilenceAnalysisAlgorithms::findSilenceIn(*reader, autoCut.thresholdIn);
                 if (sampleIndex >= 0 && reader->sampleRate > 0.0)
-                    cutIn = static_cast<double>(sampleIndex) / reader->sampleRate;
+                    sessionState.setCutIn(static_cast<double>(sampleIndex) / reader->sampleRate);
             }
 
             if ((outThresholdChanged || outActiveChanged) && autoCut.outActive)
@@ -320,7 +323,7 @@ void AudioPlayer::cutPreferenceChanged(const MainDomain::CutPreferences& prefs)
                 {
                     const auto tailSamples = static_cast<juce::int64>(reader->sampleRate * 0.05);
                     const auto endPoint = std::min(sampleIndex + tailSamples, reader->lengthInSamples);
-                    cutOut = static_cast<double>(endPoint) / reader->sampleRate;
+                    sessionState.setCutOut(static_cast<double>(endPoint) / reader->sampleRate);
                 }
             }
         }
@@ -378,8 +381,8 @@ void AudioPlayer::setPlayheadPosition(double seconds)
     double effectiveOut = totalDuration;
     if (sessionState.getCutPrefs().active)
     {
-        effectiveIn = juce::jmin(cutIn, cutOut);
-        effectiveOut = juce::jmax(cutIn, cutOut);
+        effectiveIn = juce::jmin(sessionState.getCutPrefs().cutIn, sessionState.getCutPrefs().cutOut);
+        effectiveOut = juce::jmax(sessionState.getCutPrefs().cutIn, sessionState.getCutPrefs().cutOut);
     }
 
     transportSource.setPosition(juce::jlimit(effectiveIn, effectiveOut, seconds));

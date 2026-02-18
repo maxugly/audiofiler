@@ -26,13 +26,12 @@ MainComponent::MainComponent()
     setSize(Config::Layout::Window::width, Config::Layout::Window::height);
     
     // 6. Start the UI Refresh Timer
-    startTimerHz(60);
+
 
     // 7. Focus Setup - We allow the component to receive focus, 
     // but we no longer "grab" it here to avoid Peer assertion crashes.
     setWantsKeyboardFocus(true);
     openGLContext.attachTo(*this);
-
 
 }
 
@@ -41,7 +40,7 @@ MainComponent::~MainComponent()
     openGLContext.detach();
     audioPlayer->removeChangeListener(this);
     shutdownAudio();
-    stopTimer();
+
 }
 
 //==============================================================================
@@ -85,22 +84,6 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
     }
 }
 
-void MainComponent::timerCallback()
-{
-    if (playbackLoopController != nullptr)
-        playbackLoopController->tick();
-    
-    // Handle momentary 'z' zoom key
-    const bool isZDown = juce::KeyPress::isKeyCurrentlyDown('z') || juce::KeyPress::isKeyCurrentlyDown('Z');
-    controlPanel->setZKeyDown(isZDown);
-
-    // Keep editors in sync
-    controlPanel->updateCutLabels();
-
-    // Update only the cursor/overlays to avoid full repaint
-    controlPanel->updateCursorPosition();
-}
-
 //==============================================================================
 void MainComponent::openButtonClicked()
 {
@@ -118,15 +101,10 @@ void MainComponent::openButtonClicked()
             if (result.wasOk())
             {
                 controlPanel->setTotalTimeStaticString(TimeUtils::formatTime(audioPlayer->getThumbnail().getTotalLength()));
-                controlPanel->setCutInPosition(0.0);
-                controlPanel->setCutOutPosition(audioPlayer->getThumbnail().getTotalLength());
+
                 controlPanel->updateCutLabels();
                 controlPanel->updateComponentStates();
                 controlPanel->updateStatsFromAudio();
-
-                auto& sd = controlPanel->getSilenceDetector();
-                if (sd.getIsAutoCutInActive()) sd.detectInSilence();
-                if (sd.getIsAutoCutOutActive()) sd.detectOutSilence();
 
                 if (controlPanel->shouldAutoplay())
                    audioPlayer->togglePlayStop();

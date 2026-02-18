@@ -75,6 +75,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   finaliseSetup();
 
   getAudioPlayer().getThumbnail().addChangeListener(this);
+  startTimerHz(60);
   setMouseCursor(juce::MouseCursor::CrosshairCursor);
 }
 
@@ -87,6 +88,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
  */
 ControlPanel::~ControlPanel() {
   getAudioPlayer().getThumbnail().removeChangeListener(this);
+  stopTimer();
   setLookAndFeel(nullptr);
 }
 
@@ -200,21 +202,23 @@ void ControlPanel::performDelayedJumpIfNeeded() {
 }
 
 double ControlPanel::getCutInPosition() const {
-  return getAudioPlayer().getCutIn();
+  return sessionState.getCutPrefs().cutIn;
 }
 
 double ControlPanel::getCutOutPosition() const {
-  return getAudioPlayer().getCutOut();
+  return sessionState.getCutPrefs().cutOut;
 }
 
 void ControlPanel::setCutInPosition(double pos) {
+  sessionState.setCutIn(pos);
   if (loopPresenter != nullptr)
-    loopPresenter->setCutInPosition(pos);
+    loopPresenter->updateCutLabels();
 }
 
 void ControlPanel::setCutOutPosition(double pos) {
+  sessionState.setCutOut(pos);
   if (loopPresenter != nullptr)
-    loopPresenter->setCutOutPosition(pos);
+    loopPresenter->updateCutLabels();
 }
 
 void ControlPanel::updateCutLabels() {
@@ -456,4 +460,13 @@ void ControlPanel::renderOverlays(juce::Graphics &g) {
 void ControlPanel::updateCursorPosition() {
   if (playbackOverlay != nullptr)
     playbackOverlay->repaint();
+}
+
+void ControlPanel::timerCallback() {
+  // Handle momentary 'z' zoom key
+  const bool isZDown = juce::KeyPress::isKeyCurrentlyDown('z') || juce::KeyPress::isKeyCurrentlyDown('Z');
+  setZKeyDown(isZDown);
+
+  updateCutLabels();
+  updateCursorPosition();
 }

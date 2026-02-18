@@ -29,8 +29,6 @@ public:
     void tick();
 
 private:
-    void enforceLoopBounds() const;
-
     AudioPlayer& audioPlayer;
     ControlPanel& controlPanel;
 };

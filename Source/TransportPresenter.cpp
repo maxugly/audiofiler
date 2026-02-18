@@ -11,7 +11,7 @@ TransportPresenter::TransportPresenter(ControlPanel& ownerPanel)
 void TransportPresenter::handleLoopToggle(bool shouldLoop)
 {
     owner.setShouldLoop(shouldLoop);
-    owner.getAudioPlayer().setLooping(owner.getShouldLoop());
+    owner.getAudioPlayer().setRepeating(owner.getShouldLoop());
 }
 
 void TransportPresenter::handleAutoplayToggle(bool shouldAutoplay)

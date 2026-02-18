@@ -11,32 +11,5 @@ PlaybackLoopController::PlaybackLoopController(AudioPlayer& audioPlayerIn, Contr
 
 void PlaybackLoopController::tick()
 {
-    enforceLoopBounds();
-}
-
-void PlaybackLoopController::enforceLoopBounds() const
-{
-    const double loopIn = controlPanel.getCutInPosition();
-    const double loopOut = controlPanel.getCutOutPosition();
-
-    if (loopOut <= loopIn)
-        return;
-
-    auto& transport = audioPlayer.getTransportSource();
-    const double currentPosition = transport.getCurrentPosition();
-
-    if (currentPosition < loopOut)
-        return;
-
-    if (controlPanel.isCutModeActive())
-    {
-        if (controlPanel.getShouldLoop())
-            audioPlayer.setPlayheadPosition(loopIn);
-        else
-            transport.stop();
-        return;
-    }
-
-    if (controlPanel.getShouldLoop())
-        audioPlayer.setPlayheadPosition(loopIn);
+    // Logic moved to AudioPlayer::getNextAudioBlock
 }

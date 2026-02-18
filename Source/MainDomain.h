@@ -4,6 +4,8 @@ namespace MainDomain {
 
 struct CutPreferences {
     bool active{false};
+    double cutIn{0.0};
+    double cutOut{0.0};
 
     struct Auto {
         bool inActive{false};

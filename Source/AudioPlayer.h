@@ -29,7 +29,7 @@
  * This class serves as the core audio engine for the application, handling all
  * aspects of audio playback. It is responsible for:
  * - Loading audio files from disk.
- * - Controlling playback (start, stop, pause, looping).
+ * - Controlling playback (start, stop, pause, repeating).
  * - Managing the audio transport (position, length).
  * - Providing audio data to the JUCE audio callback system (`juce::AudioSource`).
  * - Generating and managing an audio thumbnail for visual representation of the waveform.
@@ -111,21 +111,21 @@ public:
     //==============================================================================
 
     //==============================================================================
-    /** @name Looping Control
+    /** @name Repeating Control
      *  @{
      */
 
     /**
-     * @brief Checks if looping is enabled for the current playback.
+     * @brief Checks if repeating is enabled for the current playback.
      * @return True if playback will loop when it reaches the end of the current loop region, false otherwise.
      */
-    bool isLooping() const;
+    bool isRepeating() const;
 
     /**
-     * @brief Enables or disables looping for playback.
-     * @param shouldLoop True to enable looping, false to disable.
+     * @brief Enables or disables repeating for playback.
+     * @param shouldRepeat True to enable repeating, false to disable.
      */
-    void setLooping(bool shouldLoop);
+    void setRepeating(bool shouldRepeat);
 
     /** @} */
     //==============================================================================
@@ -227,17 +227,12 @@ public:
      * @brief Callback method triggered when an observed `juce::ChangeBroadcaster` changes state.
      *
      * This `AudioPlayer` listens to its `transportSource` to detect when it stops
-     * (e.g., reaching the end of the file) and can then handle looping or re-broadcasting
+     * (e.g., reaching the end of the file) and can then handle repeating or re-broadcasting
      * the change.
      * @param source A pointer to the `juce::ChangeBroadcaster` that initiated the change.
      */
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
-    void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) override;
-
-    double getCutIn() const { return cutIn; }
-    double getCutOut() const { return cutOut; }
-    void setCutIn(double positionSeconds) { cutIn = positionSeconds; }
-    void setCutOut(double positionSeconds) { cutOut = positionSeconds; }
+    void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) override;    double getCutIn() const { return sessionState.getCutPrefs().cutIn; }    double getCutOut() const { return sessionState.getCutPrefs().cutOut; }    void setCutIn(double positionSeconds) { sessionState.setCutIn(positionSeconds); }    void setCutOut(double positionSeconds) { sessionState.setCutOut(positionSeconds); }
     std::mutex& getReaderMutex() { return readerMutex; }
     bool getReaderInfo(double& sampleRateOut, juce::int64& lengthInSamplesOut) const;
 
@@ -263,15 +258,13 @@ private:
 
     juce::File loadedFile;                                  ///< Stores the currently loaded audio file.
     SessionState& sessionState;                             ///< Global preferences for the current session.
-    double cutIn{0.0};                                      ///< Track-specific cut-in position in seconds.
-    double cutOut{0.0};                                     ///< Track-specific cut-out position in seconds.
     float lastAutoCutThresholdIn{-1.0f};
     float lastAutoCutThresholdOut{-1.0f};
     bool lastAutoCutInActive{false};
     bool lastAutoCutOutActive{false};
     mutable std::mutex readerMutex;
 
-    bool looping = false;                                   ///< Flag indicating if playback should loop.
+    bool repeating = false;                                   ///< Flag indicating if playback should loop.
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPlayer) ///< Macro to prevent copying and detect memory leaks.
 

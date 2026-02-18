@@ -1,15 +1,10 @@
 #include "SessionState.h"
-#include "Config.h"
 
-SessionState::SessionState() {
-    cutPrefs.active = false;
-    cutPrefs.autoCut.inActive = false;
-    cutPrefs.autoCut.outActive = false;
-    cutPrefs.autoCut.thresholdIn = Config::Audio::silenceThresholdIn;
-    cutPrefs.autoCut.thresholdOut = Config::Audio::silenceThresholdOut;
-
-    isLooping = true;
-    autoplay = true;
+SessionState::SessionState()
+{
+    // Initialize cutIn and cutOut to 0.0
+    cutPrefs.cutIn = 0.0;
+    cutPrefs.cutOut = 0.0;
 }
 
 void SessionState::addListener(Listener* listener)
@@ -28,7 +23,6 @@ void SessionState::setCutActive(bool active)
     {
         cutPrefs.active = active;
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
-        DBG("Broadcasting cutPreferenceChanged: cutActive = " << (active ? "true" : "false"));
     }
 }
 
@@ -38,7 +32,6 @@ void SessionState::setAutoCutInActive(bool active)
     {
         cutPrefs.autoCut.inActive = active;
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
-        DBG("Broadcasting cutPreferenceChanged: autoCutInActive = " << (active ? "true" : "false"));
     }
 }
 
@@ -48,7 +41,6 @@ void SessionState::setAutoCutOutActive(bool active)
     {
         cutPrefs.autoCut.outActive = active;
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
-        DBG("Broadcasting cutPreferenceChanged: autoCutOutActive = " << (active ? "true" : "false"));
     }
 }
 
@@ -58,7 +50,6 @@ void SessionState::setThresholdIn(float threshold)
     {
         cutPrefs.autoCut.thresholdIn = threshold;
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
-        DBG("Broadcasting cutPreferenceChanged: thresholdIn = " << threshold);
     }
 }
 
@@ -68,6 +59,23 @@ void SessionState::setThresholdOut(float threshold)
     {
         cutPrefs.autoCut.thresholdOut = threshold;
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
-        DBG("Broadcasting cutPreferenceChanged: thresholdOut = " << threshold);
+    }
+}
+
+void SessionState::setCutIn(double value)
+{
+    if (cutPrefs.cutIn != value)
+    {
+        cutPrefs.cutIn = value;
+        listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
+    }
+}
+
+void SessionState::setCutOut(double value)
+{
+    if (cutPrefs.cutOut != value)
+    {
+        cutPrefs.cutOut = value;
+        listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
     }
 }

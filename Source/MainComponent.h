@@ -33,8 +33,7 @@ class PlaybackLoopController;
  * - Coordinating interactions between the `AudioPlayer` and `ControlPanel`.
  */
 class MainComponent  : public juce::AudioAppComponent,
-                       public juce::ChangeListener,
-                       public juce::Timer
+                    public juce::ChangeListener
 {
 public:
   using PlacementMode = AppEnums::PlacementMode; ///< Alias for `AppEnums::PlacementMode` for convenience.
@@ -145,7 +144,7 @@ public:
    * Used for routine UI updates, such as refreshing the playback time display,
    * updating component positions, and animating visual elements.
    */
-  void timerCallback() override;
+
 
   /** @} */
   //==============================================================================

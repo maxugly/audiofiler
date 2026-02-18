@@ -25,6 +25,8 @@ public:
     void setAutoCutOutActive(bool active);
     void setThresholdIn(float threshold);
     void setThresholdOut(float threshold);
+    void setCutIn(double value);
+    void setCutOut(double value);
 
     bool isLooping;
     bool autoplay;
