@@ -106,7 +106,7 @@ void ControlPanel::initialiseLookAndFeel() {
 }
 
 /**
- * @brief Initializes the loop editors (`cutInEditor`, `cutOutEditor`) and
+ * @brief Initializes the cut editors (`cutInEditor`, `cutOutEditor`) and
  * threshold editors.
  */
 void ControlPanel::initialiseCutEditors() {
