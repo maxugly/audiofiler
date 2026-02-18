@@ -1,0 +1,4 @@
+#pragma once
+#define JUCE_USE_CURL 0
+#define JUCE_WEB_BROWSER 0
+#define JUCE_USE_SPECIALISED_GRAPH_STRUCTURES 0

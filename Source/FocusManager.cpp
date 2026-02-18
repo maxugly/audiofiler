@@ -37,9 +37,9 @@ double FocusManager::getFocusedTime() const
     switch (target)
     {
         case FocusTarget::LoopIn:
-            return owner.getLoopInPosition();
+            return owner.getCutInPosition();
         case FocusTarget::LoopOut:
-            return owner.getLoopOutPosition();
+            return owner.getCutOutPosition();
         case FocusTarget::MouseManual:
         case FocusTarget::Playback:
         default:

@@ -33,6 +33,7 @@ AudioPlayer::AudioPlayer(SessionState& state)
       sessionState(state)
 {
     formatManager.registerBasicFormats(); // Register standard audio file formats
+    sessionState.addListener(this);
     readAheadThread.startThread(); // Start background thread for file reading
     transportSource.addChangeListener(this); // Listen to transportSource for changes (e.g., playback finished)
 
@@ -51,6 +52,7 @@ AudioPlayer::AudioPlayer(SessionState& state)
  */
 AudioPlayer::~AudioPlayer()
 {
+    sessionState.removeListener(this);
     transportSource.setSource(nullptr); // Ensure source is detached before thread stops
     readAheadThread.stopThread(1000); // Stop background thread
     transportSource.removeChangeListener(this);
@@ -280,9 +282,9 @@ void AudioPlayer::changeListenerCallback(juce::ChangeBroadcaster* source)
     }
 }
 
-void AudioPlayer::updateFromSession()
+void AudioPlayer::cutPreferenceChanged(const MainDomain::CutPreferences& prefs)
 {
-    const auto& autoCut = sessionState.getCutPrefs().autoCut;
+    const auto& autoCut = prefs.autoCut;
     const bool inThresholdChanged = autoCut.thresholdIn != lastAutoCutThresholdIn;
     const bool outThresholdChanged = autoCut.thresholdOut != lastAutoCutThresholdOut;
     const bool inActiveChanged = autoCut.inActive != lastAutoCutInActive;

@@ -52,15 +52,15 @@ LoopPresenter::~LoopPresenter() {
   cutOutEditor.removeMouseListener(this);
 }
 
-double LoopPresenter::getLoopInPosition() const noexcept {
+double LoopPresenter::getCutInPosition() const noexcept {
   return owner.getAudioPlayer().getCutIn();
 }
 
-double LoopPresenter::getLoopOutPosition() const noexcept {
+double LoopPresenter::getCutOutPosition() const noexcept {
   return owner.getAudioPlayer().getCutOut();
 }
 
-void LoopPresenter::setLoopInPosition(double positionSeconds) {
+void LoopPresenter::setCutInPosition(double positionSeconds) {
   const double totalLength = getAudioTotalLength();
   const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
   auto &audioPlayer = owner.getAudioPlayer();
@@ -78,7 +78,7 @@ void LoopPresenter::setLoopInPosition(double positionSeconds) {
   if (silenceDetector.getIsAutoCutInActive() &&
       newPos >= currentOut) {
     // Push Out to the end, then re-detect if AC Out is active
-    setLoopOutPosition(totalLength);
+    setCutOutPosition(totalLength);
     if (silenceDetector.getIsAutoCutOutActive())
       silenceDetector.detectOutSilence();
   }
@@ -89,7 +89,7 @@ void LoopPresenter::setLoopInPosition(double positionSeconds) {
   ensureLoopOrder();
 }
 
-void LoopPresenter::setLoopOutPosition(double positionSeconds) {
+void LoopPresenter::setCutOutPosition(double positionSeconds) {
   const double totalLength = getAudioTotalLength();
   const double newPos = juce::jlimit(0.0, totalLength, positionSeconds);
   auto &audioPlayer = owner.getAudioPlayer();
@@ -107,7 +107,7 @@ void LoopPresenter::setLoopOutPosition(double positionSeconds) {
   if (silenceDetector.getIsAutoCutOutActive() &&
       newPos <= currentIn) {
     // Pull In to the start, then re-detect if AC In is active
-    setLoopInPosition(0.0);
+    setCutInPosition(0.0);
     if (silenceDetector.getIsAutoCutInActive())
       silenceDetector.detectInSilence();
   }
@@ -157,7 +157,7 @@ void LoopPresenter::setLoopStartFromSample(int sampleIndex) {
   if (!audioPlayer.getReaderInfo(sampleRate, length) || sampleRate <= 0.0)
     return;
 
-  setLoopInPosition((double)sampleIndex / sampleRate);
+  setCutInPosition((double)sampleIndex / sampleRate);
   ensureLoopOrder();
   updateLoopLabels();
   owner.repaint();
@@ -170,7 +170,7 @@ void LoopPresenter::setLoopEndFromSample(int sampleIndex) {
   if (!audioPlayer.getReaderInfo(sampleRate, length) || sampleRate <= 0.0)
     return;
 
-  setLoopOutPosition((double)sampleIndex / sampleRate);
+  setCutOutPosition((double)sampleIndex / sampleRate);
   ensureLoopOrder();
   updateLoopLabels();
   owner.repaint();
@@ -252,7 +252,7 @@ bool LoopPresenter::applyLoopInFromEditor(double newPosition,
   const double totalLength = getAudioTotalLength();
   if (newPosition >= 0.0 && newPosition <= totalLength) {
 
-    setLoopInPosition(newPosition);
+    setCutInPosition(newPosition);
     owner.updateLoopButtonColors();
     owner.setAutoCutInActive(false);
 
@@ -283,7 +283,7 @@ bool LoopPresenter::applyLoopOutFromEditor(double newPosition,
         transport.getCurrentPosition() >= owner.getAudioPlayer().getCutOut())
       owner.getAudioPlayer().setPlayheadPosition(owner.getAudioPlayer().getCutIn());
 
-    setLoopOutPosition(newPosition);
+    setCutOutPosition(newPosition);
     owner.updateLoopButtonColors();
     owner.setAutoCutOutActive(false);
 
@@ -419,7 +419,7 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
     const double currentIn = owner.getAudioPlayer().getCutIn();
     double newPos = juce::jlimit(0.0, totalLength, currentIn + delta);
     if (newPos != currentIn) {
-      setLoopInPosition(newPos);
+      setCutInPosition(newPos);
       owner.setAutoCutInActive(false);
       owner.setNeedsJumpToLoopIn(true);
       ensureLoopOrder();
@@ -430,7 +430,7 @@ void LoopPresenter::mouseWheelMove(const juce::MouseEvent &event,
     const double currentOut = owner.getAudioPlayer().getCutOut();
     double newPos = juce::jlimit(0.0, totalLength, currentOut + delta);
     if (newPos != currentOut) {
-      setLoopOutPosition(newPos);
+      setCutOutPosition(newPos);
       owner.setAutoCutOutActive(false);
       owner.setNeedsJumpToLoopIn(true);
       ensureLoopOrder();

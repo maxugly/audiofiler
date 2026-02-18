@@ -87,7 +87,6 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void MainComponent::timerCallback()
 {
-    audioPlayer->updateFromSession();
     if (playbackLoopController != nullptr)
         playbackLoopController->tick();
     
@@ -119,8 +118,8 @@ void MainComponent::openButtonClicked()
             if (result.wasOk())
             {
                 controlPanel->setTotalTimeStaticString(TimeUtils::formatTime(audioPlayer->getThumbnail().getTotalLength()));
-                controlPanel->setLoopInPosition(0.0);
-                controlPanel->setLoopOutPosition(audioPlayer->getThumbnail().getTotalLength());
+                controlPanel->setCutInPosition(0.0);
+                controlPanel->setCutOutPosition(audioPlayer->getThumbnail().getTotalLength());
                 controlPanel->updateLoopLabels();
                 controlPanel->updateComponentStates();
                 controlPanel->updateStatsFromAudio();

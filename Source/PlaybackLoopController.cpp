@@ -16,8 +16,8 @@ void PlaybackLoopController::tick()
 
 void PlaybackLoopController::enforceLoopBounds() const
 {
-    const double loopIn = controlPanel.getLoopInPosition();
-    const double loopOut = controlPanel.getLoopOutPosition();
+    const double loopIn = controlPanel.getCutInPosition();
+    const double loopOut = controlPanel.getCutOutPosition();
 
     if (loopOut <= loopIn)
         return;

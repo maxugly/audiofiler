@@ -20,13 +20,13 @@ public:
     virtual AudioPlayer& getAudioPlayer() = 0;
 
     /** @brief Updates the loop start position. */
-    virtual void setLoopInPosition(double seconds) = 0;
+    virtual void setCutInPosition(double seconds) = 0;
 
     /** @brief Updates the loop end position. */
-    virtual void setLoopOutPosition(double seconds) = 0;
+    virtual void setCutOutPosition(double seconds) = 0;
 
     /** @brief Gets the current loop start position (needed for safe checks). */
-    virtual double getLoopInPosition() const = 0;
+    virtual double getCutInPosition() const = 0;
 
     /** @brief Checks if cut mode is active. */
     virtual bool isCutModeActive() const = 0;

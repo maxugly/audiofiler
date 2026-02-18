@@ -61,7 +61,7 @@ void PlaybackTextPresenter::updateEditors() {
 
   if (!isEditingLoopLength && !owner.loopLengthEditor.hasKeyboardFocus(true)) {
     double length =
-        std::abs(owner.getLoopOutPosition() - owner.getLoopInPosition());
+        std::abs(owner.getCutOutPosition() - owner.getCutInPosition());
     juce::String newText = owner.formatTime(length);
     if (owner.loopLengthEditor.getText() != newText)
       owner.loopLengthEditor.setText(newText, juce::dontSendNotification);
@@ -180,7 +180,7 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
     owner.getAudioPlayer().setPlayheadPosition(base - newTime);
   } else if (&editor == &owner.loopLengthEditor) {
     // Adjust loop out based on loop in
-    double currentIn = owner.getLoopInPosition();
+    double currentIn = owner.getCutInPosition();
 
     // Clamp length to total length to prevent issues if loopIn is 0
     newTime = juce::jlimit(0.0, totalLength, newTime);
@@ -191,10 +191,10 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
       // Shift In backwards so that [In, Out] has length newTime and Out <=
       // totalLength
       double newIn = totalLength - newTime;
-      owner.setLoopInPosition(newIn);
-      owner.setLoopOutPosition(totalLength);
+      owner.setCutInPosition(newIn);
+      owner.setCutOutPosition(totalLength);
     } else {
-      owner.setLoopOutPosition(proposedOut);
+      owner.setCutOutPosition(proposedOut);
     }
 
     owner.ensureLoopOrder();
@@ -326,7 +326,7 @@ void PlaybackTextPresenter::mouseWheelMove(
     double total = owner.getAudioPlayer().getThumbnail().getTotalLength();
     owner.getAudioPlayer().setPlayheadPosition(total - newVal);
   } else if (editor == &owner.loopLengthEditor) {
-    owner.setLoopOutPosition(owner.getLoopInPosition() + newVal);
+    owner.setCutOutPosition(owner.getCutInPosition() + newVal);
     owner.ensureLoopOrder();
     owner.updateLoopLabels();
   }

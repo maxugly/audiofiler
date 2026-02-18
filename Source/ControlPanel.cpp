@@ -190,7 +190,7 @@ void ControlPanel::setZKeyDown(bool isDown) {
 }
 
 void ControlPanel::jumpToLoopIn() {
-  getAudioPlayer().setPlayheadPosition(getLoopInPosition());
+  getAudioPlayer().setPlayheadPosition(getCutInPosition());
   m_needsJumpToLoopIn = false;
 }
 
@@ -199,22 +199,22 @@ void ControlPanel::performDelayedJumpIfNeeded() {
     jumpToLoopIn();
 }
 
-double ControlPanel::getLoopInPosition() const {
+double ControlPanel::getCutInPosition() const {
   return getAudioPlayer().getCutIn();
 }
 
-double ControlPanel::getLoopOutPosition() const {
+double ControlPanel::getCutOutPosition() const {
   return getAudioPlayer().getCutOut();
 }
 
-void ControlPanel::setLoopInPosition(double pos) {
+void ControlPanel::setCutInPosition(double pos) {
   if (loopPresenter != nullptr)
-    loopPresenter->setLoopInPosition(pos);
+    loopPresenter->setCutInPosition(pos);
 }
 
-void ControlPanel::setLoopOutPosition(double pos) {
+void ControlPanel::setCutOutPosition(double pos) {
   if (loopPresenter != nullptr)
-    loopPresenter->setLoopOutPosition(pos);
+    loopPresenter->setCutOutPosition(pos);
 }
 
 void ControlPanel::updateLoopLabels() {

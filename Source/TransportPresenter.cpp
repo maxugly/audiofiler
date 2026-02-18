@@ -41,8 +41,8 @@ void TransportPresenter::enforceCutLoopBounds() const
     auto& audioPlayer = owner.getAudioPlayer();
     auto& transport = audioPlayer.getTransportSource();
     const double currentPosition = transport.getCurrentPosition();
-    const double loopIn = owner.getLoopInPosition();
-    const double loopOut = owner.getLoopOutPosition();
+    const double loopIn = owner.getCutInPosition();
+    const double loopOut = owner.getCutOutPosition();
 
     if (loopOut > loopIn
         && (currentPosition < loopIn || currentPosition >= loopOut))

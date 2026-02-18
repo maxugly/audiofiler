@@ -209,24 +209,24 @@ public:
   /** @brief Gets the current loop-in position.
    *  @return The loop-in position in seconds.
    */
-  double getLoopInPosition() const;
+  double getCutInPosition() const;
 
   /** @brief Gets the current loop-out position.
    *  @return The loop-out position in seconds.
    */
-  double getLoopOutPosition() const;
+  double getCutOutPosition() const;
 
   /**
    * @brief Sets the loop-in position.
    * @param pos The new loop-in position in seconds.
    */
-  void setLoopInPosition(double pos);
+  void setCutInPosition(double pos);
 
   /**
    * @brief Sets the loop-out position.
    * @param pos The new loop-out position in seconds.
    */
-  void setLoopOutPosition(double pos);
+  void setCutOutPosition(double pos);
 
   /**
    * @brief Ensures that `cutInPosition` is logically before or at

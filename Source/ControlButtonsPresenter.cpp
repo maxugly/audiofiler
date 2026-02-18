@@ -178,7 +178,7 @@ void ControlButtonsPresenter::initialiseLoopButtons()
     owner.addAndMakeVisible(owner.loopInButton);
     owner.loopInButton.setButtonText(ControlPanelCopy::loopInButtonText());
     owner.loopInButton.onLeftClick = [this] {
-        owner.setLoopInPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
+        owner.setCutInPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
         owner.ensureLoopOrder();
         owner.updateLoopButtonColors();
         owner.setAutoCutInActive(false);
@@ -193,7 +193,7 @@ void ControlButtonsPresenter::initialiseLoopButtons()
     owner.addAndMakeVisible(owner.loopOutButton);
     owner.loopOutButton.setButtonText(ControlPanelCopy::loopOutButtonText());
     owner.loopOutButton.onLeftClick = [this] {
-        owner.setLoopOutPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
+        owner.setCutOutPosition(owner.getAudioPlayer().getTransportSource().getCurrentPosition());
         owner.ensureLoopOrder();
         owner.updateLoopButtonColors();
         owner.setAutoCutOutActive(false);

@@ -13,7 +13,7 @@ CutResetPresenter::CutResetPresenter(ControlPanel& ownerPanel)
 
 void CutResetPresenter::resetIn()
 {
-    owner.setLoopInPosition(0.0);
+    owner.setCutInPosition(0.0);
     owner.ensureLoopOrder();
     owner.updateLoopButtonColors();
     owner.updateLoopLabels();
@@ -23,7 +23,7 @@ void CutResetPresenter::resetIn()
 
 void CutResetPresenter::resetOut()
 {
-    owner.setLoopOutPosition(owner.getAudioPlayer().getThumbnail().getTotalLength());
+    owner.setCutOutPosition(owner.getAudioPlayer().getThumbnail().getTotalLength());
     owner.ensureLoopOrder();
     owner.updateLoopButtonColors();
     owner.updateLoopLabels();

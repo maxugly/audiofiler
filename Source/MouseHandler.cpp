@@ -100,19 +100,19 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                 owner.setNeedsJumpToLoopIn(true);
                 if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
                 {
-                    owner.setLoopInPosition(zoomedTime);
+                    owner.setCutInPosition(zoomedTime);
                     owner.setAutoCutInActive(false);
                 }
                 else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
                 {
-                    owner.setLoopOutPosition(zoomedTime);
+                    owner.setCutOutPosition(zoomedTime);
                     owner.setAutoCutOutActive(false);
                 }
                 else
                 {
                     // NOT ARMED: Drag or Seek like the main waveform
                     double loopPointTime = (owner.getActiveZoomPoint() == ControlPanel::ActiveZoomPoint::In)
-                                           ? owner.getLoopInPosition() : owner.getLoopOutPosition();
+                                           ? owner.getCutInPosition() : owner.getCutOutPosition();
                     
                     // Check if click is near the indicator (within 20 pixels)
                     float indicatorX = (float)zoomBounds.getX();
@@ -136,8 +136,8 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                     else
                     {
                         // Seek playback in zoom popup - CONSTRAINED TO LOOP
-                        double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
-                        double effectiveLoopOut = owner.getLoopOutPosition();
+                        double effectiveLoopIn = juce::jmax(0.0, owner.getCutInPosition());
+                        double effectiveLoopOut = owner.getCutOutPosition();
                         double constrainedTime = juce::jlimit(effectiveLoopIn, effectiveLoopOut, zoomedTime);
 
                         owner.getAudioPlayer().setPlayheadPosition(constrainedTime);
@@ -189,7 +189,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
         // Initialize drag operations
         if (draggedHandle == CutMarkerHandle::Full)
         {
-            dragStartCutLength = std::abs(owner.getLoopOutPosition() - owner.getLoopInPosition());
+            dragStartCutLength = std::abs(owner.getCutOutPosition() - owner.getCutInPosition());
             
             const auto waveformBounds = owner.getWaveformBounds();
             AudioPlayer& audioPlayer = owner.getAudioPlayer();
@@ -197,7 +197,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
             float proportion = (float)(event.x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
             double mouseTime = proportion * audioLength;
             
-            dragStartMouseOffset = mouseTime - owner.getLoopInPosition();
+            dragStartMouseOffset = mouseTime - owner.getCutInPosition();
             owner.repaint();
         }
         else if (draggedHandle == CutMarkerHandle::None)
@@ -270,8 +270,8 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
             }
             else if (isDragging)
             {
-                double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
-                double effectiveLoopOut = owner.getLoopOutPosition();
+                double effectiveLoopIn = juce::jmax(0.0, owner.getCutInPosition());
+                double effectiveLoopOut = owner.getCutOutPosition();
                 double constrainedTime = juce::jlimit(effectiveLoopIn, effectiveLoopOut, zoomedTime);
                 
                 owner.getAudioPlayer().setPlayheadPosition(constrainedTime);
@@ -384,12 +384,12 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
 
                 if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
                 {
-                    owner.setLoopInPosition(time);
+                    owner.setCutInPosition(time);
                     owner.setAutoCutInActive(false);
                 }
                 else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
                 {
-                    owner.setLoopOutPosition(time);
+                    owner.setCutOutPosition(time);
                     owner.setAutoCutOutActive(false);
                 }
                 owner.ensureLoopOrder();
@@ -462,8 +462,8 @@ void MouseHandler::mouseWheelMove(const juce::MouseEvent& event, const juce::Mou
     double newPos = currentPos + (direction * step);
 
     // Constrain to loop
-    double effectiveLoopIn = juce::jmax(0.0, owner.getLoopInPosition());
-    double effectiveLoopOut = owner.getLoopOutPosition();
+    double effectiveLoopIn = juce::jmax(0.0, owner.getCutInPosition());
+    double effectiveLoopOut = owner.getCutOutPosition();
     if (effectiveLoopOut <= 0.0) effectiveLoopOut = audioLength;
 
     audioPlayer.setPlayheadPosition(newPos);
@@ -490,12 +490,12 @@ void MouseHandler::handleRightClickForLoopPlacement(int x)
 
     if (currentPlacementMode == AppEnums::PlacementMode::LoopIn)
     {
-        owner.setLoopInPosition(time);
+        owner.setCutInPosition(time);
         owner.setAutoCutInActive(false);
     }
     else if (currentPlacementMode == AppEnums::PlacementMode::LoopOut)
     {
-        owner.setLoopOutPosition(time);
+        owner.setCutOutPosition(time);
         owner.setAutoCutOutActive(false);
     }
     owner.ensureLoopOrder();
@@ -570,12 +570,12 @@ MouseHandler::CutMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int>
         return hitStrip.contains(pos);
     };
 
-    if (checkHandle(owner.getLoopInPosition())) return CutMarkerHandle::In;
-    if (checkHandle(owner.getLoopOutPosition())) return CutMarkerHandle::Out;
+    if (checkHandle(owner.getCutInPosition())) return CutMarkerHandle::In;
+    if (checkHandle(owner.getCutOutPosition())) return CutMarkerHandle::Out;
 
     // Check for Full cut handle (top/bottom box areas between markers)
-    const double cutIn = owner.getLoopInPosition();
-    const double cutOut = owner.getLoopOutPosition();
+    const double cutIn = owner.getCutInPosition();
+    const double cutOut = owner.getCutOutPosition();
     const double actualIn = juce::jmin(cutIn, cutOut);
     const double actualOut = juce::jmax(cutIn, cutOut);
     

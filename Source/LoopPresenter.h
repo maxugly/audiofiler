@@ -46,25 +46,25 @@ public:
    * @brief Retrieves the loop-in position in seconds.
    * @return Current loop-in value.
    */
-  double getLoopInPosition() const noexcept;
+  double getCutInPosition() const noexcept;
 
   /**
    * @brief Retrieves the loop-out position in seconds.
    * @return Current loop-out value.
    */
-  double getLoopOutPosition() const noexcept;
+  double getCutOutPosition() const noexcept;
 
   /**
    * @brief Directly sets the loop-in position without additional validation.
    * @param positionSeconds The desired loop-in position in seconds.
    */
-  void setLoopInPosition(double positionSeconds);
+  void setCutInPosition(double positionSeconds);
 
   /**
    * @brief Directly sets the loop-out position without additional validation.
    * @param positionSeconds The desired loop-out position in seconds.
    */
-  void setLoopOutPosition(double positionSeconds);
+  void setCutOutPosition(double positionSeconds);
 
   /**
    * @brief Swaps loop-in/out values if they are inverted.

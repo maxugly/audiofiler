@@ -12,9 +12,10 @@
 #endif
 
 #include "Config.h"
+#include "SessionState.h"
+#include "MainDomain.h"
 #include <mutex>
 
-class SessionState;
 
 /**
  * @file AudioPlayer.h
@@ -39,7 +40,8 @@ class SessionState;
  */
 class AudioPlayer : public juce::AudioSource,
                     public juce::ChangeListener,
-                    public juce::ChangeBroadcaster
+                    public juce::ChangeBroadcaster,
+                    public SessionState::Listener
 {
 public:
     //==============================================================================
@@ -230,8 +232,8 @@ public:
      * @param source A pointer to the `juce::ChangeBroadcaster` that initiated the change.
      */
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+    void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) override;
 
-    void updateFromSession();
     double getCutIn() const { return cutIn; }
     double getCutOut() const { return cutOut; }
     void setCutIn(double positionSeconds) { cutIn = positionSeconds; }
