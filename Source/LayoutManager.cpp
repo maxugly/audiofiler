@@ -84,7 +84,7 @@ void LayoutManager::layoutCutControls(juce::Rectangle<int>& bounds, int rowHeigh
 
     auto cutRow = bounds.removeFromTop(rowHeight).reduced(margin);
     
-    // Group "In" controls
+    
     controlPanel.cutInButton.setBounds(cutRow.removeFromLeft(buttonWidth));
     cutRow.removeFromLeft(margin);
     controlPanel.cutInEditor.setBounds(cutRow.removeFromLeft(cutTextWidth));
@@ -95,10 +95,10 @@ void LayoutManager::layoutCutControls(juce::Rectangle<int>& bounds, int rowHeigh
     cutRow.removeFromLeft(margin / 2);
     controlPanel.autoCutInButton.setBounds(cutRow.removeFromLeft(buttonWidth));
     
-    // Space between groups
+    
     cutRow.removeFromLeft(margin * 3);
     
-    // Group "Out" controls
+    
     controlPanel.cutOutButton.setBounds(cutRow.removeFromLeft(buttonWidth));
     cutRow.removeFromLeft(margin);
     controlPanel.cutOutEditor.setBounds(cutRow.removeFromLeft(cutTextWidth));

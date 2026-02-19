@@ -81,10 +81,10 @@ private:
     bool wasPlayingBeforeScan = false;
     juce::String assignedFilePath;
 
-    // Token to ensure safe async callbacks
+    
     std::shared_ptr<bool> lifeToken;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SilenceAnalysisWorker)
 };
 
-#endif // AUDIOFILER_SILENCEANALYSISWORKER_H
+#endif 

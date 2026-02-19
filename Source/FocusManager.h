@@ -25,11 +25,11 @@ class ControlPanel;
  */
 enum class FocusTarget {
   None,
-  CutIn,     ///< The Cut In marker is being dragged or hovered.
-  CutOut,    ///< The Cut Out marker is being dragged or hovered.
-  Playback,   ///< Standard playback position.
-  MouseManual ///< User is manually scrubbing with the mouse (but not dragging a
-              ///< marker).
+  CutIn,     
+  CutOut,    
+  Playback,   
+  MouseManual 
+              
 };
 
 /**
@@ -66,4 +66,4 @@ private:
   ControlPanel &owner;
 };
 
-#endif // AUDIOFILER_FOCUSMANAGER_H
+#endif 

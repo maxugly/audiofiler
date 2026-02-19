@@ -66,4 +66,4 @@ public:
     static void logAudioTooLarge(SilenceWorkerClient& client);
 };
 
-#endif // AUDIOFILER_SILENCEDETECTIONLOGGER_H
+#endif 

@@ -12,8 +12,8 @@
 namespace
 {
     constexpr int kChunkSize = 65536;
-    // kMaxAnalyzableSamples limit removed to allow processing of large files via chunking
-    constexpr int kMaxChannels = 128; // Reasonable limit for audio channels
+    
+    constexpr int kMaxChannels = 128; 
 }
 
 juce::int64 SilenceAnalysisAlgorithms::findSilenceIn(juce::AudioFormatReader& reader, float threshold,
@@ -21,11 +21,11 @@ juce::int64 SilenceAnalysisAlgorithms::findSilenceIn(juce::AudioFormatReader& re
 {
     const juce::int64 lengthInSamples = reader.lengthInSamples;
 
-    // Security Fix: Validate channel count to prevent invalid buffer allocation
+    
     if (reader.numChannels <= 0 || reader.numChannels > kMaxChannels)
         return -1;
 
-    // Security Fix: Process in chunks to avoid large memory allocation
+    
     /**
      * @brief Undocumented method.
      * @param reader.numChannels [in] Description for reader.numChannels.
@@ -64,11 +64,11 @@ juce::int64 SilenceAnalysisAlgorithms::findSilenceOut(juce::AudioFormatReader& r
 {
     const juce::int64 lengthInSamples = reader.lengthInSamples;
 
-    // Security Fix: Validate channel count
+    
     if (reader.numChannels <= 0 || reader.numChannels > kMaxChannels)
         return -1;
 
-    // Security Fix: Process in chunks backwards
+    
     /**
      * @brief Undocumented method.
      * @param reader.numChannels [in] Description for reader.numChannels.

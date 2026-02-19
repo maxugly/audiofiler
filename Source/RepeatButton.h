@@ -21,8 +21,8 @@
  */
 class RepeatButton final : public juce::TextButton {
 public:
-    std::function<void()> onLeftClick;  ///< Function to call when the left mouse button is released over the button.
-    std::function<void()> onRightClick; ///< Function to call when the right mouse button is released over the button.
+    std::function<void()> onLeftClick;  
+    std::function<void()> onRightClick; 
 
     /**
      * @brief Constructs a RepeatButton.
@@ -40,4 +40,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RepeatButton)
 };
 
-#endif // AUDIOFILER_REPEATBUTTON_H
+#endif 

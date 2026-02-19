@@ -647,11 +647,11 @@ void ControlPanel::updateCursorPosition() {
 
       if (currentX != lastCursorX)
       {
-          // Repaint old area
+          
           if (lastCursorX >= 0)
               playbackCursorView->repaint(lastCursorX - 1, 0, 3, playbackCursorView->getHeight());
           
-          // Repaint new area
+          
           playbackCursorView->repaint(currentX - 1, 0, 3, playbackCursorView->getHeight());
           
           lastCursorX = currentX;
@@ -661,8 +661,8 @@ void ControlPanel::updateCursorPosition() {
       const auto activePoint = getActiveZoomPoint();
       const bool isZooming = zDown || activePoint != ControlPanel::ActiveZoomPoint::None;
       
-      // If zooming, we might want to hide the cursor if it intersects the popup area
-      // popupBounds is in ControlPanel coords, PlaybackCursorView is at waveformBounds
+      
+      
       if (isZooming && m_zoomPopupBounds.translated(-layoutCache.waveformBounds.getX(), -layoutCache.waveformBounds.getY()).contains(currentX, 10))
           playbackCursorView->setVisible(false);
       else

@@ -77,4 +77,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WaveformView)
 };
 
-#endif // AUDIOFILER_WAVEFORMVIEW_H
+#endif 

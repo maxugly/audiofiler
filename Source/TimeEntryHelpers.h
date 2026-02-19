@@ -41,4 +41,4 @@ namespace TimeEntryHelpers
     double calculateStepSize(int charIndex, const juce::ModifierKeys& mods, double sampleRate = 0.0);
 }
 
-#endif // AUDIOFILER_TIMEENTRYHELPERS_H
+#endif 

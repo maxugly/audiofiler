@@ -60,7 +60,7 @@ public:
         g.setColour(Config::Colors::statsBackground);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), Config::Layout::Stats::cornerRadius);
 
-        // Draw a subtle resize handle at the bottom
+        
         auto handleArea = getLocalBounds().removeFromBottom(Config::Layout::Stats::handleAreaHeight);
         g.setColour(juce::Colours::white.withAlpha(Config::Layout::Stats::handleAlpha));
         
@@ -180,4 +180,4 @@ private:
     int currentHeight { Config::Layout::Stats::initialHeight };
 };
 
-#endif // AUDIOFILER_STATSPRESENTER_H
+#endif 

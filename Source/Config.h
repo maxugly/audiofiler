@@ -182,6 +182,6 @@ namespace Config {
         extern const juce::String cutButton;
     }
 
-} // namespace Config
+} 
 
 #endif

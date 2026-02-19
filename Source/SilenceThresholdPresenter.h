@@ -96,4 +96,4 @@ private:
     ControlPanel& owner;
 };
 
-#endif // AUDIOFILER_SILENCETHRESHOLDPRESENTER_H
+#endif 

@@ -77,7 +77,7 @@ public:
      */
     bool isAnalyzing() const { return silenceWorker.isBusy(); }
 
-    // SilenceWorkerClient implementation
+    
     /**
      * @brief Gets the AudioPlayer.
      * @return AudioPlayer&
@@ -114,4 +114,4 @@ private:
     SilenceAnalysisWorker silenceWorker;
 };
 
-#endif // AUDIOFILER_SILENCEDETECTIONPRESENTER_H
+#endif 

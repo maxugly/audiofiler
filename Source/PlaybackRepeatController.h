@@ -50,4 +50,4 @@ private:
     ControlPanel& controlPanel;
 };
 
-#endif // AUDIOFILER_PLAYBACKREPEATCONTROLLER_H
+#endif 

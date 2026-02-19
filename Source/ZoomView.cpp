@@ -39,7 +39,7 @@ void ZoomView::updateZoomState()
     const auto activePoint = owner.getActiveZoomPoint();
     const bool isZooming = zDown || activePoint != ControlPanel::ActiveZoomPoint::None;
 
-    // 1. Handle Mouse Lines Repaint
+    
     if (currentMouseX != lastMouseX || currentMouseY != lastMouseY)
     {
         if (lastMouseX != -1)
@@ -58,7 +58,7 @@ void ZoomView::updateZoomState()
         lastMouseY = currentMouseY;
     }
 
-    // 2. Handle Zoom Popup Repaint
+    
     if (isZooming)
     {
         const auto waveformBounds = getLocalBounds();
@@ -79,7 +79,7 @@ void ZoomView::updateZoomState()
         }
         else
         {
-            // Even if bounds didn't change, we might need to update the internal waveform or playhead
+            
             repaint(currentPopupBounds.expanded(5));
         }
     }
@@ -100,10 +100,10 @@ void ZoomView::paint(juce::Graphics& g)
     const auto waveformBounds = getLocalBounds();
     const auto& mouse = owner.getMouseHandler();
 
-    // 1. Draw Mouse Cursor Overlays (Top-most dynamic guides)
+    
     if (mouse.getMouseCursorX() != -1)
     {
-        // Translate mouse position from ControlPanel coordinates to local ZoomView coordinates
+        
         const int localMouseX = mouse.getMouseCursorX() - getX();
         const int localMouseY = mouse.getMouseCursorY() - getY();
 
@@ -145,7 +145,7 @@ void ZoomView::paint(juce::Graphics& g)
         g.fillRect(localMouseX - Config::Layout::Glow::mouseHighlightOffset, waveformBounds.getY(), Config::Layout::Glow::mouseHighlightSize, waveformBounds.getHeight());
         g.fillRect(waveformBounds.getX(), localMouseY - Config::Layout::Glow::mouseHighlightOffset, waveformBounds.getWidth(), Config::Layout::Glow::mouseHighlightSize);
 
-        // Amplitude and Time labels
+        
         float amplitude = 0.0f;
         if (audioPlayer.getWaveformManager().getThumbnail().getNumChannels() > 0)
         {
@@ -198,7 +198,7 @@ void ZoomView::paint(juce::Graphics& g)
         g.drawHorizontalLine(localMouseY, (float)waveformBounds.getX(), (float)waveformBounds.getRight());
     }
 
-    // 2. Draw Zoom Popup
+    
     const bool zDown = owner.isZKeyDown();
     const auto activePoint = owner.getActiveZoomPoint();
 
@@ -220,7 +220,7 @@ void ZoomView::paint(juce::Graphics& g)
         const double startTime = zoomCenterTime - (timeRange / 2.0);
         const double endTime = startTime + timeRange;
 
-        // Sync with owner for interaction logic (mouse events in zoom)
+        
         owner.setZoomPopupBounds(popupBounds.translated(getX(), getY()));
         owner.setZoomTimeRange(startTime, endTime);
 

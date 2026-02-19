@@ -42,7 +42,7 @@ public:
      */
     void paint(juce::Graphics& g) override;
 
-    /** @brief Updates the zoom information and triggers a repaint. */
+    
     void updateZoomState();
 
 private:
@@ -55,4 +55,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ZoomView)
 };
 
-#endif // AUDIOFILER_ZOOMVIEW_H
+#endif 

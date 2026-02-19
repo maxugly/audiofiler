@@ -41,4 +41,4 @@ private:
 };
 
 
-#endif // AUDIOFILER_CUTRESETPRESENTER_H
+#endif 

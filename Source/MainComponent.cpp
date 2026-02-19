@@ -13,19 +13,19 @@
 
 MainComponent::MainComponent()
 {
-    // 1. Initialize logic and engines
+    
     audioPlayer = std::make_unique<AudioPlayer>(sessionState);
     audioPlayer->addChangeListener(this);
     
-    // 2. Initialize UI components
+    
     controlPanel = std::make_unique<ControlPanel>(*this, sessionState);
     addAndMakeVisible(controlPanel.get());
     
-    // 3. Initialize controllers that bridge UI and Logic
+    
     keybindHandler = std::make_unique<KeybindHandler>(*this, *audioPlayer, *controlPanel);
     playbackRepeatController = std::make_unique<PlaybackRepeatController>(*audioPlayer, *controlPanel);
 
-    // 4. Set Audio Channels (Important to do before some UI sizing if they depend on audio state)
+    
     /**
      * @brief Sets the AudioChannels.
      * @param 0 [in] Description for 0.
@@ -33,7 +33,7 @@ MainComponent::MainComponent()
      */
     setAudioChannels(0, 2);
 
-    // 5. Set Window Size - This triggers resized() and lays out the ControlPanel
+    
     /**
      * @brief Sets the Size.
      * @param Config::Layout::Window::width [in] Description for Config::Layout::Window::width.
@@ -41,11 +41,11 @@ MainComponent::MainComponent()
      */
     setSize(Config::Layout::Window::width, Config::Layout::Window::height);
     
-    // 6. Start the UI Refresh Timer
+    
 
 
-    // 7. Focus Setup - We allow the component to receive focus, 
-    // but we no longer "grab" it here to avoid Peer assertion crashes.
+    
+    
     /**
      * @brief Sets the WantsKeyboardFocus.
      * @param true [in] Description for true.
@@ -66,7 +66,7 @@ MainComponent::~MainComponent()
 
 }
 
-//==============================================================================
+
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     audioPlayer->prepareToPlay(samplesPerBlockExpected, sampleRate);
@@ -82,22 +82,22 @@ void MainComponent::releaseResources()
     audioPlayer->releaseResources();
 }
 
-//==============================================================================
+
 void MainComponent::paint(juce::Graphics& g)
 {
-    // ControlPanel handles the bulk of the UI painting.
-    // Fill the background to prevent "ghosting" artifacts.
+    
+    
     g.fillAll(Config::Colors::Window::background);
 }
 
 void MainComponent::resized()
 {
-    // Ensure the control panel fills the entire available space
+    
     if (controlPanel != nullptr)
         controlPanel->setBounds(getLocalBounds());
 }
 
-//==============================================================================
+
 void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == audioPlayer.get())
@@ -110,7 +110,7 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
     }
 }
 
-//==============================================================================
+
 void MainComponent::openButtonClicked()
 {
     chooser = std::make_unique<juce::FileChooser>("Select Audio...",
@@ -140,7 +140,7 @@ void MainComponent::openButtonClicked()
                 controlPanel->setStatsDisplayText(result.getErrorMessage(), Config::Colors::statsErrorText);
             }
         }
-        // Safely request focus after a UI interaction
+        
         /**
          * @brief Undocumented method.
          */

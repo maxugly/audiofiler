@@ -49,10 +49,10 @@ public:
      */
     void removeListener(Listener* listener);
 
-    // Getters
+    
     MainDomain::CutPreferences getCutPrefs() const;
 
-    // Setters
+    
     /**
      * @brief Sets the CutActive.
      * @param active [in] Description for active.

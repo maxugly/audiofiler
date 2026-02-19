@@ -8,7 +8,7 @@
 
 SessionState::SessionState()
 {
-    // Initialize cutIn and cutOut to 0.0
+    
     cutPrefs.cutIn = 0.0;
     cutPrefs.cutOut = 0.0;
 }

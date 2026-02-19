@@ -8,14 +8,14 @@
  */
 class FocusManager;
 #include "AppEnums.h"
-#include "AudioPlayer.h" // Added for AudioPlayer type recognition
+#include "AudioPlayer.h" 
 #include "Config.h"
 #include "ControlPanelLayoutCache.h"
 #include "RepeatButton.h"
-#include "ModernLookAndFeel.h" // Added include for ModernLookAndFeel
-#include "MouseHandler.h"      // Include the new MouseHandler class
+#include "ModernLookAndFeel.h" 
+#include "MouseHandler.h"      
 #include "SessionState.h"
-#include "SilenceDetector.h"   // Include the new SilenceDetector class
+#include "SilenceDetector.h"   
 #include "SilenceWorkerClient.h"
 
 #if defined(JUCE_HEADLESS)
@@ -26,7 +26,7 @@ class FocusManager;
     #include <JuceHeader.h>
 #endif
 
-#include <memory> // Required for std::unique_ptr
+#include <memory> 
 #include <tuple>
 
 /**
@@ -34,7 +34,7 @@ class FocusManager;
  * @brief Home: View.
  *
  */
-class MainComponent; // Forward declaration
+class MainComponent; 
 /**
  * @class LayoutManager
  * @brief Home: Engine.
@@ -150,7 +150,7 @@ class ZoomView;
 class ControlPanel final : public juce::Component,
                            public juce::Timer {
 public:
-  //==============================================================================
+  
   /** @name Constructors and Destructors
    *  @{
    */
@@ -165,9 +165,9 @@ public:
    */
   ~ControlPanel() override;
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name Zoom Popup State
    *  @{
    */
@@ -247,9 +247,9 @@ public:
    * @brief Undocumented method.
    */
   void performDelayedJumpIfNeeded();
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name juce::Component Overrides
    *  @{
    */
@@ -264,12 +264,12 @@ public:
    */
   void resized() override;
 
-  /** @brief Updates only the cursor/overlay part of the UI. */
+  
   void updateCursorPosition();
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name State Update Methods
    *  @{
    */
@@ -307,37 +307,37 @@ public:
    */
   void updateCutButtonColors();
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name Playback & Repeating State Accessors and Mutators
    *  @{
    */
 
-  /** @brief Checks if repeating is enabled. */
+  
   bool getShouldRepeat() const { return shouldRepeat; }
 
-  /** @brief Sets whether audio playback should repeat. */
+  
   void setShouldRepeat(bool shouldRepeatParam);
 
-  /** @brief Gets the current cut-in position. */
+  
   double getCutInPosition() const;
 
-  /** @brief Gets the current cut-out position. */
+  
   double getCutOutPosition() const;
 
-  /** @brief Sets the cut-in position. */
+  
   void setCutInPosition(double pos);
 
-  /** @brief Sets the cut-out position. */
+  
   void setCutOutPosition(double pos);
 
-  /** @brief Ensures that cut-in is logically before or at cut-out. */
+  
   void ensureCutOrder();
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name UI Action Triggers
    *  @{
    */
@@ -359,7 +359,7 @@ public:
    */
   void triggerChannelViewButton();
 
-  /** @brief Triggers the main repeat toggle button. */
+  
   void triggerRepeatButton();
 
   /**
@@ -371,9 +371,9 @@ public:
    */
   void resetOut();
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name Stats Display Control
    *  @{
    */
@@ -397,9 +397,9 @@ public:
    */
   void updateStatsFromAudio();
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name Placement Mode & Autoplay Status
    *  @{
    */
@@ -420,9 +420,9 @@ public:
    */
   bool isCutModeActive() const { return m_isCutModeActive; }
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name Component Accessors
    *  @{
    */
@@ -507,9 +507,9 @@ public:
   const juce::LookAndFeel &getLookAndFeel() const;
   FocusManager &getFocusManager() const { return *focusManager; }
 
-  /** @} */
+  
 
-  //==============================================================================
+  
   /** @name juce::MouseListener Overrides
    *  @{
    */
@@ -546,7 +546,7 @@ public:
    */
   void timerCallback() override;
 
-  /** @} */
+  
 
 private:
   friend class LayoutManager;
@@ -581,7 +581,7 @@ private:
 
   int lastCursorX{-1};
 
-  // --- UI Components ---
+  
   juce::TextButton openButton, playStopButton, modeButton, exitButton,
       statsButton, repeatButton, channelViewButton,
       qualityButton;
@@ -591,10 +591,10 @@ private:
   RepeatButton cutInButton, cutOutButton;
   juce::TextButton autoplayButton, autoCutInButton, autoCutOutButton, cutButton;
 
-  // --- Layout ---
+  
   ControlPanelLayoutCache layoutCache;
 
-  // --- State ---
+  
   AppEnums::ViewMode currentMode = AppEnums::ViewMode::Classic;
   AppEnums::ChannelViewMode currentChannelViewMode = AppEnums::ChannelViewMode::Mono;
   AppEnums::ThumbnailQuality currentQuality = AppEnums::ThumbnailQuality::Low;
@@ -638,4 +638,4 @@ private:
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ControlPanel)
 };
 
-#endif // AUDIOFILER_CONTROLPANEL_H
+#endif 

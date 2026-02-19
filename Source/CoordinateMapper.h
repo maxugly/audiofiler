@@ -51,4 +51,4 @@ public:
     }
 };
 
-#endif // AUDIOFILER_COORDINATEMAPPER_H
+#endif 

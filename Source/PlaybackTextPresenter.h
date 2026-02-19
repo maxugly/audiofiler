@@ -119,4 +119,4 @@ private:
   void mouseDown(const juce::MouseEvent &event) override;
 };
 
-#endif // AUDIOFILER_PLAYBACKTEXTPRESENTER_H
+#endif 

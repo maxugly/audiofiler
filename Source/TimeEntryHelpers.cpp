@@ -33,14 +33,14 @@ namespace TimeEntryHelpers
         double step = Config::Audio::cutStepMilliseconds;
         bool isMillis = false;
 
-        // Determine base step from cursor position
-        if (charIndex >= 0 && charIndex <= 1)      // HH
+        
+        if (charIndex >= 0 && charIndex <= 1)      
             step = Config::Audio::cutStepHours;
-        else if (charIndex >= 3 && charIndex <= 4) // MM
+        else if (charIndex >= 3 && charIndex <= 4) 
             step = Config::Audio::cutStepMinutes;
-        else if (charIndex >= 6 && charIndex <= 7) // SS
+        else if (charIndex >= 6 && charIndex <= 7) 
             step = Config::Audio::cutStepSeconds;
-        else if (charIndex >= 9)                   // mmm
+        else if (charIndex >= 9)                   
             isMillis = true;
 
         if (isMillis)

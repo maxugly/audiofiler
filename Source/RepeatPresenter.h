@@ -51,32 +51,32 @@ public:
    */
   ~RepeatPresenter() override;
 
-  /** @brief Retrieves the cut-in position in seconds. */
+  
   double getCutInPosition() const noexcept;
 
-  /** @brief Retrieves the cut-out position in seconds. */
+  
   double getCutOutPosition() const noexcept;
 
-  /** @brief Sets the cut-in position. */
+  
   void setCutInPosition(double positionSeconds);
 
-  /** @brief Sets the cut-out position. */
+  
   void setCutOutPosition(double positionSeconds);
 
-  /** @brief Swaps cut-in/out values if they are inverted. */
+  
   void ensureCutOrder();
 
-  /** @brief Refreshes the editor text. */
+  
   void updateCutLabels();
 
-  /** @brief Sets the cut-in from a sample index. */
+  
   void setCutStartFromSample(int sampleIndex);
 
-  /** @brief Sets the cut-out from a sample index. */
+  
   void setCutEndFromSample(int sampleIndex);
 
 private:
-  // juce::TextEditor::Listener overrides
+  
   /**
    * @brief Undocumented method.
    * @param editor [in] Description for editor.
@@ -98,7 +98,7 @@ private:
    */
   void textEditorFocusLost(juce::TextEditor &editor) override;
 
-  // juce::MouseListener overrides
+  
   void mouseWheelMove(const juce::MouseEvent &event,
                       const juce::MouseWheelDetails &wheel) override;
   /**
@@ -157,4 +157,4 @@ private:
   void mouseDown(const juce::MouseEvent &event) override;
 };
 
-#endif // AUDIOFILER_REPEATPRESENTER_H
+#endif 

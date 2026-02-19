@@ -7,7 +7,7 @@
     #include <JuceHeader.h>
 #endif
 
-#include "Config.h" // Include Config.h
+#include "Config.h" 
 
 /**
  * @file ModernLookAndFeel.h
@@ -51,23 +51,23 @@ public:
      * @param juce::TextButton::textColourOnId [in] Description for juce::TextButton::textColourOnId.
      * @param Config::Colors::Button::text [in] Description for Config::Colors::Button::text.
      */
-    setColour (juce::TextButton::textColourOnId, Config::Colors::Button::text); } // Use same text colour for on/off states
+    setColour (juce::TextButton::textColourOnId, Config::Colors::Button::text); } 
 
-    //------------------------------------------------------------------------------------------------
+    
     /** @name Color Setters
      *  Public methods to dynamically change the look and feel colors if needed.
      *  @{
      */
 
-    /** @brief Sets the base background color for a button in its "off" state. */
+    
   void setBaseOffColor(juce::Colour color) { setColour(juce::TextButton::buttonColourId, color); }
-  /** @brief Sets the base background color for a button in its "on" (toggled) state. */
+  
   void setBaseOnColor(juce::Colour color) { setColour(juce::TextButton::buttonOnColourId, color); }
-  /** @brief Sets the text color for a button for both "on" and "off" states. */
+  
   void setTextColor(juce::Colour color) { setColour(juce::TextButton::textColourOffId, color); setColour(juce::TextButton::textColourOnId, color); }
 
-    /** @} */
-    //------------------------------------------------------------------------------------------------
+    
+    
 
     /**
      * @brief Custom drawing logic for a button's background.
@@ -182,14 +182,14 @@ public:
      */
   void drawTextEditorOutline (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override {
       if (!textEditor.isEnabled()) {
-          g.setColour(Config::Colors::Button::disabledText.withAlpha(0.5f)); // Faint outline for disabled
+          g.setColour(Config::Colors::Button::disabledText.withAlpha(0.5f)); 
       } else {
           g.setColour(textEditor.findColour(juce::TextEditor::outlineColourId));
       }
-      g.drawRect(0, 0, width, height, Config::Layout::Text::editorOutlineThickness); // Use Config for thickness
+      g.drawRect(0, 0, width, height, Config::Layout::Text::editorOutlineThickness); 
   }
 
 private:
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModernLookAndFeel) };
 
-#endif // AUDIOFILER_MODERNLOOKANDFEEL_H
+#endif 

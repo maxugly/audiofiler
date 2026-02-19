@@ -17,5 +17,5 @@ PlaybackRepeatController::PlaybackRepeatController(AudioPlayer& audioPlayerIn, C
 
 void PlaybackRepeatController::tick()
 {
-    // Logic moved to AudioPlayer::getNextAudioBlock
+    
 }

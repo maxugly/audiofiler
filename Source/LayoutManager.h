@@ -62,4 +62,4 @@ private:
     ControlPanel& controlPanel;
 };
 
-#endif // AUDIOFILER_LAYOUTMANAGER_H
+#endif 

@@ -14,10 +14,10 @@
 juce::String TimeUtils::formatTime(double seconds) {
   if (seconds < 0) seconds = 0;
 
-  // Use long long to prevent overflow for large hours and handle precision better
-  // Add small epsilon to correct floating point drift (e.g. 3599.999 -> 3599.99899...)
-  // We use 0.0001 (0.1ms) which is small enough not to affect valid milliseconds
-  // but large enough to fix precision errors.
+  
+  
+  
+  
   long long totalMilliseconds = (long long)(seconds * 1000.0 + 0.0001);
 
   int hours = (int)(totalMilliseconds / 3600000);
@@ -43,7 +43,7 @@ juce::String TimeUtils::formatTime(double seconds) {
 
 double TimeUtils::parseTime(const juce::String& timeString)
 {
-    // Remove leading '-' if present for remaining time
+    
     juce::String cleanTime = timeString.startsWithChar('-') ? timeString.substring(1) : timeString;
 
     auto parts = juce::StringArray::fromTokens(cleanTime, ":", "");

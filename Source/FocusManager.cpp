@@ -15,24 +15,24 @@ FocusTarget FocusManager::getCurrentTarget() const
 {
     const auto& mouseHandler = owner.getMouseHandler();
 
-    // Priority 1: Dragging a handle (Highest Priority)
+    
     if (mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::In)
         return FocusTarget::CutIn;
     if (mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::Out)
         return FocusTarget::CutOut;
 
-    // Priority 2: MouseManual (Active Scrubbing/Right-click Placement)
+    
     if (mouseHandler.isScrubbing())
         return FocusTarget::MouseManual;
 
-    // Priority 3: Hovering (Timer Boxes)
+    
     const auto activePoint = owner.getActiveZoomPoint();
     if (activePoint == ControlPanel::ActiveZoomPoint::In)
         return FocusTarget::CutIn;
     if (activePoint == ControlPanel::ActiveZoomPoint::Out)
         return FocusTarget::CutOut;
 
-    // Priority 4: Playback (Default)
+    
     return FocusTarget::Playback;
 }
 

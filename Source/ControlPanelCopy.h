@@ -134,7 +134,7 @@ inline const juce::String& silenceThresholdOutTooltip()
     static const juce::String text("Threshold to detect end of sound (0.0 - 1.0)");
     return text;
 }
-} // namespace ControlPanelCopy
+} 
 
 
-#endif // AUDIOFILER_CONTROLPANELCOPY_H
+#endif 

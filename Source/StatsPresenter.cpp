@@ -49,7 +49,7 @@ void StatsPresenter::setShouldShowStats(bool shouldShowStats)
      * @brief Undocumented method.
      */
     updateVisibility();
-    owner.resized(); // Reflow layout so the stats bounds get recomputed.
+    owner.resized(); 
 }
 
 juce::String StatsPresenter::getStatsText() const

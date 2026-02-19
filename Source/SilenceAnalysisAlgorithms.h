@@ -42,4 +42,4 @@ public:
                                       juce::Thread* thread = nullptr);
 };
 
-#endif // SILENCE_ANALYSIS_ALGORITHMS_H
+#endif 

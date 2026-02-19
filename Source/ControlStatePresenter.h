@@ -57,4 +57,4 @@ private:
     ControlPanel& owner;
 };
 
-#endif // AUDIOFILER_CONTROLSTATEPRESENTER_H
+#endif 

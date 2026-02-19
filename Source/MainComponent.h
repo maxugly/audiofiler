@@ -52,7 +52,7 @@ class MainComponent  : public juce::AudioAppComponent,
                     public juce::ChangeListener
 {
 public:
-  using PlacementMode = AppEnums::PlacementMode; ///< Alias for `AppEnums::PlacementMode` for convenience.
+  using PlacementMode = AppEnums::PlacementMode; 
 
   /**
    * @brief Constructs the MainComponent.
@@ -69,7 +69,7 @@ public:
    */
   ~MainComponent() override;
 
-  //==============================================================================
+  
   /** @name juce::AudioAppComponent Overrides
    *  Methods for handling audio setup and processing.
    *  @{
@@ -101,10 +101,10 @@ public:
    */
   void releaseResources() override;
   
-  /** @} */
-  //==============================================================================
+  
+  
 
-  //==============================================================================
+  
   /** @name juce::Component Overrides
    *  Methods for handling GUI drawing and layout.
    *  @{
@@ -127,10 +127,10 @@ public:
    */
   void resized() override;
   
-  /** @} */
-  //==============================================================================
+  
+  
 
-  //==============================================================================
+  
   /** @name juce::ChangeListener Overrides
    *  Method for receiving notifications from observed `juce::ChangeBroadcaster` objects.
    *  @{
@@ -145,10 +145,10 @@ public:
    */
   void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
-  /** @} */
-  //==============================================================================
+  
+  
 
-  //==============================================================================
+  
   /** @name juce::Timer Overrides
    *  Method for periodic updates.
    *  @{
@@ -162,10 +162,10 @@ public:
    */
 
 
-  /** @} */
-  //==============================================================================
+  
+  
 
-  //==============================================================================
+  
   /** @name Event Handlers
    *  Methods for handling user input and specific actions.
    *  @{
@@ -194,10 +194,10 @@ public:
    */
   void seekToPosition (int x);
 
-  /** @} */
-  //==============================================================================
+  
+  
 
-  //==============================================================================
+  
   /** @name Utility Methods
    *  @{
    */
@@ -208,36 +208,36 @@ public:
    */
   AudioPlayer* getAudioPlayer() const { return audioPlayer.get(); }
 
-  /** @} */
-  //==============================================================================
+  
+  
 
 private:
-    //==============================================================================
+    
     /** @name Private Member Variables
      *  Internal components and state of the MainComponent.
      *  @{
      */
     SessionState sessionState;
-    std::unique_ptr<AudioPlayer> audioPlayer;       ///< The audio playback manager.
-    std::unique_ptr<juce::FileChooser> chooser;     ///< Used for opening audio files.
-    std::unique_ptr<ControlPanel> controlPanel;     ///< The main control panel containing buttons and displays.
-    std::unique_ptr<KeybindHandler> keybindHandler; ///< Delegates keyboard shortcut logic.
-    std::unique_ptr<PlaybackRepeatController> playbackRepeatController; ///< Enforces repeat bounds during playback.
-    juce::OpenGLContext openGLContext; ///< Context for OpenGL rendering.
+    std::unique_ptr<AudioPlayer> audioPlayer;       
+    std::unique_ptr<juce::FileChooser> chooser;     
+    std::unique_ptr<ControlPanel> controlPanel;     
+    std::unique_ptr<KeybindHandler> keybindHandler; 
+    std::unique_ptr<PlaybackRepeatController> playbackRepeatController; 
+    juce::OpenGLContext openGLContext; 
     
-    /** @} */
-    //==============================================================================
+    
+    
 
-    //==============================================================================
-    //==============================================================================
+    
+    
     /** @name Private Utility Methods
      *  @{
      */
 
-    /** @} */
-    //==============================================================================
+    
+    
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
 
-#endif // AUDIOFILER_MAINCOMPONENT_H
+#endif 

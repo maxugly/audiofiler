@@ -23,5 +23,5 @@ void RepeatButton::mouseUp (const juce::MouseEvent& event)
      * @brief Undocumented method.
      * @param event [in] Description for event.
      */
-    juce::TextButton::mouseUp(event); // Call base class method
+    juce::TextButton::mouseUp(event); 
 }

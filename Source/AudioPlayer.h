@@ -52,7 +52,7 @@ public:
      */
     ~AudioPlayer() override;
 
-    /** @brief Sets the playback position. */
+    
     void setPlayheadPosition(double seconds);
 
     /**
@@ -76,16 +76,16 @@ public:
      */
     double getCurrentPosition() const;
 
-    /** @brief Sets the ControlPanel reference for silence detection delegation. */
+    
     void setControlPanel(ControlPanel* panel) { controlPanel = panel; }
 
-    /** @brief Starts a background silence analysis (delegated via ControlPanel). */
+    
     void startSilenceAnalysis(float threshold, bool detectingIn);
 
-    /** @brief Checks if repeating is enabled. */
+    
     bool isRepeating() const;
 
-    /** @brief Enables or disables repeating for playback. */
+    
     void setRepeating(bool shouldRepeat);
 
     #if !defined(JUCE_HEADLESS)
@@ -224,4 +224,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPlayer)
 };
 
-#endif // AUDIOFILER_AUDIOPLAYER_H
+#endif 

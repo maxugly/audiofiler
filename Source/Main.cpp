@@ -49,9 +49,9 @@ public:
    */
   void initialise (const juce::String& commandLine) override {
     #if JUCE_DEBUG
-    // If juce::VBlank is not available, you can use the JUCE_ENABLE_REPAINT_DEBUGGING 1 
-    // in AppConfig.h or compiler flags. 
-    // For now, I'll just remove the failing line to let it build.
+    
+    
+    
     #endif
     mainWindow.reset (new MainWindow (getApplicationName())); }
 
@@ -121,7 +121,7 @@ private:
       JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
 
-    std::unique_ptr<MainWindow> mainWindow; ///< The unique pointer holding the main application window.
+    std::unique_ptr<MainWindow> mainWindow; 
 };
 
 /**
