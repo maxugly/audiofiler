@@ -2,5 +2,7 @@
 Source/** linguist-language=C++
 
 # Optional: Tell github  to ignore any CMake files in that folder specifically
-#Source/**/*.cmake linguist-vendored
-#Source/**/CMakeLists.txt linguist-vendored
+*.cmake linguist-vendored
+CMakeLists.txt linguist-vendored
+_deps/** linguist-vendored
+cmake/** linguist-vendored
