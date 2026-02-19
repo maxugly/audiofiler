@@ -48,6 +48,9 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
         const juce::String filePath = file.getFullPathName();
         sessionState.setCurrentFilePath(filePath);
 
+        const double totalDuration = (double)reader->lengthInSamples / reader->sampleRate;
+        sessionState.setTotalDuration(totalDuration);
+
         if (sessionState.hasMetadataForFile(filePath))
         {
             const FileMetadata cached = sessionState.getMetadataForFile(filePath);
@@ -57,7 +60,7 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
         {
             FileMetadata metadata;
             if (reader->sampleRate > 0.0)
-                metadata.cutOut = (double)reader->lengthInSamples / reader->sampleRate;
+                metadata.cutOut = totalDuration;
             sessionState.setMetadataForFile(filePath, metadata);
         }
 

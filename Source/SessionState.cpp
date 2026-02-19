@@ -78,39 +78,65 @@ void SessionState::setThresholdOut(float threshold)
 void SessionState::setCutIn(double value)
 {
     const juce::ScopedLock lock(stateLock);
-    if (cutPrefs.cutIn != value)
+    
+    // Clamp to [0, totalDuration]
+    double clampedValue = juce::jlimit(0.0, totalDuration, value);
+    
+    // Boundary Rule: CutIn <= CutOut
+    clampedValue = juce::jmin(clampedValue, cutPrefs.cutOut);
+
+    if (cutPrefs.cutIn != clampedValue)
     {
-        cutPrefs.cutIn = value;
+        cutPrefs.cutIn = clampedValue;
         if (!currentFilePath.isEmpty())
-            metadataCache[currentFilePath].cutIn = value;
+            metadataCache[currentFilePath].cutIn = clampedValue;
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
-        listeners.call([value](Listener& l) { l.cutInChanged(value); });
+        listeners.call([clampedValue](Listener& l) { l.cutInChanged(clampedValue); });
     }
 }
 
 void SessionState::setCutOut(double value)
 {
     const juce::ScopedLock lock(stateLock);
-    if (cutPrefs.cutOut != value)
+    
+    // Clamp to [0, totalDuration]
+    double clampedValue = juce::jlimit(0.0, totalDuration, value);
+    
+    // Boundary Rule: CutOut >= CutIn
+    clampedValue = juce::jmax(clampedValue, cutPrefs.cutIn);
+
+    if (cutPrefs.cutOut != clampedValue)
     {
-        cutPrefs.cutOut = value;
+        cutPrefs.cutOut = clampedValue;
         if (!currentFilePath.isEmpty())
-            metadataCache[currentFilePath].cutOut = value;
+            metadataCache[currentFilePath].cutOut = clampedValue;
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
-        listeners.call([value](Listener& l) { l.cutOutChanged(value); });
+        listeners.call([clampedValue](Listener& l) { l.cutOutChanged(clampedValue); });
     }
 }
 
 double SessionState::getCutIn() const
 {
     const juce::ScopedLock lock(stateLock);
-    return getMetadataForFile(currentFilePath).cutIn;
+    return cutPrefs.cutIn;
 }
 
 double SessionState::getCutOut() const
 {
     const juce::ScopedLock lock(stateLock);
-    return getMetadataForFile(currentFilePath).cutOut;
+    return cutPrefs.cutOut;
+}
+
+void SessionState::setTotalDuration(double duration)
+{
+    const juce::ScopedLock lock(stateLock);
+    totalDuration = duration;
+}
+
+double SessionState::getTotalDuration() const
+{
+    const juce::ScopedLock lock(stateLock);
+    return totalDuration;
 }
 
 FileMetadata SessionState::getMetadataForFile(const juce::String& filePath) const
@@ -153,8 +179,14 @@ void SessionState::setMetadataForFile(const juce::String& filePath, const FileMe
 
     if (filePath == currentFilePath)
     {
-        cutPrefs.cutIn = newMetadata.cutIn;
-        cutPrefs.cutOut = newMetadata.cutOut;
+        // Apply clamping when syncing to active cutPrefs
+        const double inVal = juce::jlimit(0.0, totalDuration, newMetadata.cutIn);
+        const double outVal = juce::jlimit(0.0, totalDuration, newMetadata.cutOut);
+        
+        // Ensure CutIn <= CutOut
+        cutPrefs.cutIn = juce::jmin(inVal, outVal);
+        cutPrefs.cutOut = juce::jmax(inVal, outVal);
+
         listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
     }
 }

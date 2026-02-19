@@ -53,6 +53,10 @@ public:
     void setCutOut(double value);
     double getCutIn() const;
     double getCutOut() const;
+
+    void setTotalDuration(double duration);
+    double getTotalDuration() const;
+
     FileMetadata getMetadataForFile(const juce::String& filePath) const;
     FileMetadata getCurrentMetadata() const;
     void setMetadataForFile(const juce::String& filePath, const FileMetadata& newMetadata);
@@ -64,6 +68,7 @@ public:
 private:
     MainDomain::CutPreferences cutPrefs;
     juce::String currentFilePath;
+    double totalDuration { 0.0 };
     std::map<juce::String, FileMetadata> metadataCache;
     juce::ListenerList<Listener> listeners;
 
