@@ -24,6 +24,7 @@
 #include "CutPresenter.h"
 #include "CoordinateMapper.h"
 #include "ZoomView.h"
+#include "PlaybackTimerManager.h"
 #include <cmath>
 
 ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionStateIn)
@@ -74,18 +75,20 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   controlStatePresenter = std::make_unique<ControlStatePresenter>(*this);
   transportPresenter = std::make_unique<TransportPresenter>(*this);
 
+  playbackTimerManager = std::make_unique<PlaybackTimerManager>(*this, 
+                                                                getAudioPlayer(), 
+                                                                layoutCache);
+  playbackTimerManager->setViews(playbackCursorView.get(), zoomView.get());
+
   updateUIFromState();
 
   finaliseSetup();
-
-  startTimerHz(60);
 
   setMouseCursor(juce::MouseCursor::CrosshairCursor);
 }
 
 ControlPanel::~ControlPanel() {
-
-  stopTimer();
+  playbackTimerManager.reset();
 
   setLookAndFeel(nullptr);
 }
@@ -155,11 +158,11 @@ void ControlPanel::setZKeyDown(bool isDown) {
   if (m_isZKeyDown) {
     auto dragged = getMouseHandler().getDraggedHandle();
     if (dragged == MouseHandler::CutMarkerHandle::In)
-      m_activeZoomPoint = ActiveZoomPoint::In;
+      m_activeZoomPoint = AppEnums::ActiveZoomPoint::In;
     else if (dragged == MouseHandler::CutMarkerHandle::Out)
-      m_activeZoomPoint = ActiveZoomPoint::Out;
+      m_activeZoomPoint = AppEnums::ActiveZoomPoint::Out;
   } else {
-    m_activeZoomPoint = ActiveZoomPoint::None;
+    m_activeZoomPoint = AppEnums::ActiveZoomPoint::None;
 
     performDelayedJumpIfNeeded();
   }
@@ -171,14 +174,14 @@ void ControlPanel::setZKeyDown(bool isDown) {
   repaint();
 }
 
-void ControlPanel::setActiveZoomPoint(ActiveZoomPoint point) {
+void ControlPanel::setActiveZoomPoint(AppEnums::ActiveZoomPoint point) {
   if (m_activeZoomPoint != point) {
     m_activeZoomPoint = point;
-    if (zoomView != nullptr) {
+    if (zoomView != nullptr)
       zoomView->repaint();
-    }
-
     repaint();
+  }
+}
   }
 }
 
@@ -410,49 +413,3 @@ void ControlPanel::mouseWheelMove(const juce::MouseEvent &event,
   getMouseHandler().mouseWheelMove(event, wheel);
 }
 
-void ControlPanel::updateCursorPosition() {
-  if (playbackCursorView != nullptr)
-  {
-    const auto& audioPlayer = getAudioPlayer();
-    const double audioLength = audioPlayer.getWaveformManager().getThumbnail().getTotalLength();
-    if (audioLength > 0.0)
-    {
-      const float x = CoordinateMapper::secondsToPixels(audioPlayer.getCurrentPosition(), 
-                                                        (float)layoutCache.waveformBounds.getWidth(), 
-                                                        audioLength);
-      const int currentX = juce::roundToInt(x);
-
-      if (currentX != lastCursorX)
-      {
-
-          if (lastCursorX >= 0)
-              playbackCursorView->repaint(lastCursorX - 1, 0, 3, playbackCursorView->getHeight());
-
-          playbackCursorView->repaint(currentX - 1, 0, 3, playbackCursorView->getHeight());
-
-          lastCursorX = currentX;
-      }
-
-      const bool zDown = isZKeyDown();
-      const auto activePoint = getActiveZoomPoint();
-      const bool isZooming = zDown || activePoint != ControlPanel::ActiveZoomPoint::None;
-
-      if (isZooming && m_zoomPopupBounds.translated(-layoutCache.waveformBounds.getX(), -layoutCache.waveformBounds.getY()).contains(currentX, 10))
-          playbackCursorView->setVisible(false);
-      else
-          playbackCursorView->setVisible(true);
-    }
-  }
-}
-
-void ControlPanel::timerCallback() {
-  const bool isZDown = juce::KeyPress::isKeyCurrentlyDown('z') || juce::KeyPress::isKeyCurrentlyDown('Z');
-
-  setZKeyDown(isZDown);
-
-  updateCutLabels();
-
-  updateCursorPosition();
-  if (zoomView != nullptr)
-    zoomView->updateZoomState();
-}

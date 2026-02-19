@@ -27,34 +27,21 @@ class FocusManager;
 class MainComponent; 
 
 class LayoutManager;
-
 class WaveformView;
-
 class CutLayerView;
-
 class CutPresenter;
-
 class StatsPresenter;
-
 class RepeatPresenter;
-
 class ControlStatePresenter;
-
 class TransportPresenter;
-
 class SilenceDetectionPresenter;
-
 class ControlButtonsPresenter;
-
 class CutResetPresenter;
-
 class CutButtonPresenter;
-
 class PlaybackTextPresenter;
-
 class PlaybackCursorView;
-
 class ZoomView;
+class PlaybackTimerManager;
 
 /**
  * @ingroup UI
@@ -69,19 +56,16 @@ class ZoomView;
  * @see MainComponent
  * @see SessionState
  */
-class ControlPanel final : public juce::Component,
-                           public juce::Timer {
+class ControlPanel final : public juce::Component {
 public:
 
   explicit ControlPanel(MainComponent &owner, SessionState &sessionStateIn);
 
   ~ControlPanel() override;
 
-  enum class ActiveZoomPoint { None, In, Out };
+  AppEnums::ActiveZoomPoint getActiveZoomPoint() const { return m_activeZoomPoint; }
 
-  ActiveZoomPoint getActiveZoomPoint() const { return m_activeZoomPoint; }
-
-  void setActiveZoomPoint(ActiveZoomPoint point);
+  void setActiveZoomPoint(AppEnums::ActiveZoomPoint point);
 
   float getZoomFactor() const { return m_zoomFactor; }
 
@@ -116,8 +100,6 @@ public:
   void paint(juce::Graphics &g) override;
 
   void resized() override;
-
-  void updateCursorPosition();
 
   void updatePlayButtonText(bool isPlaying);
 
@@ -233,7 +215,7 @@ public:
   void mouseWheelMove(const juce::MouseEvent &event,
                       const juce::MouseWheelDetails &wheel) override;
 
-  void timerCallback() override;
+  PlaybackTimerManager& getPlaybackTimerManager() { return *playbackTimerManager; }
 
 private:
   friend class LayoutManager;
@@ -301,7 +283,8 @@ private:
   /** @brief Renders the zoom window. */
   std::unique_ptr<ZoomView> zoomView;
 
-  int lastCursorX{-1};
+  /** @brief Manages high-frequency updates. */
+  std::unique_ptr<PlaybackTimerManager> playbackTimerManager;
 
   juce::TextButton openButton, playStopButton, modeButton, exitButton,
       statsButton, repeatButton, channelViewButton,
@@ -326,7 +309,7 @@ private:
   bool m_shouldAutoplay = false;
   float glowAlpha = 0.0f;
   bool m_isCutModeActive = false;
-  ActiveZoomPoint m_activeZoomPoint = ActiveZoomPoint::None;
+  AppEnums::ActiveZoomPoint m_activeZoomPoint = AppEnums::ActiveZoomPoint::None;
   float m_zoomFactor = 10.0f;
   bool m_isZKeyDown = false;
   bool m_needsJumpToCutIn = false;

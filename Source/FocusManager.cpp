@@ -20,9 +20,9 @@ FocusTarget FocusManager::getCurrentTarget() const
         return FocusTarget::MouseManual;
 
     const auto activePoint = owner.getActiveZoomPoint();
-    if (activePoint == ControlPanel::ActiveZoomPoint::In)
+    if (activePoint == AppEnums::ActiveZoomPoint::In)
         return FocusTarget::CutIn;
-    if (activePoint == ControlPanel::ActiveZoomPoint::Out)
+    if (activePoint == AppEnums::ActiveZoomPoint::Out)
         return FocusTarget::CutOut;
 
     return FocusTarget::Playback;

@@ -130,6 +130,8 @@ if (NOT BUILD_TESTS_ONLY)
             Source/PlaybackCursorGlow.cpp
             Source/PlaybackCursorView.h
             Source/PlaybackCursorView.cpp
+            Source/PlaybackTimerManager.h
+            Source/PlaybackTimerManager.cpp
     )
 
     target_link_libraries(audiofiler PRIVATE

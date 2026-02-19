@@ -25,6 +25,12 @@ namespace AppEnums
         Medium,
         High
     };
+
+    enum class ActiveZoomPoint {
+        None,
+        In,
+        Out
+    };
 }
 
 #endif 

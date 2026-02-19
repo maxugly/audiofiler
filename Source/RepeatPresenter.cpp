@@ -239,7 +239,7 @@ void RepeatPresenter::textEditorFocusLost(juce::TextEditor &editor) {
     applyCutOutFromEditor(newPosition, editor);
   }
 
-  owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::None);
+  owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::None);
   owner.performDelayedJumpIfNeeded();
 }
 
@@ -263,7 +263,7 @@ bool RepeatPresenter::applyCutInFromEditor(double newPosition,
     owner.updateCutButtonColors();
     owner.setAutoCutInActive(false);
 
-    if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
+    if (owner.getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None)
       owner.setNeedsJumpToCutIn(true);
 
     editor.setColour(juce::TextEditor::textColourId,
@@ -294,7 +294,7 @@ bool RepeatPresenter::applyCutOutFromEditor(double newPosition,
     owner.updateCutButtonColors();
     owner.setAutoCutOutActive(false);
 
-    if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
+    if (owner.getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None)
       owner.setNeedsJumpToCutIn(true);
 
     editor.setColour(juce::TextEditor::textColourId,
@@ -327,15 +327,15 @@ void RepeatPresenter::syncEditorToPosition(juce::TextEditor &editor,
 
 void RepeatPresenter::mouseEnter(const juce::MouseEvent &event) {
   if (event.eventComponent == &cutInEditor)
-    owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
+    owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::In);
   else if (event.eventComponent == &cutOutEditor)
-    owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
+    owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::Out);
 }
 
 void RepeatPresenter::mouseExit(const juce::MouseEvent &event) {
   auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
   if (editor != nullptr && !editor->hasKeyboardFocus(false)) {
-    owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::None);
+    owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::None);
     owner.performDelayedJumpIfNeeded();
   }
 }
