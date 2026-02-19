@@ -1,3 +1,9 @@
+/**
+ * @file MouseHandler.cpp
+ * @brief Defines the MouseHandler class.
+ * @ingroup Engine
+ */
+
 #include "MouseHandler.h"
 #include "FocusManager.h"
 #include "ControlPanel.h"
@@ -56,6 +62,10 @@ void MouseHandler::mouseMove(const juce::MouseEvent& event)
 
 void MouseHandler::mouseDown(const juce::MouseEvent& event)
 {
+    /**
+     * @brief Undocumented method.
+     * @param event [in] Description for event.
+     */
     clearTextEditorFocusIfNeeded(event);
 
     if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
@@ -169,6 +179,10 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
             isScrubbingState = true;
             mouseDragStartX = event.x;
             currentPlaybackPosOnDragStart = owner.getAudioPlayer().getCurrentPosition();
+            /**
+             * @brief Undocumented method.
+             * @param event.x [in] Description for event.x.
+             */
             seekToMousePosition(event.x);
         }
         else
@@ -178,6 +192,10 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
     }
     else if (event.mods.isRightButtonDown())
     {
+        /**
+         * @brief Undocumented method.
+         * @param event.x [in] Description for event.x.
+         */
         handleRightClickForCutPlacement(event.x);
     }
 }
@@ -281,6 +299,10 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
     }
     else if (isDragging && waveformBounds.contains(event.getPosition()))
     {
+        /**
+         * @brief Undocumented method.
+         * @param event.x [in] Description for event.x.
+         */
         seekToMousePosition(event.x);
         owner.repaint();
     }
@@ -340,6 +362,10 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
         }
         else if (mouseDragStartX == event.x)
         {
+            /**
+             * @brief Undocumented method.
+             * @param event.x [in] Description for event.x.
+             */
             seekToMousePosition(event.x);
         }
     }
@@ -347,6 +373,10 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
 
 void MouseHandler::mouseExit(const juce::MouseEvent& event)
 {
+    /**
+     * @brief Undocumented method.
+     * @param event [in] Description for event.
+     */
     juce::ignoreUnused(event);
     mouseCursorX = -1;
     mouseCursorY = -1;

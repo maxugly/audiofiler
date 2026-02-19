@@ -1,3 +1,9 @@
+/**
+ * @file SilenceAnalysisWorker.h
+ * @brief Defines the SilenceAnalysisWorker class.
+ * @ingroup Engine
+ */
+
 #ifndef AUDIOFILER_SILENCEANALYSISWORKER_H
 #define AUDIOFILER_SILENCEANALYSISWORKER_H
 
@@ -12,6 +18,11 @@
 #include <memory>
 #include "SilenceWorkerClient.h"
 
+/**
+ * @class SessionState
+ * @brief Home: Engine.
+ *
+ */
 class SessionState;
 
 /**

@@ -1,3 +1,9 @@
+/**
+ * @file StatsPresenter.cpp
+ * @brief Defines the StatsPresenter class.
+ * @ingroup Presenters
+ */
+
 #include "StatsPresenter.h"
 
 #include "ControlPanel.h"
@@ -29,12 +35,19 @@ void StatsPresenter::updateStats()
 
 void StatsPresenter::toggleVisibility()
 {
+    /**
+     * @brief Sets the ShouldShowStats.
+     * @param !showStats [in] Description for !showStats.
+     */
     setShouldShowStats(!showStats);
 }
 
 void StatsPresenter::setShouldShowStats(bool shouldShowStats)
 {
     showStats = shouldShowStats;
+    /**
+     * @brief Undocumented method.
+     */
     updateVisibility();
     owner.resized(); // Reflow layout so the stats bounds get recomputed.
 }
@@ -54,6 +67,9 @@ void StatsPresenter::layoutWithin(const juce::Rectangle<int>& contentAreaBounds)
         statsOverlay.setBounds(statsBounds);
         statsOverlay.toFront(true);
     }
+    /**
+     * @brief Undocumented method.
+     */
     updateVisibility();
 }
 

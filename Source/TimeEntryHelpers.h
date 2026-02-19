@@ -1,3 +1,9 @@
+/**
+ * @file TimeEntryHelpers.h
+ * @brief Defines the TimeEntryHelpers class.
+ * @ingroup Engine
+ */
+
 #ifndef AUDIOFILER_TIMEENTRYHELPERS_H
 #define AUDIOFILER_TIMEENTRYHELPERS_H
 
@@ -17,6 +23,11 @@ namespace TimeEntryHelpers
      * @param totalLength The total length of the audio file in seconds.
      */
 
+    /**
+     * @brief Undocumented method.
+     * @param editor [in] Description for editor.
+     * @param totalLength [in] Description for totalLength.
+     */
     void validateTimeEntry(juce::TextEditor& editor, double totalLength);
 
     /**

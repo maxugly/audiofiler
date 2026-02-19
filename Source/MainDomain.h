@@ -1,3 +1,9 @@
+/**
+ * @file MainDomain.h
+ * @brief Defines the MainDomain class.
+ * @ingroup Views
+ */
+
 #pragma once
 
 namespace MainDomain {

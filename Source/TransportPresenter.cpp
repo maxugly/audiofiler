@@ -1,3 +1,9 @@
+/**
+ * @file TransportPresenter.cpp
+ * @brief Defines the TransportPresenter class.
+ * @ingroup Presenters
+ */
+
 #include "TransportPresenter.h"
 
 #include "ControlPanel.h"
@@ -34,6 +40,9 @@ void TransportPresenter::handleCutModeToggle(bool enableCutMode)
     owner.getSessionState().setCutActive(enableCutMode);
     owner.updateComponentStates();
     if (owner.m_isCutModeActive && owner.getAudioPlayer().isPlaying())
+        /**
+         * @brief Undocumented method.
+         */
         enforceCutBounds();
 }
 

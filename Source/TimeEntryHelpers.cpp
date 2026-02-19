@@ -1,3 +1,9 @@
+/**
+ * @file TimeEntryHelpers.cpp
+ * @brief Defines the TimeEntryHelpers class.
+ * @ingroup Engine
+ */
+
 #include "TimeEntryHelpers.h"
 #include "TimeUtils.h"
 #include "Config.h"

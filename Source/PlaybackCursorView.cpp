@@ -1,3 +1,9 @@
+/**
+ * @file PlaybackCursorView.cpp
+ * @brief Defines the PlaybackCursorView class.
+ * @ingroup Views
+ */
+
 #include "PlaybackCursorView.h"
 #include "ControlPanel.h"
 #include "PlaybackCursorGlow.h"
@@ -7,7 +13,16 @@
 PlaybackCursorView::PlaybackCursorView(ControlPanel& ownerPanel)
     : owner(ownerPanel)
 {
+    /**
+     * @brief Sets the InterceptsMouseClicks.
+     * @param false [in] Description for false.
+     * @param false [in] Description for false.
+     */
     setInterceptsMouseClicks(false, false);
+    /**
+     * @brief Sets the Opaque.
+     * @param false [in] Description for false.
+     */
     setOpaque(false);
 }
 

@@ -1,3 +1,9 @@
+/**
+ * @file SilenceWorkerClient.h
+ * @brief Defines the SilenceWorkerClient class.
+ * @ingroup Engine
+ */
+
 #ifndef AUDIOFILER_SILENCEWORKERCLIENT_H
 #define AUDIOFILER_SILENCEWORKERCLIENT_H
 
@@ -7,6 +13,11 @@
     #include <JuceHeader.h>
 #endif
 
+/**
+ * @class AudioPlayer
+ * @brief Home: Engine.
+ *
+ */
 class AudioPlayer;
 
 /**

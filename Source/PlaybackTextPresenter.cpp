@@ -1,3 +1,9 @@
+/**
+ * @file PlaybackTextPresenter.cpp
+ * @brief Defines the PlaybackTextPresenter class.
+ * @ingroup Presenters
+ */
+
 #include "PlaybackTextPresenter.h"
 #include "TimeUtils.h"
 
@@ -9,14 +15,25 @@
 #include <cmath>
 
 PlaybackTextPresenter::PlaybackTextPresenter(ControlPanel &ownerPanel)
+    /**
+     * @brief Undocumented method.
+     * @param ownerPanel [in] Description for ownerPanel.
+     * @return :
+     */
     : owner(ownerPanel) {}
 
+/**
+ * @brief Undocumented method.
+ */
 PlaybackTextPresenter::~PlaybackTextPresenter() {
   owner.elapsedTimeEditor.removeListener(this);
   owner.remainingTimeEditor.removeListener(this);
   owner.cutLengthEditor.removeListener(this);
 }
 
+/**
+ * @brief Undocumented method.
+ */
 void PlaybackTextPresenter::initialiseEditors() {
   auto configure = [&](juce::TextEditor &ed, juce::Justification just) {
     owner.addAndMakeVisible(ed);
@@ -37,11 +54,29 @@ void PlaybackTextPresenter::initialiseEditors() {
     ed.addMouseListener(this, false);
   };
 
+  /**
+   * @brief Undocumented method.
+   * @param owner.elapsedTimeEditor [in] Description for owner.elapsedTimeEditor.
+   * @param juce::Justification::left [in] Description for juce::Justification::left.
+   */
   configure(owner.elapsedTimeEditor, juce::Justification::left);
+  /**
+   * @brief Undocumented method.
+   * @param owner.remainingTimeEditor [in] Description for owner.remainingTimeEditor.
+   * @param juce::Justification::right [in] Description for juce::Justification::right.
+   */
   configure(owner.remainingTimeEditor, juce::Justification::right);
+  /**
+   * @brief Undocumented method.
+   * @param owner.cutLengthEditor [in] Description for owner.cutLengthEditor.
+   * @param juce::Justification::centred [in] Description for juce::Justification::centred.
+   */
   configure(owner.cutLengthEditor, juce::Justification::centred);
 }
 
+/**
+ * @brief Undocumented method.
+ */
 void PlaybackTextPresenter::updateEditors() {
   if (!isEditingElapsed && !owner.elapsedTimeEditor.hasKeyboardFocus(true))
     syncEditorToPosition(
@@ -56,6 +91,12 @@ void PlaybackTextPresenter::updateEditors() {
         0.0,
         (session.getCutPrefs().active ? cutOut : owner.getAudioPlayer().getThumbnail().getTotalLength()) -
             owner.getAudioPlayer().getCurrentPosition());
+    /**
+     * @brief Undocumented method.
+     * @param owner.remainingTimeEditor [in] Description for owner.remainingTimeEditor.
+     * @param remaining [in] Description for remaining.
+     * @param true [in] Description for true.
+     */
     syncEditorToPosition(owner.remainingTimeEditor, remaining, true);
   }
 
@@ -68,6 +109,9 @@ void PlaybackTextPresenter::updateEditors() {
   }
 }
 
+/**
+ * @brief Undocumented method.
+ */
 void PlaybackTextPresenter::layoutEditors() {
   const int textY =
       owner.getBottomRowTopY() - Config::Layout::Text::playbackOffsetY;
@@ -85,6 +129,10 @@ void PlaybackTextPresenter::layoutEditors() {
                                    Config::Layout::Text::playbackHeight);
 }
 
+/**
+ * @brief Undocumented method.
+ * @param g [in] Description for g.
+ */
 void PlaybackTextPresenter::render(juce::Graphics &g) const {
   if (owner.getAudioPlayer().getThumbnail().getTotalLength() <= 0.0)
     return;
@@ -104,6 +152,10 @@ void PlaybackTextPresenter::render(juce::Graphics &g) const {
              false);
 }
 
+/**
+ * @brief Undocumented method.
+ * @param editor [in] Description for editor.
+ */
 void PlaybackTextPresenter::textEditorTextChanged(juce::TextEditor &editor) {
   if (&editor == &owner.elapsedTimeEditor)
     isEditingElapsed = true;
@@ -114,6 +166,11 @@ void PlaybackTextPresenter::textEditorTextChanged(juce::TextEditor &editor) {
 
   const double totalLength =
       owner.getAudioPlayer().getThumbnail().getTotalLength();
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   * @param totalLength [in] Description for totalLength.
+   */
   TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }
 
@@ -126,6 +183,10 @@ void PlaybackTextPresenter::textEditorReturnKeyPressed(
   else if (&editor == &owner.cutLengthEditor)
     isEditingCutLength = false;
 
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   */
   applyTimeEdit(editor);
   editor.giveAwayKeyboardFocus();
 }
@@ -139,10 +200,17 @@ void PlaybackTextPresenter::textEditorEscapeKeyPressed(
   else if (&editor == &owner.cutLengthEditor)
     isEditingCutLength = false;
 
+  /**
+   * @brief Undocumented method.
+   */
   updateEditors();
   editor.giveAwayKeyboardFocus();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param editor [in] Description for editor.
+ */
 void PlaybackTextPresenter::textEditorFocusLost(juce::TextEditor &editor) {
   if (&editor == &owner.elapsedTimeEditor)
     isEditingElapsed = false;
@@ -151,10 +219,18 @@ void PlaybackTextPresenter::textEditorFocusLost(juce::TextEditor &editor) {
   else if (&editor == &owner.cutLengthEditor)
     isEditingCutLength = false;
 
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   */
   applyTimeEdit(editor);
 }
 
 
+/**
+ * @brief Undocumented method.
+ * @param editor [in] Description for editor.
+ */
 void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
   double newTime = TimeUtils::parseTime(editor.getText());
   if (newTime < 0.0)
@@ -187,6 +263,9 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
     owner.updateCutLabels();
   }
 
+  /**
+   * @brief Undocumented method.
+   */
   updateEditors();
 }
 
@@ -208,6 +287,10 @@ void PlaybackTextPresenter::syncEditorToPosition(juce::TextEditor &editor,
     editor.setText(text, juce::dontSendNotification);
 }
 
+/**
+ * @brief Undocumented method.
+ * @param event [in] Description for event.
+ */
 void PlaybackTextPresenter::mouseDown(const juce::MouseEvent &event) {
   if (auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent)) {
     if (editor == &owner.elapsedTimeEditor)
@@ -219,6 +302,10 @@ void PlaybackTextPresenter::mouseDown(const juce::MouseEvent &event) {
   }
 }
 
+/**
+ * @brief Undocumented method.
+ * @param event [in] Description for event.
+ */
 void PlaybackTextPresenter::mouseUp(const juce::MouseEvent &event) {
   auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
   if (editor == nullptr)
@@ -317,5 +404,8 @@ void PlaybackTextPresenter::mouseWheelMove(
     owner.updateCutLabels();
   }
 
+  /**
+   * @brief Undocumented method.
+   */
   updateEditors();
 }

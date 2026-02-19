@@ -28,9 +28,29 @@ public:
      * created while this LookAndFeel is active will share the same base appearance.
      */
   ModernLookAndFeel() {
+    /**
+     * @brief Sets the Colour.
+     * @param juce::TextButton::buttonColourId [in] Description for juce::TextButton::buttonColourId.
+     * @param Config::Colors::Button::base [in] Description for Config::Colors::Button::base.
+     */
     setColour (juce::TextButton::buttonColourId, Config::Colors::Button::base);
+    /**
+     * @brief Sets the Colour.
+     * @param juce::TextButton::buttonOnColourId [in] Description for juce::TextButton::buttonOnColourId.
+     * @param Config::Colors::Button::on [in] Description for Config::Colors::Button::on.
+     */
     setColour (juce::TextButton::buttonOnColourId, Config::Colors::Button::on);
+    /**
+     * @brief Sets the Colour.
+     * @param juce::TextButton::textColourOffId [in] Description for juce::TextButton::textColourOffId.
+     * @param Config::Colors::Button::text [in] Description for Config::Colors::Button::text.
+     */
     setColour (juce::TextButton::textColourOffId, Config::Colors::Button::text);
+    /**
+     * @brief Sets the Colour.
+     * @param juce::TextButton::textColourOnId [in] Description for juce::TextButton::textColourOnId.
+     * @param Config::Colors::Button::text [in] Description for Config::Colors::Button::text.
+     */
     setColour (juce::TextButton::textColourOnId, Config::Colors::Button::text); } // Use same text colour for on/off states
 
     //------------------------------------------------------------------------------------------------

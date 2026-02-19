@@ -1,3 +1,9 @@
+/**
+ * @file SilenceAnalysisAlgorithms.cpp
+ * @brief Defines the SilenceAnalysisAlgorithms class.
+ * @ingroup Engine
+ */
+
 #include "SilenceAnalysisAlgorithms.h"
 #include <limits>
 #include <algorithm>
@@ -20,6 +26,12 @@ juce::int64 SilenceAnalysisAlgorithms::findSilenceIn(juce::AudioFormatReader& re
         return -1;
 
     // Security Fix: Process in chunks to avoid large memory allocation
+    /**
+     * @brief Undocumented method.
+     * @param reader.numChannels [in] Description for reader.numChannels.
+     * @param kChunkSize [in] Description for kChunkSize.
+     * @return juce::AudioBuffer<float>
+     */
     juce::AudioBuffer<float> buffer(reader.numChannels, kChunkSize);
 
     juce::int64 currentPos = 0;
@@ -57,6 +69,12 @@ juce::int64 SilenceAnalysisAlgorithms::findSilenceOut(juce::AudioFormatReader& r
         return -1;
 
     // Security Fix: Process in chunks backwards
+    /**
+     * @brief Undocumented method.
+     * @param reader.numChannels [in] Description for reader.numChannels.
+     * @param kChunkSize [in] Description for kChunkSize.
+     * @return juce::AudioBuffer<float>
+     */
     juce::AudioBuffer<float> buffer(reader.numChannels, kChunkSize);
 
     juce::int64 currentPos = lengthInSamples;

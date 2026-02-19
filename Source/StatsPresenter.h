@@ -1,3 +1,9 @@
+/**
+ * @file StatsPresenter.h
+ * @brief Defines the StatsPresenter class.
+ * @ingroup Presenters
+ */
+
 #ifndef AUDIOFILER_STATSPRESENTER_H
 #define AUDIOFILER_STATSPRESENTER_H
 
@@ -9,6 +15,11 @@
 
 #include "Config.h"
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
 
 /**
@@ -21,8 +32,21 @@ public:
     StatsOverlay()
         : resizer (this, &constrainer, juce::ResizableEdgeComponent::bottomEdge)
     {
+        /**
+         * @brief Sets the InterceptsMouseClicks.
+         * @param false [in] Description for false.
+         * @param true [in] Description for true.
+         */
         setInterceptsMouseClicks(false, true);
+        /**
+         * @brief Undocumented method.
+         * @param statsDisplay [in] Description for statsDisplay.
+         */
         addAndMakeVisible(statsDisplay);
+        /**
+         * @brief Undocumented method.
+         * @param resizer [in] Description for resizer.
+         */
         addAndMakeVisible(resizer);
 
         statsDisplay.setInterceptsMouseClicks(false, false);
@@ -140,7 +164,14 @@ public:
     void setDisplayEnabled(bool shouldEnable);
 
 private:
+    /**
+     * @brief Undocumented method.
+     * @return juce::String
+     */
     juce::String buildStatsString() const;
+    /**
+     * @brief Undocumented method.
+     */
     void updateVisibility();
 
     ControlPanel& owner;

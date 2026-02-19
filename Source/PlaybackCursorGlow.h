@@ -1,3 +1,9 @@
+/**
+ * @file PlaybackCursorGlow.h
+ * @brief Defines the PlaybackCursorGlow class.
+ * @ingroup Views
+ */
+
 /*
   ==============================================================================
 
@@ -18,6 +24,11 @@
 
 #include "Config.h"
 
+/**
+ * @class PlaybackCursorGlow
+ * @brief Home: Engine.
+ *
+ */
 class PlaybackCursorGlow
 {
 public:

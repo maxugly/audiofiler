@@ -1,3 +1,9 @@
+/**
+ * @file CoordinateMapper.h
+ * @brief Utility for pixel/sample conversion math.
+ * @ingroup Engine
+ */
+
 #ifndef AUDIOFILER_COORDINATEMAPPER_H
 #define AUDIOFILER_COORDINATEMAPPER_H
 

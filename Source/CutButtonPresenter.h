@@ -1,3 +1,9 @@
+/**
+ * @file CutButtonPresenter.h
+ * @brief Defines the CutButtonPresenter class.
+ * @ingroup Presenters
+ */
+
 #ifndef AUDIOFILER_CUTBUTTONPRESENTER_H
 #define AUDIOFILER_CUTBUTTONPRESENTER_H
 
@@ -7,6 +13,11 @@
     #include <JuceHeader.h>
 #endif
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
 
 /**
@@ -16,8 +27,15 @@ class ControlPanel;
 class CutButtonPresenter
 {
 public:
+    /**
+     * @brief Undocumented method.
+     * @param ownerPanel [in] Description for ownerPanel.
+     */
     explicit CutButtonPresenter(ControlPanel& ownerPanel);
 
+    /**
+     * @brief Undocumented method.
+     */
     void updateColours();
 
 private:

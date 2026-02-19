@@ -1,3 +1,9 @@
+/**
+ * @file SilenceAnalysisWorker.cpp
+ * @brief Defines the SilenceAnalysisWorker class.
+ * @ingroup Engine
+ */
+
 #include "SilenceAnalysisWorker.h"
 #include "SilenceAnalysisAlgorithms.h"
 #include "AudioPlayer.h"
@@ -17,6 +23,10 @@ SilenceAnalysisWorker::SilenceAnalysisWorker(SilenceWorkerClient& owner, Session
 
 SilenceAnalysisWorker::~SilenceAnalysisWorker()
 {
+    /**
+     * @brief Undocumented method.
+     * @param 4000 [in] Description for 4000.
+     */
     stopThread(4000);
 }
 
@@ -42,6 +52,9 @@ void SilenceAnalysisWorker::startAnalysis(float thresholdVal, bool isIn)
     if (wasPlayingBeforeScan)
         audioPlayer.stopPlayback();
 
+    /**
+     * @brief Undocumented method.
+     */
     startThread();
 }
 
@@ -52,6 +65,11 @@ void SilenceAnalysisWorker::run()
     // Capture necessary state
     AudioPlayer& audioPlayer = client.getAudioPlayer();
     const juce::String filePath = assignedFilePath;
+    /**
+     * @brief Undocumented method.
+     * @param filePath [in] Description for filePath.
+     * @return juce::File
+     */
     juce::File fileToAnalyze(filePath);
     
     // Independent Reader: Create a local, temporary reader for the file

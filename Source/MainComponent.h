@@ -13,7 +13,17 @@
 #include "AppEnums.h"
 #include "SessionState.h"
 
+/**
+ * @class KeybindHandler
+ * @brief Home: Engine.
+ *
+ */
 class KeybindHandler;
+/**
+ * @class PlaybackRepeatController
+ * @brief Home: Engine.
+ *
+ */
 class PlaybackRepeatController;
 
 /**

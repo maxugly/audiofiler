@@ -1,3 +1,9 @@
+/**
+ * @file SilenceAnalysisAlgorithms.h
+ * @brief Defines the SilenceAnalysisAlgorithms class.
+ * @ingroup Engine
+ */
+
 #ifndef SILENCE_ANALYSIS_ALGORITHMS_H
 #define SILENCE_ANALYSIS_ALGORITHMS_H
 
@@ -9,6 +15,11 @@
  #include <JuceHeader.h>
 #endif
 
+/**
+ * @class SilenceAnalysisAlgorithms
+ * @brief Home: Engine.
+ *
+ */
 class SilenceAnalysisAlgorithms
 {
 public:

@@ -1,3 +1,9 @@
+/**
+ * @file PlaybackRepeatController.cpp
+ * @brief Defines the PlaybackRepeatController class.
+ * @ingroup Presenters
+ */
+
 #include "PlaybackRepeatController.h"
 
 #include "AudioPlayer.h"

@@ -85,11 +85,28 @@ private:
        * centers it on screen, and makes it visible.
        */
       MainWindow (juce::String name) : DocumentWindow (name, Config::Colors::Window::background, allButtons) {
+        /**
+         * @brief Sets the UsingNativeTitleBar.
+         * @param true [in] Description for true.
+         */
         setUsingNativeTitleBar (true);
         setContentOwned (new MainComponent(), true);
+        /**
+         * @brief Sets the Resizable.
+         * @param true [in] Description for true.
+         * @param true [in] Description for true.
+         */
         setResizable (true, true);
         centreWithSize (getWidth(), getHeight());
+        /**
+         * @brief Sets the Visible.
+         * @param true [in] Description for true.
+         */
         setVisible (true);
+        /**
+         * @brief Sets the FullScreen.
+         * @param false [in] Description for false.
+         */
         setFullScreen (false); }
 
       /**

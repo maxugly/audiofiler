@@ -1,3 +1,9 @@
+/**
+ * @file RepeatPresenter.h
+ * @brief Defines the RepeatPresenter class.
+ * @ingroup Presenters
+ */
+
 #ifndef AUDIOFILER_REPEATPRESENTER_H
 #define AUDIOFILER_REPEATPRESENTER_H
 
@@ -7,12 +13,23 @@
     #include <JuceHeader.h>
 #endif
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
+/**
+ * @class SilenceDetector
+ * @brief Home: Engine.
+ *
+ */
 class SilenceDetector;
 
 /**
  * @class RepeatPresenter
  * @brief Coordinates the repeat button and the session state repeat flag.
+ * @see RepeatButton
  *        Also handles the cut boundary text editors.
  */
 class RepeatPresenter : private juce::TextEditor::Listener,
@@ -60,21 +77,70 @@ public:
 
 private:
   // juce::TextEditor::Listener overrides
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   */
   void textEditorTextChanged(juce::TextEditor &editor) override;
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   */
   void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   */
   void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   */
   void textEditorFocusLost(juce::TextEditor &editor) override;
 
   // juce::MouseListener overrides
   void mouseWheelMove(const juce::MouseEvent &event,
                       const juce::MouseWheelDetails &wheel) override;
+  /**
+   * @brief Undocumented method.
+   * @param event [in] Description for event.
+   */
   void mouseEnter(const juce::MouseEvent &event) override;
+  /**
+   * @brief Undocumented method.
+   * @param event [in] Description for event.
+   */
   void mouseExit(const juce::MouseEvent &event) override;
+  /**
+   * @brief Undocumented method.
+   * @param event [in] Description for event.
+   */
   void mouseUp(const juce::MouseEvent &event) override;
 
+  /**
+   * @brief Gets the AudioTotalLength.
+   * @return double
+   */
   double getAudioTotalLength() const;
+  /**
+   * @brief Undocumented method.
+   * @param newPosition [in] Description for newPosition.
+   * @param editor [in] Description for editor.
+   * @return bool
+   */
   bool applyCutInFromEditor(double newPosition, juce::TextEditor &editor);
+  /**
+   * @brief Undocumented method.
+   * @param newPosition [in] Description for newPosition.
+   * @param editor [in] Description for editor.
+   * @return bool
+   */
   bool applyCutOutFromEditor(double newPosition, juce::TextEditor &editor);
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   * @param positionSeconds [in] Description for positionSeconds.
+   */
   void syncEditorToPosition(juce::TextEditor &editor, double positionSeconds);
 
   ControlPanel &owner;
@@ -84,6 +150,10 @@ private:
   bool isEditingIn{false};
   bool isEditingOut{false};
 
+  /**
+   * @brief Undocumented method.
+   * @param event [in] Description for event.
+   */
   void mouseDown(const juce::MouseEvent &event) override;
 };
 

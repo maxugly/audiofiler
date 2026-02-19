@@ -1,3 +1,9 @@
+/**
+ * @file Config.h
+ * @brief Defines the Config class.
+ * @ingroup Engine
+ */
+
 #ifndef AUDIOFILER_CONFIG_H
 #define AUDIOFILER_CONFIG_H
 

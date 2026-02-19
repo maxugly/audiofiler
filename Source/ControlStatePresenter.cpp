@@ -1,3 +1,9 @@
+/**
+ * @file ControlStatePresenter.cpp
+ * @brief Defines the ControlStatePresenter class.
+ * @ingroup Presenters
+ */
+
 #include "ControlStatePresenter.h"
 
 #include "ControlPanel.h"
@@ -14,6 +20,10 @@ void ControlStatePresenter::refreshStates()
 {
     const bool enabled = owner.getAudioPlayer().getThumbnail().getTotalLength() > 0.0;
 
+    /**
+     * @brief Undocumented method.
+     * @param enabled [in] Description for enabled.
+     */
     updateGeneralButtonStates(enabled);
     updateCutModeControlStates(owner.isCutModeActive(), enabled);
 }

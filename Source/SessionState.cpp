@@ -1,3 +1,9 @@
+/**
+ * @file SessionState.cpp
+ * @brief Defines the SessionState class.
+ * @ingroup Engine
+ */
+
 #include "SessionState.h"
 
 SessionState::SessionState()

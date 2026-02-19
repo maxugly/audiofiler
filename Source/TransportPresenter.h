@@ -1,3 +1,9 @@
+/**
+ * @file TransportPresenter.h
+ * @brief Defines the TransportPresenter class.
+ * @ingroup Presenters
+ */
+
 #ifndef AUDIOFILER_TRANSPORTPRESENTER_H
 #define AUDIOFILER_TRANSPORTPRESENTER_H
 
@@ -7,6 +13,11 @@
     #include <JuceHeader.h>
 #endif
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
 
 /**
@@ -37,6 +48,9 @@ public:
     void handleCutModeToggle(bool enableCutMode);
 
 private:
+    /**
+     * @brief Undocumented method.
+     */
     void enforceCutBounds() const;
 
     ControlPanel& owner;

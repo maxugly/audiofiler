@@ -12,6 +12,11 @@
     #include <JuceHeader.h>
 #endif
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
 
 /**
@@ -34,6 +39,10 @@ enum class FocusTarget {
  */
 class FocusManager {
 public:
+  /**
+   * @brief Undocumented method.
+   * @param owner [in] Description for owner.
+   */
   explicit FocusManager(ControlPanel &owner);
 
   /**

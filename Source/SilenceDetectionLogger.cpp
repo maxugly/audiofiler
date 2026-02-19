@@ -1,3 +1,9 @@
+/**
+ * @file SilenceDetectionLogger.cpp
+ * @brief Defines the SilenceDetectionLogger class.
+ * @ingroup Engine
+ */
+
 #include "SilenceDetectionLogger.h"
 #include "TimeUtils.h"
 

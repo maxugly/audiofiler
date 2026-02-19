@@ -1,3 +1,9 @@
+/**
+ * @file PlaybackCursorView.h
+ * @brief Defines the PlaybackCursorView class.
+ * @ingroup Views
+ */
+
 #ifndef AUDIOFILER_PLAYBACKCURSORVIEW_H
 #define AUDIOFILER_PLAYBACKCURSORVIEW_H
 
@@ -7,6 +13,11 @@
     #include <JuceHeader.h>
 #endif
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
 
 /**
@@ -17,9 +28,17 @@ class ControlPanel;
 class PlaybackCursorView : public juce::Component
 {
 public:
+    /**
+     * @brief Undocumented method.
+     * @param owner [in] Description for owner.
+     */
     explicit PlaybackCursorView(ControlPanel& owner);
     ~PlaybackCursorView() override = default;
 
+    /**
+     * @brief Renders the component.
+     * @param g [in] Description for g.
+     */
     void paint(juce::Graphics& g) override;
 
 private:

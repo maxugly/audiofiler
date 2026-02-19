@@ -1,3 +1,9 @@
+/**
+ * @file SilenceDetectionPresenter.cpp
+ * @brief Defines the SilenceDetectionPresenter class.
+ * @ingroup Presenters
+ */
+
 #include "SilenceDetectionPresenter.h"
 
 #include "ControlPanel.h"

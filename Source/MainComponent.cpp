@@ -1,3 +1,9 @@
+/**
+ * @file MainComponent.cpp
+ * @brief Defines the MainComponent class.
+ * @ingroup Views
+ */
+
 #include "MainComponent.h"
 #include "TimeUtils.h"
 #include "ControlPanel.h"
@@ -20,9 +26,19 @@ MainComponent::MainComponent()
     playbackRepeatController = std::make_unique<PlaybackRepeatController>(*audioPlayer, *controlPanel);
 
     // 4. Set Audio Channels (Important to do before some UI sizing if they depend on audio state)
+    /**
+     * @brief Sets the AudioChannels.
+     * @param 0 [in] Description for 0.
+     * @param 2 [in] Description for 2.
+     */
     setAudioChannels(0, 2);
 
     // 5. Set Window Size - This triggers resized() and lays out the ControlPanel
+    /**
+     * @brief Sets the Size.
+     * @param Config::Layout::Window::width [in] Description for Config::Layout::Window::width.
+     * @param Config::Layout::Window::height [in] Description for Config::Layout::Window::height.
+     */
     setSize(Config::Layout::Window::width, Config::Layout::Window::height);
     
     // 6. Start the UI Refresh Timer
@@ -30,6 +46,10 @@ MainComponent::MainComponent()
 
     // 7. Focus Setup - We allow the component to receive focus, 
     // but we no longer "grab" it here to avoid Peer assertion crashes.
+    /**
+     * @brief Sets the WantsKeyboardFocus.
+     * @param true [in] Description for true.
+     */
     setWantsKeyboardFocus(true);
     openGLContext.attachTo(*this);
 
@@ -39,6 +59,9 @@ MainComponent::~MainComponent()
 {
     openGLContext.detach();
     audioPlayer->removeChangeListener(this);
+    /**
+     * @brief Undocumented method.
+     */
     shutdownAudio();
 
 }
@@ -80,6 +103,9 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
     if (source == audioPlayer.get())
     {
         controlPanel->updatePlayButtonText(audioPlayer->isPlaying());
+        /**
+         * @brief Undocumented method.
+         */
         repaint(); 
     }
 }
@@ -115,6 +141,9 @@ void MainComponent::openButtonClicked()
             }
         }
         // Safely request focus after a UI interaction
+        /**
+         * @brief Undocumented method.
+         */
         grabKeyboardFocus();
     });
 }

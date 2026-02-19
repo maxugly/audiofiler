@@ -1,3 +1,9 @@
+/**
+ * @file SilenceDetectionPresenter.h
+ * @brief Defines the SilenceDetectionPresenter class.
+ * @ingroup Presenters
+ */
+
 #ifndef AUDIOFILER_SILENCEDETECTIONPRESENTER_H
 #define AUDIOFILER_SILENCEDETECTIONPRESENTER_H
 
@@ -10,8 +16,23 @@
 #include "SilenceWorkerClient.h"
 #include "SilenceAnalysisWorker.h"
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
+/**
+ * @class SessionState
+ * @brief Home: Engine.
+ *
+ */
 class SessionState;
+/**
+ * @class AudioPlayer
+ * @brief Home: Engine.
+ *
+ */
 class AudioPlayer;
 
 /**
@@ -57,13 +78,34 @@ public:
     bool isAnalyzing() const { return silenceWorker.isBusy(); }
 
     // SilenceWorkerClient implementation
+    /**
+     * @brief Gets the AudioPlayer.
+     * @return AudioPlayer&
+     */
     AudioPlayer& getAudioPlayer() override;
+    /**
+     * @brief Sets the CutStart.
+     * @param sampleIndex [in] Description for sampleIndex.
+     */
     void setCutStart(int sampleIndex) override;
+    /**
+     * @brief Sets the CutEnd.
+     * @param sampleIndex [in] Description for sampleIndex.
+     */
     void setCutEnd(int sampleIndex) override;
+    /**
+     * @brief Undocumented method.
+     * @param message [in] Description for message.
+     * @param false [in] Description for false.
+     */
     void logStatusMessage(const juce::String& message, bool isError = false) override;
     bool isCutModeActive() const override;
 
 private:
+    /**
+     * @brief Checks if sLoadedAudio.
+     * @return bool
+     */
     bool hasLoadedAudio() const;
 
     ControlPanel& owner;

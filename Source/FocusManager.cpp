@@ -1,3 +1,9 @@
+/**
+ * @file FocusManager.cpp
+ * @brief Defines the FocusManager class.
+ * @ingroup Engine
+ */
+
 #include "FocusManager.h"
 #include "ControlPanel.h"
 #include "MouseHandler.h"

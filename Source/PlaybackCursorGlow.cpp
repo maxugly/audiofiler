@@ -1,3 +1,9 @@
+/**
+ * @file PlaybackCursorGlow.cpp
+ * @brief Defines the PlaybackCursorGlow class.
+ * @ingroup Views
+ */
+
 /*
   ==============================================================================
 

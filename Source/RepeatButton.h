@@ -1,3 +1,9 @@
+/**
+ * @file RepeatButton.h
+ * @brief Defines the RepeatButton class.
+ * @ingroup Views
+ */
+
 #ifndef AUDIOFILER_REPEATBUTTON_H
 #define AUDIOFILER_REPEATBUTTON_H
 

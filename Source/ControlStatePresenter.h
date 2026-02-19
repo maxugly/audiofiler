@@ -1,3 +1,9 @@
+/**
+ * @file ControlStatePresenter.h
+ * @brief Defines the ControlStatePresenter class.
+ * @ingroup Presenters
+ */
+
 #ifndef AUDIOFILER_CONTROLSTATEPRESENTER_H
 #define AUDIOFILER_CONTROLSTATEPRESENTER_H
 
@@ -7,6 +13,11 @@
     #include <JuceHeader.h>
 #endif
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
 
 /**
@@ -31,7 +42,16 @@ public:
     void refreshStates();
 
 private:
+    /**
+     * @brief Undocumented method.
+     * @param enabled [in] Description for enabled.
+     */
     void updateGeneralButtonStates(bool enabled);
+    /**
+     * @brief Undocumented method.
+     * @param isCutModeActive [in] Description for isCutModeActive.
+     * @param enabled [in] Description for enabled.
+     */
     void updateCutModeControlStates(bool isCutModeActive, bool enabled);
 
     ControlPanel& owner;

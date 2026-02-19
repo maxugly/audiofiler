@@ -1,3 +1,9 @@
+/**
+ * @file ControlButtonsPresenter.cpp
+ * @brief Defines the ControlButtonsPresenter class.
+ * @ingroup Presenters
+ */
+
 #include "ControlButtonsPresenter.h"
 
 #include "ControlPanel.h"
@@ -18,19 +24,61 @@ ControlButtonsPresenter::ControlButtonsPresenter(ControlPanel& ownerPanel)
 
 void ControlButtonsPresenter::initialiseAllButtons()
 {
+    /**
+     * @brief Undocumented method.
+     */
     initialiseOpenButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialisePlayStopButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseModeButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseChannelViewButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseQualityButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseExitButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseStatsButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseRepeatButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseAutoplayButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseAutoCutInButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseAutoCutOutButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseCutButton();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseCutBoundaryButtons();
+    /**
+     * @brief Undocumented method.
+     */
     initialiseClearButtons();
 }
 

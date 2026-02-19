@@ -1,3 +1,9 @@
+/**
+ * @file ControlPanelLayoutCache.h
+ * @brief Defines the ControlPanelLayoutCache class.
+ * @ingroup Views
+ */
+
 #ifndef AUDIOFILER_CONTROLPANELLAYOUTCACHE_H
 #define AUDIOFILER_CONTROLPANELLAYOUTCACHE_H
 

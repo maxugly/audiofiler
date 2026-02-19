@@ -1,3 +1,9 @@
+/**
+ * @file SilenceThresholdPresenter.cpp
+ * @brief Defines the SilenceThresholdPresenter class.
+ * @ingroup Presenters
+ */
+
 #include "SilenceThresholdPresenter.h"
 
 #include "SilenceDetector.h"
@@ -61,16 +67,28 @@ void SilenceThresholdPresenter::textEditorTextChanged(juce::TextEditor& editor)
     editor.setColour(juce::TextEditor::backgroundColourId,
                      owner.getLookAndFeel().findColour(juce::TextEditor::backgroundColourId));
 
+    /**
+     * @brief Undocumented method.
+     * @param editor [in] Description for editor.
+     */
     updateThresholdFromEditorIfValid(editor);
 }
 
 void SilenceThresholdPresenter::textEditorReturnKeyPressed(juce::TextEditor& editor)
 {
+    /**
+     * @brief Undocumented method.
+     * @param editor [in] Description for editor.
+     */
     applyThresholdFromEditor(editor);
 }
 
 void SilenceThresholdPresenter::textEditorFocusLost(juce::TextEditor& editor)
 {
+    /**
+     * @brief Undocumented method.
+     * @param editor [in] Description for editor.
+     */
     applyThresholdFromEditor(editor);
 }
 
@@ -93,6 +111,10 @@ void SilenceThresholdPresenter::mouseWheelMove(const juce::MouseEvent& event, co
     if (newPercentage != currentPercentage)
     {
         editor->setText(juce::String(newPercentage), juce::sendNotification);
+        /**
+         * @brief Undocumented method.
+         * @param editor [in] Description for editor.
+         */
         applyThresholdFromEditor(*editor);
     }
 }
@@ -103,6 +125,10 @@ void SilenceThresholdPresenter::applyThresholdFromEditor(juce::TextEditor& edito
 
     if (isValidPercentage(intValue))
     {
+        /**
+         * @brief Undocumented method.
+         * @param editor [in] Description for editor.
+         */
         updateThresholdFromEditorIfValid(editor);
 
         editor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
@@ -112,6 +138,10 @@ void SilenceThresholdPresenter::applyThresholdFromEditor(juce::TextEditor& edito
     }
     else
     {
+        /**
+         * @brief Undocumented method.
+         * @param editor [in] Description for editor.
+         */
         restoreEditorToCurrentValue(editor);
         editor.setColour(juce::TextEditor::textColourId, Config::Colors::textEditorWarning);
         owner.getStatsDisplay().insertTextAtCaret("Warning: Threshold value must be between 1 and 99. Restored to last valid value.\n");

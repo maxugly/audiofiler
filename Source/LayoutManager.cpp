@@ -1,3 +1,9 @@
+/**
+ * @file LayoutManager.cpp
+ * @brief Defines the LayoutManager class.
+ * @ingroup Engine
+ */
+
 #include "LayoutManager.h"
 
 #include "ControlPanel.h"
@@ -17,9 +23,28 @@ void LayoutManager::performLayout()
     const int margin = Config::Layout::windowBorderMargins;
     const int rowHeight = Config::Layout::buttonHeight + margin * 2;
 
+    /**
+     * @brief Undocumented method.
+     * @param bounds [in] Description for bounds.
+     * @param rowHeight [in] Description for rowHeight.
+     */
     layoutTopRowButtons(bounds, rowHeight);
+    /**
+     * @brief Undocumented method.
+     * @param bounds [in] Description for bounds.
+     * @param rowHeight [in] Description for rowHeight.
+     */
     layoutCutControls(bounds, rowHeight);
+    /**
+     * @brief Undocumented method.
+     * @param bounds [in] Description for bounds.
+     * @param rowHeight [in] Description for rowHeight.
+     */
     layoutBottomRowAndTextDisplay(bounds, rowHeight);
+    /**
+     * @brief Undocumented method.
+     * @param bounds [in] Description for bounds.
+     */
     layoutWaveformAndStats(bounds);
 }
 

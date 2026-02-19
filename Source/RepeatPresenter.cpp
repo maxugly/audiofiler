@@ -1,3 +1,9 @@
+/**
+ * @file RepeatPresenter.cpp
+ * @brief Defines the RepeatPresenter class.
+ * @ingroup Presenters
+ */
+
 #include "RepeatPresenter.h"
 #include "FocusManager.h"
 #include "TimeUtils.h"
@@ -15,6 +21,10 @@ RepeatPresenter::RepeatPresenter(ControlPanel &ownerPanel,
                              juce::TextEditor &cutIn,
                              juce::TextEditor &cutOut)
     : owner(ownerPanel), silenceDetector(detector), cutInEditor(cutIn),
+      /**
+       * @brief Undocumented method.
+       * @param cutOut [in] Description for cutOut.
+       */
       cutOutEditor(cutOut) {
   cutInEditor.addListener(this);
   cutOutEditor.addListener(this);
@@ -22,6 +32,9 @@ RepeatPresenter::RepeatPresenter(ControlPanel &ownerPanel,
   cutOutEditor.addMouseListener(this, false);
 }
 
+/**
+ * @brief Undocumented method.
+ */
 void RepeatPresenter::initialiseEditors() {
   auto configure = [](juce::TextEditor &editor) {
     editor.setReadOnly(false);
@@ -39,12 +52,23 @@ void RepeatPresenter::initialiseEditors() {
   };
 
   owner.addAndMakeVisible(cutInEditor);
+  /**
+   * @brief Undocumented method.
+   * @param cutInEditor [in] Description for cutInEditor.
+   */
   configure(cutInEditor);
 
   owner.addAndMakeVisible(cutOutEditor);
+  /**
+   * @brief Undocumented method.
+   * @param cutOutEditor [in] Description for cutOutEditor.
+   */
   configure(cutOutEditor);
 }
 
+/**
+ * @brief Undocumented method.
+ */
 RepeatPresenter::~RepeatPresenter() {
   cutInEditor.removeListener(this);
   cutOutEditor.removeListener(this);
@@ -60,6 +84,10 @@ double RepeatPresenter::getCutOutPosition() const noexcept {
   return owner.getAudioPlayer().getCutOut();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param positionSeconds [in] Description for positionSeconds.
+ */
 void RepeatPresenter::setCutInPosition(double positionSeconds) {
   const double totalLength = getAudioTotalLength();
   const double newPos = positionSeconds;
@@ -75,6 +103,10 @@ void RepeatPresenter::setCutInPosition(double positionSeconds) {
 
   if (silenceDetector.getIsAutoCutInActive() &&
       newPos >= currentOut) {
+    /**
+     * @brief Sets the CutOutPosition.
+     * @param totalLength [in] Description for totalLength.
+     */
     setCutOutPosition(totalLength);
     if (silenceDetector.getIsAutoCutOutActive())
       silenceDetector.detectOutSilence();
@@ -82,9 +114,16 @@ void RepeatPresenter::setCutInPosition(double positionSeconds) {
 
   audioPlayer.setPlayheadPosition(
       audioPlayer.getCurrentPosition());
+  /**
+   * @brief Undocumented method.
+   */
   ensureCutOrder();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param positionSeconds [in] Description for positionSeconds.
+ */
 void RepeatPresenter::setCutOutPosition(double positionSeconds) {
   const double newPos = positionSeconds;
   auto &audioPlayer = owner.getAudioPlayer();
@@ -99,6 +138,10 @@ void RepeatPresenter::setCutOutPosition(double positionSeconds) {
 
   if (silenceDetector.getIsAutoCutOutActive() &&
       newPos <= currentIn) {
+    /**
+     * @brief Sets the CutInPosition.
+     * @param 0.0 [in] Description for 0.0.
+     */
     setCutInPosition(0.0);
     if (silenceDetector.getIsAutoCutInActive())
       silenceDetector.detectInSilence();
@@ -106,15 +149,26 @@ void RepeatPresenter::setCutOutPosition(double positionSeconds) {
 
   audioPlayer.setPlayheadPosition(
       audioPlayer.getCurrentPosition());
+  /**
+   * @brief Undocumented method.
+   */
   ensureCutOrder();
 }
 
+/**
+ * @brief Undocumented method.
+ */
 void RepeatPresenter::ensureCutOrder() {
   auto &audioPlayer = owner.getAudioPlayer();
   double currentIn = audioPlayer.getCutIn();
   double currentOut = audioPlayer.getCutOut();
 
   if (currentIn > currentOut) {
+    /**
+     * @brief Undocumented method.
+     * @param currentIn [in] Description for currentIn.
+     * @param currentOut [in] Description for currentOut.
+     */
     std::swap(currentIn, currentOut);
     audioPlayer.setCutIn(currentIn);
     audioPlayer.setCutOut(currentOut);
@@ -126,18 +180,35 @@ void RepeatPresenter::ensureCutOrder() {
   }
 }
 
+/**
+ * @brief Undocumented method.
+ */
 void RepeatPresenter::updateCutLabels() {
   const double currentIn = owner.getAudioPlayer().getCutIn();
   const double currentOut = owner.getAudioPlayer().getCutOut();
   if (!isEditingIn && !cutInEditor.hasKeyboardFocus(true)) {
+    /**
+     * @brief Undocumented method.
+     * @param cutInEditor [in] Description for cutInEditor.
+     * @param currentIn [in] Description for currentIn.
+     */
     syncEditorToPosition(cutInEditor, currentIn);
   }
 
   if (!isEditingOut && !cutOutEditor.hasKeyboardFocus(true)) {
+    /**
+     * @brief Undocumented method.
+     * @param cutOutEditor [in] Description for cutOutEditor.
+     * @param currentOut [in] Description for currentOut.
+     */
     syncEditorToPosition(cutOutEditor, currentOut);
   }
 }
 
+/**
+ * @brief Undocumented method.
+ * @param sampleIndex [in] Description for sampleIndex.
+ */
 void RepeatPresenter::setCutStartFromSample(int sampleIndex) {
   AudioPlayer &audioPlayer = owner.getAudioPlayer();
   double sampleRate = 0.0;
@@ -146,11 +217,21 @@ void RepeatPresenter::setCutStartFromSample(int sampleIndex) {
     return;
 
   setCutInPosition((double)sampleIndex / sampleRate);
+  /**
+   * @brief Undocumented method.
+   */
   ensureCutOrder();
+  /**
+   * @brief Undocumented method.
+   */
   updateCutLabels();
   owner.repaint();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param sampleIndex [in] Description for sampleIndex.
+ */
 void RepeatPresenter::setCutEndFromSample(int sampleIndex) {
   AudioPlayer &audioPlayer = owner.getAudioPlayer();
   double sampleRate = 0.0;
@@ -159,11 +240,21 @@ void RepeatPresenter::setCutEndFromSample(int sampleIndex) {
     return;
 
   setCutOutPosition((double)sampleIndex / sampleRate);
+  /**
+   * @brief Undocumented method.
+   */
   ensureCutOrder();
+  /**
+   * @brief Undocumented method.
+   */
   updateCutLabels();
   owner.repaint();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param editor [in] Description for editor.
+ */
 void RepeatPresenter::textEditorTextChanged(juce::TextEditor &editor) {
   if (&editor == &cutInEditor)
     isEditingIn = true;
@@ -171,9 +262,18 @@ void RepeatPresenter::textEditorTextChanged(juce::TextEditor &editor) {
     isEditingOut = true;
 
   const double totalLength = getAudioTotalLength();
+  /**
+   * @brief Undocumented method.
+   * @param editor [in] Description for editor.
+   * @param totalLength [in] Description for totalLength.
+   */
   TimeEntryHelpers::validateTimeEntry(editor, totalLength);
 }
 
+/**
+ * @brief Undocumented method.
+ * @param editor [in] Description for editor.
+ */
 void RepeatPresenter::textEditorReturnKeyPressed(juce::TextEditor &editor) {
   if (&editor == &cutInEditor)
     isEditingIn = false;
@@ -182,13 +282,27 @@ void RepeatPresenter::textEditorReturnKeyPressed(juce::TextEditor &editor) {
 
   const double newPosition = TimeUtils::parseTime(editor.getText());
   if (&editor == &cutInEditor) {
+    /**
+     * @brief Undocumented method.
+     * @param newPosition [in] Description for newPosition.
+     * @param editor [in] Description for editor.
+     */
     applyCutInFromEditor(newPosition, editor);
   } else if (&editor == &cutOutEditor) {
+    /**
+     * @brief Undocumented method.
+     * @param newPosition [in] Description for newPosition.
+     * @param editor [in] Description for editor.
+     */
     applyCutOutFromEditor(newPosition, editor);
   }
   editor.giveAwayKeyboardFocus();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param editor [in] Description for editor.
+ */
 void RepeatPresenter::textEditorEscapeKeyPressed(juce::TextEditor &editor) {
   if (&editor == &cutInEditor)
     isEditingIn = false;
@@ -205,6 +319,10 @@ void RepeatPresenter::textEditorEscapeKeyPressed(juce::TextEditor &editor) {
   editor.giveAwayKeyboardFocus();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param editor [in] Description for editor.
+ */
 void RepeatPresenter::textEditorFocusLost(juce::TextEditor &editor) {
   if (&editor == &cutInEditor)
     isEditingIn = false;
@@ -213,8 +331,18 @@ void RepeatPresenter::textEditorFocusLost(juce::TextEditor &editor) {
 
   const double newPosition = TimeUtils::parseTime(editor.getText());
   if (&editor == &cutInEditor) {
+    /**
+     * @brief Undocumented method.
+     * @param newPosition [in] Description for newPosition.
+     * @param editor [in] Description for editor.
+     */
     applyCutInFromEditor(newPosition, editor);
   } else if (&editor == &cutOutEditor) {
+    /**
+     * @brief Undocumented method.
+     * @param newPosition [in] Description for newPosition.
+     * @param editor [in] Description for editor.
+     */
     applyCutOutFromEditor(newPosition, editor);
   }
 
@@ -222,6 +350,10 @@ void RepeatPresenter::textEditorFocusLost(juce::TextEditor &editor) {
   owner.performDelayedJumpIfNeeded();
 }
 
+/**
+ * @brief Undocumented method.
+ * @param event [in] Description for event.
+ */
 void RepeatPresenter::mouseDown(const juce::MouseEvent &event) {
   if (event.eventComponent == &cutInEditor)
     isEditingIn = true;
@@ -230,6 +362,10 @@ void RepeatPresenter::mouseDown(const juce::MouseEvent &event) {
 }
 
 
+/**
+ * @brief Undocumented method.
+ * @return double
+ */
 double RepeatPresenter::getAudioTotalLength() const {
   return owner.getAudioPlayer().getThumbnail().getTotalLength();
 }
@@ -239,6 +375,10 @@ bool RepeatPresenter::applyCutInFromEditor(double newPosition,
   const double totalLength = getAudioTotalLength();
   if (newPosition >= 0.0 && newPosition <= totalLength) {
 
+    /**
+     * @brief Sets the CutInPosition.
+     * @param newPosition [in] Description for newPosition.
+     */
     setCutInPosition(newPosition);
     owner.updateCutButtonColors();
     owner.setAutoCutInActive(false);
@@ -249,6 +389,9 @@ bool RepeatPresenter::applyCutInFromEditor(double newPosition,
     editor.setColour(juce::TextEditor::textColourId,
                      Config::Colors::playbackText);
     owner.repaint();
+    /**
+     * @brief Undocumented method.
+     */
     updateCutLabels();
     return true;
   }
@@ -269,6 +412,10 @@ bool RepeatPresenter::applyCutOutFromEditor(double newPosition,
         audioPlayer.getCurrentPosition() >= owner.getAudioPlayer().getCutOut())
       owner.getAudioPlayer().setPlayheadPosition(owner.getAudioPlayer().getCutIn());
 
+    /**
+     * @brief Sets the CutOutPosition.
+     * @param newPosition [in] Description for newPosition.
+     */
     setCutOutPosition(newPosition);
     owner.updateCutButtonColors();
     owner.setAutoCutOutActive(false);
@@ -279,6 +426,9 @@ bool RepeatPresenter::applyCutOutFromEditor(double newPosition,
     editor.setColour(juce::TextEditor::textColourId,
                      Config::Colors::playbackText);
     owner.repaint();
+    /**
+     * @brief Undocumented method.
+     */
     updateCutLabels();
     return true;
   }
@@ -303,6 +453,10 @@ void RepeatPresenter::syncEditorToPosition(juce::TextEditor &editor,
     editor.setText(newText, juce::dontSendNotification);
 }
 
+/**
+ * @brief Undocumented method.
+ * @param event [in] Description for event.
+ */
 void RepeatPresenter::mouseEnter(const juce::MouseEvent &event) {
   if (event.eventComponent == &cutInEditor)
     owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::In);
@@ -310,6 +464,10 @@ void RepeatPresenter::mouseEnter(const juce::MouseEvent &event) {
     owner.setActiveZoomPoint(ControlPanel::ActiveZoomPoint::Out);
 }
 
+/**
+ * @brief Undocumented method.
+ * @param event [in] Description for event.
+ */
 void RepeatPresenter::mouseExit(const juce::MouseEvent &event) {
   auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
   if (editor != nullptr && !editor->hasKeyboardFocus(false)) {
@@ -318,6 +476,10 @@ void RepeatPresenter::mouseExit(const juce::MouseEvent &event) {
   }
 }
 
+/**
+ * @brief Undocumented method.
+ * @param event [in] Description for event.
+ */
 void RepeatPresenter::mouseUp(const juce::MouseEvent &event) {
   auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
   if (editor == nullptr)
@@ -381,6 +543,12 @@ void RepeatPresenter::mouseWheelMove(const juce::MouseEvent &event,
   owner.getAudioPlayer().getReaderInfo(sampleRate, length);
 
   double step =
+      /**
+       * @brief Undocumented method.
+       * @param charIndex [in] Description for charIndex.
+       * @param event.mods [in] Description for event.mods.
+       * @param sampleRate [in] Description for sampleRate.
+       */
       TimeEntryHelpers::calculateStepSize(charIndex, event.mods, sampleRate);
 
   const double direction = (wheel.deltaY > 0) ? 1.0 : -1.0;
@@ -390,10 +558,20 @@ void RepeatPresenter::mouseWheelMove(const juce::MouseEvent &event,
     const double currentIn = owner.getAudioPlayer().getCutIn();
     double newPos = currentIn + delta;
     if (newPos != currentIn) {
+      /**
+       * @brief Sets the CutInPosition.
+       * @param newPos [in] Description for newPos.
+       */
       setCutInPosition(newPos);
       owner.setAutoCutInActive(false);
       owner.setNeedsJumpToCutIn(true);
+      /**
+       * @brief Undocumented method.
+       */
       ensureCutOrder();
+      /**
+       * @brief Undocumented method.
+       */
       updateCutLabels();
       owner.repaint();
     }
@@ -401,10 +579,20 @@ void RepeatPresenter::mouseWheelMove(const juce::MouseEvent &event,
     const double currentOut = owner.getAudioPlayer().getCutOut();
     double newPos = currentOut + delta;
     if (newPos != currentOut) {
+      /**
+       * @brief Sets the CutOutPosition.
+       * @param newPos [in] Description for newPos.
+       */
       setCutOutPosition(newPos);
       owner.setAutoCutOutActive(false);
       owner.setNeedsJumpToCutIn(true);
+      /**
+       * @brief Undocumented method.
+       */
       ensureCutOrder();
+      /**
+       * @brief Undocumented method.
+       */
       updateCutLabels();
       owner.repaint();
     }

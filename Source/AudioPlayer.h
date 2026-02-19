@@ -1,3 +1,9 @@
+/**
+ * @file AudioPlayer.h
+ * @brief Manages Gated VLAN playback logic and private transport.
+ * @ingroup Engine
+ */
+
 #ifndef AUDIOFILER_AUDIOPLAYER_H
 #define AUDIOFILER_AUDIOPLAYER_H
 
@@ -19,6 +25,11 @@
 #endif
 #include <mutex>
 
+/**
+ * @class ControlPanel
+ * @brief Home: View.
+ *
+ */
 class ControlPanel;
 
 /**
@@ -31,15 +42,38 @@ class AudioPlayer : public juce::AudioSource,
                     public SessionState::Listener
 {
 public:
+    /**
+     * @brief Constructs an AudioPlayer.
+     * @param state The session state manager to use for playback information.
+     */
     explicit AudioPlayer(SessionState& state);
+    /**
+     * @brief Undocumented method.
+     */
     ~AudioPlayer() override;
 
     /** @brief Sets the playback position. */
     void setPlayheadPosition(double seconds);
 
+    /**
+     * @brief Undocumented method.
+     * @param file [in] Description for file.
+     * @return juce::Result
+     */
     juce::Result loadFile(const juce::File& file);
+    /**
+     * @brief Undocumented method.
+     */
     void togglePlayStop();
+    /**
+     * @brief Checks if Playing.
+     * @return bool
+     */
     bool isPlaying() const;
+    /**
+     * @brief Gets the CurrentPosition.
+     * @return double
+     */
     double getCurrentPosition() const;
 
     /** @brief Sets the ControlPanel reference for silence detection delegation. */
@@ -55,33 +89,114 @@ public:
     void setRepeating(bool shouldRepeat);
 
     #if !defined(JUCE_HEADLESS)
+    /**
+     * @brief Gets the Thumbnail.
+     * @return juce::AudioThumbnail&
+     */
     juce::AudioThumbnail& getThumbnail();
+    /**
+     * @brief Gets the WaveformManager.
+     * @return WaveformManager&
+     */
     WaveformManager& getWaveformManager();
+    /**
+     * @brief Gets the WaveformManager.
+     * @return const WaveformManager&
+     */
     const WaveformManager& getWaveformManager() const;
     #endif
 
+    /**
+     * @brief Undocumented method.
+     */
     void startPlayback();
+    /**
+     * @brief Undocumented method.
+     */
     void stopPlayback();
+    /**
+     * @brief Gets the FormatManager.
+     * @return juce::AudioFormatManager&
+     */
     juce::AudioFormatManager& getFormatManager();
+    /**
+     * @brief Gets the AudioFormatReader.
+     * @return juce::AudioFormatReader*
+     */
     juce::AudioFormatReader* getAudioFormatReader() const;
+    /**
+     * @brief Gets the LoadedFile.
+     * @return juce::File
+     */
     juce::File getLoadedFile() const;
 
+    /**
+     * @brief Undocumented method.
+     * @param samplesPerBlockExpected [in] Description for samplesPerBlockExpected.
+     * @param sampleRate [in] Description for sampleRate.
+     */
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+    /**
+     * @brief Gets the NextAudioBlock.
+     * @param bufferToFill [in] Description for bufferToFill.
+     */
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
+    /**
+     * @brief Undocumented method.
+     */
     void releaseResources() override;
 
+    /**
+     * @brief Undocumented method.
+     * @param source [in] Description for source.
+     */
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+    /**
+     * @brief Undocumented method.
+     * @param prefs [in] Description for prefs.
+     */
     void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) override;
     
+    /**
+     * @brief Gets the CutIn.
+     * @return double
+     */
     double getCutIn() const { return sessionState.getCutIn(); }
+    /**
+     * @brief Gets the CutOut.
+     * @return double
+     */
     double getCutOut() const { return sessionState.getCutOut(); }
+    /**
+     * @brief Sets the CutIn.
+     * @param positionSeconds [in] Description for positionSeconds.
+     */
     void setCutIn(double positionSeconds) { sessionState.setCutIn(positionSeconds); }
+    /**
+     * @brief Sets the CutOut.
+     * @param positionSeconds [in] Description for positionSeconds.
+     */
     void setCutOut(double positionSeconds) { sessionState.setCutOut(positionSeconds); }
     
+    /**
+     * @brief Gets the ReaderMutex.
+     * @return std::mutex&
+     */
     std::mutex& getReaderMutex() { return readerMutex; }
+    /**
+     * @brief Gets the ReaderInfo.
+     * @param sampleRateOut [in] Description for sampleRateOut.
+     * @param lengthInSamplesOut [in] Description for lengthInSamplesOut.
+     * @return bool
+     */
     bool getReaderInfo(double& sampleRateOut, juce::int64& lengthInSamplesOut) const;
 
 #if JUCE_UNIT_TESTS
+    /**
+     * @brief Sets the SourceForTesting.
+     * @param source [in] Description for source.
+     * @param sampleRate [in] Description for sampleRate.
+     */
     void setSourceForTesting(juce::PositionableAudioSource* source, double sampleRate);
 #endif
 

@@ -1,3 +1,9 @@
+/**
+ * @file WaveformView.cpp
+ * @brief Defines the WaveformView class.
+ * @ingroup Views
+ */
+
 #include "WaveformView.h"
 #include "WaveformManager.h"
 #include "Config.h"
@@ -6,8 +12,21 @@ WaveformView::WaveformView(WaveformManager& waveformManagerIn)
     : waveformManager(waveformManagerIn)
 {
     waveformManager.addChangeListener(this);
+    /**
+     * @brief Sets the InterceptsMouseClicks.
+     * @param false [in] Description for false.
+     * @param false [in] Description for false.
+     */
     setInterceptsMouseClicks(false, false);
+    /**
+     * @brief Sets the Opaque.
+     * @param true [in] Description for true.
+     */
     setOpaque(true);
+    /**
+     * @brief Sets the BufferedToImage.
+     * @param true [in] Description for true.
+     */
     setBufferedToImage(true);
 }
 
@@ -19,6 +38,9 @@ WaveformView::~WaveformView()
 void WaveformView::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == &waveformManager.getThumbnail())
+        /**
+         * @brief Undocumented method.
+         */
         repaint();
 }
 
@@ -26,6 +48,9 @@ void WaveformView::setQuality(AppEnums::ThumbnailQuality quality)
 {
     if (currentQuality == quality) return;
     currentQuality = quality;
+    /**
+     * @brief Undocumented method.
+     */
     repaint();
 }
 
@@ -33,6 +58,9 @@ void WaveformView::setChannelMode(AppEnums::ChannelViewMode channelMode)
 {
     if (currentChannelMode == channelMode) return;
     currentChannelMode = channelMode;
+    /**
+     * @brief Undocumented method.
+     */
     repaint();
 }
 
