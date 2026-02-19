@@ -8,6 +8,7 @@
 #endif
 
 #include "Config.h"
+#include "AppEnums.h"
 
 class SessionState;
 class SilenceDetector;
@@ -15,7 +16,8 @@ class MouseHandler;
 class WaveformManager;
 class ControlPanel;
 
-class CutLayerView : public juce::Component
+class CutLayerView : public juce::Component,
+                     public juce::ChangeListener
 {
 public:
     CutLayerView(ControlPanel& owner,
@@ -24,10 +26,16 @@ public:
                  WaveformManager& waveformManager,
                  std::function<float()> glowAlphaProvider);
 
+    ~CutLayerView() override;
+
     void setMouseHandler(MouseHandler& mouseHandlerIn) { mouseHandler = &mouseHandlerIn; }
     void setMarkersVisible(bool visible) { markersVisible = visible; repaint(); }
 
+    void setChannelMode(AppEnums::ChannelViewMode mode);
+    void setQuality(AppEnums::ThumbnailQuality quality);
+
     void paint(juce::Graphics& g) override;
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
 private:
     ControlPanel& owner;
@@ -37,6 +45,9 @@ private:
     WaveformManager& waveformManager;
     std::function<float()> glowAlphaProvider;
     bool markersVisible = false;
+
+    AppEnums::ChannelViewMode currentChannelMode = AppEnums::ChannelViewMode::Mono;
+    AppEnums::ThumbnailQuality currentQuality = AppEnums::ThumbnailQuality::Low;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CutLayerView)
 };

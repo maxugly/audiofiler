@@ -32,9 +32,8 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
       layoutManager(std::make_unique<LayoutManager>(*this)),
       focusManager(std::make_unique<FocusManager>(*this)) {
   initialiseLookAndFeel();
+
   waveformView = std::make_unique<WaveformView>(owner.getAudioPlayer()->getWaveformManager());
-  waveformView->setQuality(currentQuality);
-  waveformView->setChannelMode(currentChannelViewMode);
   addAndMakeVisible(waveformView.get());
 
   cutLayerView = std::make_unique<CutLayerView>(*this,
@@ -225,6 +224,12 @@ void ControlPanel::updateUIFromState() {
       .setText(juce::String(inPercent), juce::dontSendNotification);
   silenceDetector->getOutSilenceThresholdEditor()
       .setText(juce::String(outPercent), juce::dontSendNotification);
+
+  updateComponentStates();
+  updateCutLabels();
+  if (zoomView != nullptr)
+    zoomView->updateZoomState();
+  repaint();
 }
 
 void ControlPanel::setAutoCutInActive(bool isActive) {
@@ -422,8 +427,6 @@ void ControlPanel::timerCallback() {
 
   updateCutLabels();
   updateCursorPosition();
-  if (cutLayerView != nullptr)
-    cutLayerView->repaint();
   if (zoomView != nullptr)
-    zoomView->repaint();
+    zoomView->updateZoomState();
 }

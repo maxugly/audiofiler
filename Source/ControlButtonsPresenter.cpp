@@ -2,6 +2,7 @@
 
 #include "ControlPanel.h"
 #include "WaveformView.h"
+#include "CutLayerView.h"
 #include "ControlPanelCopy.h"
 #include "TransportPresenter.h"
 #include "SilenceDetectionPresenter.h"

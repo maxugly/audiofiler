@@ -20,6 +20,33 @@ CutLayerView::CutLayerView(ControlPanel& ownerIn,
 {
     setInterceptsMouseClicks(false, false);
     setOpaque(false);
+    setBufferedToImage(true);
+    waveformManager.addChangeListener(this);
+}
+
+CutLayerView::~CutLayerView()
+{
+    waveformManager.removeChangeListener(this);
+}
+
+void CutLayerView::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == &waveformManager.getThumbnail())
+        repaint();
+}
+
+void CutLayerView::setChannelMode(AppEnums::ChannelViewMode mode)
+{
+    if (currentChannelMode == mode) return;
+    currentChannelMode = mode;
+    repaint();
+}
+
+void CutLayerView::setQuality(AppEnums::ThumbnailQuality quality)
+{
+    if (currentQuality == quality) return;
+    currentQuality = quality;
+    repaint();
 }
 
 void CutLayerView::paint(juce::Graphics& g)
