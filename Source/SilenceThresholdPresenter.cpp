@@ -25,7 +25,9 @@ SilenceThresholdPresenter::SilenceThresholdPresenter(SilenceDetector& detectorIn
 SilenceThresholdPresenter::~SilenceThresholdPresenter()
 {
     detector.inSilenceThresholdEditor.removeListener(this);
+    detector.inSilenceThresholdEditor.removeMouseListener(this);
     detector.outSilenceThresholdEditor.removeListener(this);
+    detector.outSilenceThresholdEditor.removeMouseListener(this);
 }
 
 void SilenceThresholdPresenter::configureEditor(juce::TextEditor& editor,
@@ -42,6 +44,7 @@ void SilenceThresholdPresenter::configureEditor(juce::TextEditor& editor,
     editor.setMultiLine(false);
     editor.setReturnKeyStartsNewLine(false);
     editor.addListener(this);
+    editor.addMouseListener(this, false);
     editor.setWantsKeyboardFocus(true);
     editor.setTooltip(tooltip);
     editor.setSelectAllWhenFocused(true);
@@ -69,6 +72,29 @@ void SilenceThresholdPresenter::textEditorReturnKeyPressed(juce::TextEditor& edi
 void SilenceThresholdPresenter::textEditorFocusLost(juce::TextEditor& editor)
 {
     applyThresholdFromEditor(editor);
+}
+
+void SilenceThresholdPresenter::mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)
+{
+    if (wheel.deltaY == 0.0f)
+        return;
+
+    auto* editor = dynamic_cast<juce::TextEditor*>(event.eventComponent);
+    if (editor == nullptr)
+        return;
+
+    if (editor->hasKeyboardFocus(true))
+        return;
+
+    const int currentPercentage = editor->getText().getIntValue();
+    const int direction = (wheel.deltaY > 0) ? 1 : -1;
+    const int newPercentage = juce::jlimit(1, 99, currentPercentage + direction);
+
+    if (newPercentage != currentPercentage)
+    {
+        editor->setText(juce::String(newPercentage), juce::sendNotification);
+        applyThresholdFromEditor(*editor);
+    }
 }
 
 void SilenceThresholdPresenter::applyThresholdFromEditor(juce::TextEditor& editor)

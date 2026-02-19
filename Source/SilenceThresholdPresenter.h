@@ -14,7 +14,8 @@ class SilenceDetector;
  * @class SilenceThresholdPresenter
  * @brief Manages the silence threshold editors, validation, and auto-cut re-triggers.
  */
-class SilenceThresholdPresenter final : private juce::TextEditor::Listener
+class SilenceThresholdPresenter final : private juce::TextEditor::Listener,
+                                 public juce::MouseListener
 {
 public:
     /**
@@ -37,6 +38,8 @@ private:
     void textEditorTextChanged(juce::TextEditor& editor) override;
     void textEditorReturnKeyPressed(juce::TextEditor& editor) override;
     void textEditorFocusLost(juce::TextEditor& editor) override;
+
+    void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
 
     void applyThresholdFromEditor(juce::TextEditor& editor);
     void updateThresholdFromEditorIfValid(juce::TextEditor& editor);
