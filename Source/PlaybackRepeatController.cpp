@@ -1,8 +1,4 @@
-/**
- * @file PlaybackRepeatController.cpp
- * @brief Defines the PlaybackRepeatController class.
- * @ingroup Presenters
- */
+
 
 #include "PlaybackRepeatController.h"
 
@@ -17,5 +13,5 @@ PlaybackRepeatController::PlaybackRepeatController(AudioPlayer& audioPlayerIn, C
 
 void PlaybackRepeatController::tick()
 {
-    
+
 }

@@ -1,8 +1,4 @@
-/**
- * @file FocusManager.cpp
- * @brief Defines the FocusManager class.
- * @ingroup Engine
- */
+
 
 #include "FocusManager.h"
 #include "ControlPanel.h"
@@ -15,24 +11,20 @@ FocusTarget FocusManager::getCurrentTarget() const
 {
     const auto& mouseHandler = owner.getMouseHandler();
 
-    
     if (mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::In)
         return FocusTarget::CutIn;
     if (mouseHandler.getDraggedHandle() == MouseHandler::CutMarkerHandle::Out)
         return FocusTarget::CutOut;
 
-    
     if (mouseHandler.isScrubbing())
         return FocusTarget::MouseManual;
 
-    
     const auto activePoint = owner.getActiveZoomPoint();
     if (activePoint == ControlPanel::ActiveZoomPoint::In)
         return FocusTarget::CutIn;
     if (activePoint == ControlPanel::ActiveZoomPoint::Out)
         return FocusTarget::CutOut;
 
-    
     return FocusTarget::Playback;
 }
 

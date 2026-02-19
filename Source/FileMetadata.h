@@ -1,8 +1,4 @@
-/**
- * @file FileMetadata.h
- * @brief Defines the FileMetadata class.
- * @ingroup Engine
- */
+
 
 #pragma once
 

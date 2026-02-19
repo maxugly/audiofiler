@@ -1,8 +1,4 @@
-/**
- * @file TimeEntryHelpers.cpp
- * @brief Defines the TimeEntryHelpers class.
- * @ingroup Engine
- */
+
 
 #include "TimeEntryHelpers.h"
 #include "TimeUtils.h"
@@ -33,7 +29,6 @@ namespace TimeEntryHelpers
         double step = Config::Audio::cutStepMilliseconds;
         bool isMillis = false;
 
-        
         if (charIndex >= 0 && charIndex <= 1)      
             step = Config::Audio::cutStepHours;
         else if (charIndex >= 3 && charIndex <= 4) 

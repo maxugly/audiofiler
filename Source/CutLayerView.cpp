@@ -1,8 +1,4 @@
-/**
- * @file CutLayerView.cpp
- * @brief Defines the CutLayerView class.
- * @ingroup Views
- */
+
 
 #include "CutLayerView.h"
 
@@ -24,21 +20,11 @@ CutLayerView::CutLayerView(ControlPanel& ownerIn,
       waveformManager(waveformManagerIn),
       glowAlphaProvider(std::move(glowAlphaProviderIn))
 {
-    /**
-     * @brief Sets the InterceptsMouseClicks.
-     * @param false [in] Description for false.
-     * @param false [in] Description for false.
-     */
+
     setInterceptsMouseClicks(false, false);
-    /**
-     * @brief Sets the Opaque.
-     * @param false [in] Description for false.
-     */
+
     setOpaque(false);
-    /**
-     * @brief Sets the BufferedToImage.
-     * @param true [in] Description for true.
-     */
+
     setBufferedToImage(true);
     waveformManager.addChangeListener(this);
 }
@@ -51,9 +37,7 @@ CutLayerView::~CutLayerView()
 void CutLayerView::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == &waveformManager.getThumbnail())
-        /**
-         * @brief Undocumented method.
-         */
+
         repaint();
 }
 
@@ -61,9 +45,7 @@ void CutLayerView::setChannelMode(AppEnums::ChannelViewMode mode)
 {
     if (currentChannelMode == mode) return;
     currentChannelMode = mode;
-    /**
-     * @brief Undocumented method.
-     */
+
     repaint();
 }
 
@@ -71,9 +53,7 @@ void CutLayerView::setQuality(AppEnums::ThumbnailQuality quality)
 {
     if (currentQuality == quality) return;
     currentQuality = quality;
-    /**
-     * @brief Undocumented method.
-     */
+
     repaint();
 }
 
@@ -128,10 +108,10 @@ void CutLayerView::paint(juce::Graphics& g)
 
     const double actualIn = juce::jmin(cutIn, cutOut);
     const double actualOut = juce::jmax(cutIn, cutOut);
-    
+
     const float inX = juce::jlimit((float)bounds.getX(), (float)bounds.getRight(), (float)bounds.getX() + CoordinateMapper::secondsToPixels(actualIn, (float)bounds.getWidth(), (double)audioLength));
     const float outX = juce::jlimit((float)bounds.getX(), (float)bounds.getRight(), (float)bounds.getX() + CoordinateMapper::secondsToPixels(actualOut, (float)bounds.getWidth(), (double)audioLength));
-    
+
     const float fadeLength = bounds.getWidth() * Config::Layout::Waveform::cutRegionFadeProportion;
     const float boxHeight = (float)Config::Layout::Glow::cutMarkerBoxHeight;
 
@@ -209,17 +189,8 @@ void CutLayerView::paint(juce::Graphics& g)
                    (float)bounds.getHeight() - (2.0f * boxHeight));
     };
 
-    /**
-     * @brief Undocumented method.
-     * @param inX [in] Description for inX.
-     * @param MouseHandler::CutMarkerHandle::In [in] Description for MouseHandler::CutMarkerHandle::In.
-     */
     drawCutMarker(inX, MouseHandler::CutMarkerHandle::In);
-    /**
-     * @brief Undocumented method.
-     * @param outX [in] Description for outX.
-     * @param MouseHandler::CutMarkerHandle::Out [in] Description for MouseHandler::CutMarkerHandle::Out.
-     */
+
     drawCutMarker(outX, MouseHandler::CutMarkerHandle::Out);
 
     juce::Colour hollowColor = Config::Colors::cutLine;

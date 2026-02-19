@@ -1,8 +1,4 @@
-/**
- * @file CutResetPresenter.cpp
- * @brief Defines the CutResetPresenter class.
- * @ingroup Presenters
- */
+
 
 #include "CutResetPresenter.h"
 

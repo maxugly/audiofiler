@@ -1,8 +1,4 @@
-/**
- * @file Config.h
- * @brief Defines the Config class.
- * @ingroup Engine
- */
+
 
 #ifndef AUDIOFILER_CONFIG_H
 #define AUDIOFILER_CONFIG_H
@@ -157,7 +153,7 @@ namespace Config {
          constexpr float silenceThresholdOut = 0.01f;
          constexpr bool lockHandlesWhenAutoCutActive = false;
     }
-    
+
     namespace Labels {
         extern const juce::String openButton;
         extern const juce::String playButton;

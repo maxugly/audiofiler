@@ -1,8 +1,4 @@
-/**
- * @file ControlPanelLayoutCache.h
- * @brief Defines the ControlPanelLayoutCache class.
- * @ingroup Views
- */
+
 
 #ifndef AUDIOFILER_CONTROLPANELLAYOUTCACHE_H
 #define AUDIOFILER_CONTROLPANELLAYOUTCACHE_H
@@ -14,10 +10,6 @@
     #include <JuceHeader.h>
 #endif
 
-/**
- * @struct ControlPanelLayoutCache
- * @brief Stores geometry values computed during ControlPanel layout.
- */
 struct ControlPanelLayoutCache
 {
     juce::Rectangle<int> waveformBounds;
@@ -27,6 +19,5 @@ struct ControlPanelLayoutCache
     int playbackRightTextX = 0;
     int playbackCenterTextX = 0;
 };
-
 
 #endif 

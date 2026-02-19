@@ -1,8 +1,4 @@
-/**
- * @file SilenceAnalysisWorker.cpp
- * @brief Defines the SilenceAnalysisWorker class.
- * @ingroup Engine
- */
+
 
 #include "SilenceAnalysisWorker.h"
 #include "SilenceAnalysisAlgorithms.h"
@@ -23,10 +19,7 @@ SilenceAnalysisWorker::SilenceAnalysisWorker(SilenceWorkerClient& owner, Session
 
 SilenceAnalysisWorker::~SilenceAnalysisWorker()
 {
-    /**
-     * @brief Undocumented method.
-     * @param 4000 [in] Description for 4000.
-     */
+
     stopThread(4000);
 }
 
@@ -43,18 +36,13 @@ void SilenceAnalysisWorker::startAnalysis(float thresholdVal, bool isIn)
     threshold.store(thresholdVal);
     detectingIn.store(isIn);
 
-    
     AudioPlayer& audioPlayer = client.getAudioPlayer();
     assignedFilePath = audioPlayer.getLoadedFile().getFullPathName();
     wasPlayingBeforeScan = audioPlayer.isPlaying();
 
-    
     if (wasPlayingBeforeScan)
         audioPlayer.stopPlayback();
 
-    /**
-     * @brief Undocumented method.
-     */
     startThread();
 }
 
@@ -62,19 +50,13 @@ void SilenceAnalysisWorker::run()
 {
     busy.store(true);
 
-    
     AudioPlayer& audioPlayer = client.getAudioPlayer();
     const juce::String filePath = assignedFilePath;
-    /**
-     * @brief Undocumented method.
-     * @param filePath [in] Description for filePath.
-     * @return juce::File
-     */
+
     juce::File fileToAnalyze(filePath);
-    
-    
+
     std::unique_ptr<juce::AudioFormatReader> localReader(audioPlayer.getFormatManager().createReaderFor(fileToAnalyze));
-    
+
     juce::int64 result = -1;
     bool success = false;
     juce::int64 sampleRate = 0;
@@ -85,7 +67,6 @@ void SilenceAnalysisWorker::run()
         sampleRate = (juce::int64)localReader->sampleRate;
         lengthInSamples = localReader->lengthInSamples;
 
-        
         if (detectingIn.load())
         {
             result = SilenceAnalysisAlgorithms::findSilenceIn(*localReader, threshold.load(), this);
@@ -97,16 +78,14 @@ void SilenceAnalysisWorker::run()
         success = true;
     }
 
-    
     std::weak_ptr<bool> weakToken = lifeToken;
 
-    
     juce::MessageManager::callAsync([this, weakToken, result, success, sampleRate, lengthInSamples, filePath]()
     {
-        
+
         if (auto token = weakToken.lock())
         {
-            
+
             AudioPlayer& player = client.getAudioPlayer();
 
             if (!success || lengthInSamples <= 0)
@@ -154,7 +133,6 @@ void SilenceAnalysisWorker::run()
                  sessionState.setMetadataForFile(filePath, metadata);
             }
 
-            
             if (wasPlayingBeforeScan)
                 player.startPlayback();
 

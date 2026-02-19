@@ -1,8 +1,4 @@
-/**
- * @file RepeatButton.cpp
- * @brief Defines the RepeatButton class.
- * @ingroup Views
- */
+
 
 #include "RepeatButton.h"
 
@@ -19,9 +15,6 @@ void RepeatButton::mouseUp (const juce::MouseEvent& event)
             if (onLeftClick) onLeftClick();
         }
     }
-    /**
-     * @brief Undocumented method.
-     * @param event [in] Description for event.
-     */
+
     juce::TextButton::mouseUp(event); 
 }

@@ -1,8 +1,4 @@
-/**
- * @file KeybindHandler.cpp
- * @brief Defines the KeybindHandler class.
- * @ingroup Engine
- */
+
 
 #include "KeybindHandler.h"
 

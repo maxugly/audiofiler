@@ -1,8 +1,4 @@
-/**
- * @file ZoomView.h
- * @brief Defines the ZoomView class.
- * @ingroup Views
- */
+
 
 #ifndef AUDIOFILER_ZOOMVIEW_H
 #define AUDIOFILER_ZOOMVIEW_H
@@ -15,34 +11,17 @@
 
 #include "AppEnums.h"
 
-/**
- * @class ControlPanel
- * @brief Home: View.
- *
- */
 class ControlPanel;
 
-/**
- * @class ZoomView
- * @brief Dedicated view for rendering the zoomed-in waveform popup.
- */
 class ZoomView : public juce::Component
 {
 public:
-    /**
-     * @brief Undocumented method.
-     * @param owner [in] Description for owner.
-     */
+
     explicit ZoomView(ControlPanel& owner);
     ~ZoomView() override = default;
 
-    /**
-     * @brief Renders the component.
-     * @param g [in] Description for g.
-     */
     void paint(juce::Graphics& g) override;
 
-    
     void updateZoomState();
 
 private:

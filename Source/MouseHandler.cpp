@@ -1,8 +1,4 @@
-/**
- * @file MouseHandler.cpp
- * @brief Defines the MouseHandler class.
- * @ingroup Engine
- */
+
 
 #include "MouseHandler.h"
 #include "FocusManager.h"
@@ -21,7 +17,7 @@ void MouseHandler::mouseMove(const juce::MouseEvent& event)
     {
         mouseCursorX = event.x;
         mouseCursorY = event.y;
-        
+
         hoveredHandle = getHandleAtPosition(event.getPosition());
 
         if (Config::Audio::lockHandlesWhenAutoCutActive)
@@ -62,10 +58,7 @@ void MouseHandler::mouseMove(const juce::MouseEvent& event)
 
 void MouseHandler::mouseDown(const juce::MouseEvent& event)
 {
-    /**
-     * @brief Undocumented method.
-     * @param event [in] Description for event.
-     */
+
     clearTextEditorFocusIfNeeded(event);
 
     if (owner.getActiveZoomPoint() != ControlPanel::ActiveZoomPoint::None)
@@ -78,7 +71,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
             double zoomedTime = CoordinateMapper::pixelsToSeconds((float)(event.x - zoomBounds.getX()), 
                                                                   (float)zoomBounds.getWidth(), 
                                                                   timeRange.second - timeRange.first) + timeRange.first;
-            
+
             if (event.mods.isLeftButtonDown())
             {
                 owner.setNeedsJumpToCutIn(true);
@@ -96,7 +89,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                 {
                     double cutPointTime = (owner.getActiveZoomPoint() == ControlPanel::ActiveZoomPoint::In)
                                            ? owner.getCutInPosition() : owner.getCutOutPosition();
-                    
+
                     float indicatorX = (float)zoomBounds.getX() + 
                                        CoordinateMapper::secondsToPixels(cutPointTime - timeRange.first, 
                                                                          (float)zoomBounds.getWidth(), 
@@ -107,7 +100,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                         draggedHandle = (owner.getActiveZoomPoint() == ControlPanel::ActiveZoomPoint::In) 
                                          ? CutMarkerHandle::In : CutMarkerHandle::Out;
                         dragStartMouseOffset = zoomedTime - cutPointTime;
-                        
+
                         if (draggedHandle == CutMarkerHandle::In)
                             owner.setAutoCutInActive(false);
                         else
@@ -136,7 +129,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
     {
         draggedHandle = getHandleAtPosition(event.getPosition());
         auto& silenceDetector = owner.getSilenceDetector();
-        
+
         if (Config::Audio::lockHandlesWhenAutoCutActive)
         {
             if ((draggedHandle == CutMarkerHandle::In && silenceDetector.getIsAutoCutInActive()) ||
@@ -146,7 +139,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
                 draggedHandle = CutMarkerHandle::None;
             }
         }
-        
+
         if (draggedHandle != CutMarkerHandle::None)
         {
             if (draggedHandle == CutMarkerHandle::In || draggedHandle == CutMarkerHandle::Full)
@@ -162,14 +155,14 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
         if (draggedHandle == CutMarkerHandle::Full)
         {
             dragStartCutLength = std::abs(owner.getCutOutPosition() - owner.getCutInPosition());
-            
+
             const auto waveformBounds = owner.getWaveformBounds();
             AudioPlayer& audioPlayer = owner.getAudioPlayer();
             auto audioLength = audioPlayer.getThumbnail().getTotalLength();
             double mouseTime = CoordinateMapper::pixelsToSeconds((float)(event.x - waveformBounds.getX()), 
                                                                  (float)waveformBounds.getWidth(), 
                                                                  audioLength);
-            
+
             dragStartMouseOffset = mouseTime - owner.getCutInPosition();
             owner.repaint();
         }
@@ -179,10 +172,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
             isScrubbingState = true;
             mouseDragStartX = event.x;
             currentPlaybackPosOnDragStart = owner.getAudioPlayer().getCurrentPosition();
-            /**
-             * @brief Undocumented method.
-             * @param event.x [in] Description for event.x.
-             */
+
             seekToMousePosition(event.x);
         }
         else
@@ -192,10 +182,7 @@ void MouseHandler::mouseDown(const juce::MouseEvent& event)
     }
     else if (event.mods.isRightButtonDown())
     {
-        /**
-         * @brief Undocumented method.
-         * @param event.x [in] Description for event.x.
-         */
+
         handleRightClickForCutPlacement(event.x);
     }
 }
@@ -235,7 +222,7 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
             if (draggedHandle != CutMarkerHandle::None)
             {
                 double offset = (currentPlacementMode == AppEnums::PlacementMode::None) ? dragStartMouseOffset : 0.0;
-                
+
                 if (draggedHandle == CutMarkerHandle::In)
                     owner.getAudioPlayer().setCutIn(zoomedTime - offset);
                 else if (draggedHandle == CutMarkerHandle::Out)
@@ -274,7 +261,7 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
             {
                 double newIn = mouseTime - dragStartMouseOffset;
                 double newOut = newIn + dragStartCutLength;
-                
+
                 if (newIn < 0.0)
                 {
                     newIn = 0.0;
@@ -299,10 +286,7 @@ void MouseHandler::mouseDrag(const juce::MouseEvent& event)
     }
     else if (isDragging && waveformBounds.contains(event.getPosition()))
     {
-        /**
-         * @brief Undocumented method.
-         * @param event.x [in] Description for event.x.
-         */
+
         seekToMousePosition(event.x);
         owner.repaint();
     }
@@ -328,7 +312,7 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
     isScrubbingState = false;
     draggedHandle = CutMarkerHandle::None;
     owner.jumpToCutIn();
-    
+
     const auto waveformBounds = owner.getWaveformBounds();
     if (waveformBounds.contains(event.getPosition()) && event.mods.isLeftButtonDown())
     {
@@ -362,10 +346,7 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
         }
         else if (mouseDragStartX == event.x)
         {
-            /**
-             * @brief Undocumented method.
-             * @param event.x [in] Description for event.x.
-             */
+
             seekToMousePosition(event.x);
         }
     }
@@ -373,10 +354,7 @@ void MouseHandler::mouseUp(const juce::MouseEvent& event)
 
 void MouseHandler::mouseExit(const juce::MouseEvent& event)
 {
-    /**
-     * @brief Undocumented method.
-     * @param event [in] Description for event.
-     */
+
     juce::ignoreUnused(event);
     mouseCursorX = -1;
     mouseCursorY = -1;
@@ -404,7 +382,7 @@ void MouseHandler::mouseWheelMove(const juce::MouseEvent& event, const juce::Mou
     double currentPos = audioPlayer.getCurrentPosition();
     double multiplier = FocusManager::getStepMultiplier(event.mods.isShiftDown(), event.mods.isCtrlDown());
     double step = 0.01 * multiplier;
-    
+
     if (event.mods.isAltDown())
         step *= 10.0;
 
@@ -458,7 +436,7 @@ void MouseHandler::seekToMousePosition(int x)
 void MouseHandler::clearTextEditorFocusIfNeeded(const juce::MouseEvent& event)
 {
     const auto screenPos = event.getScreenPosition();
-    
+
     for (int i = 0; i < owner.getNumChildComponents(); ++i)
     {
         auto* child = owner.getChildComponent(i);
@@ -489,12 +467,12 @@ MouseHandler::CutMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int>
     auto checkHandle = [&](double time) -> bool {
         float x = (float)waveformBounds.getX() + 
                   CoordinateMapper::secondsToPixels(time, (float)waveformBounds.getWidth(), audioLength);
-        
+
         juce::Rectangle<int> hitStrip((int)(x - Config::Layout::Glow::cutMarkerBoxWidth / 2.0f),
                                       waveformBounds.getY(), 
                                       (int)Config::Layout::Glow::cutMarkerBoxWidth,
                                       waveformBounds.getHeight());
-                                       
+
         return hitStrip.contains(pos);
     };
 
@@ -505,17 +483,17 @@ MouseHandler::CutMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int>
     const double cutOut = owner.getCutOutPosition();
     const double actualIn = juce::jmin(cutIn, cutOut);
     const double actualOut = juce::jmax(cutIn, cutOut);
-    
+
     float inX = (float)waveformBounds.getX() + 
                 CoordinateMapper::secondsToPixels(actualIn, (float)waveformBounds.getWidth(), audioLength);
     float outX = (float)waveformBounds.getX() + 
                  CoordinateMapper::secondsToPixels(actualOut, (float)waveformBounds.getWidth(), audioLength);
-    
+
     int hollowHeight = Config::Layout::Glow::cutMarkerBoxHeight;
-    
+
     juce::Rectangle<int> topHollow((int)inX, waveformBounds.getY(), (int)(outX - inX), hollowHeight);
     juce::Rectangle<int> bottomHollow((int)inX, waveformBounds.getBottom() - hollowHeight, (int)(outX - inX), hollowHeight);
-    
+
     if (topHollow.contains(pos) || bottomHollow.contains(pos))
         return CutMarkerHandle::Full;
 

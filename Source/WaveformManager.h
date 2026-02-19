@@ -1,8 +1,4 @@
-/**
- * @file WaveformManager.h
- * @brief Defines the WaveformManager class.
- * @ingroup Engine
- */
+
 
 #ifndef AUDIOFILER_WAVEFORMMANAGER_H
 #define AUDIOFILER_WAVEFORMMANAGER_H
@@ -17,45 +13,20 @@
 #include <JuceHeader.h>
 #endif
 
-/**
- * @class WaveformManager
- * @brief Owns and manages waveform data for Cut boundary rendering.
- */
 class WaveformManager
 {
 public:
-    /**
-     * @brief Undocumented method.
-     * @param formatManagerIn [in] Description for formatManagerIn.
-     */
+
     explicit WaveformManager(juce::AudioFormatManager& formatManagerIn);
 
-    /**
-     * @brief Undocumented method.
-     * @param file [in] Description for file.
-     */
     void loadFile(const juce::File& file);
 
-    /**
-     * @brief Gets the Thumbnail.
-     * @return juce::AudioThumbnail&
-     */
     juce::AudioThumbnail& getThumbnail();
-    /**
-     * @brief Gets the Thumbnail.
-     * @return const juce::AudioThumbnail&
-     */
+
     const juce::AudioThumbnail& getThumbnail() const;
 
-    /**
-     * @brief Undocumented method.
-     * @param listener [in] Description for listener.
-     */
     void addChangeListener(juce::ChangeListener* listener);
-    /**
-     * @brief Undocumented method.
-     * @param listener [in] Description for listener.
-     */
+
     void removeChangeListener(juce::ChangeListener* listener);
 
 private:

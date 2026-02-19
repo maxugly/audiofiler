@@ -1,8 +1,4 @@
-/**
- * @file CutPresenter.cpp
- * @brief Defines the CutPresenter class.
- * @ingroup Presenters
- */
+
 
 #include "CutPresenter.h"
 #include "CutLayerView.h"
@@ -14,9 +10,7 @@ CutPresenter::CutPresenter(ControlPanel& controlPanel, SessionState& sessionStat
       mouseHandler(controlPanel)
 {
     sessionState.addListener(this);
-    /**
-     * @brief Undocumented method.
-     */
+
     refreshMarkersVisibility();
 }
 
@@ -27,9 +21,7 @@ CutPresenter::~CutPresenter()
 
 void CutPresenter::cutPreferenceChanged(const MainDomain::CutPreferences&)
 {
-    /**
-     * @brief Undocumented method.
-     */
+
     refreshMarkersVisibility();
     cutLayerView.repaint();
 }

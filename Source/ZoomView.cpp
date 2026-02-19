@@ -1,8 +1,4 @@
-/**
- * @file ZoomView.cpp
- * @brief Defines the ZoomView class.
- * @ingroup Views
- */
+
 
 #include "ZoomView.h"
 #include "ControlPanel.h"
@@ -16,16 +12,9 @@
 ZoomView::ZoomView(ControlPanel& ownerIn)
     : owner(ownerIn)
 {
-    /**
-     * @brief Sets the InterceptsMouseClicks.
-     * @param false [in] Description for false.
-     * @param false [in] Description for false.
-     */
+
     setInterceptsMouseClicks(false, false);
-    /**
-     * @brief Sets the Opaque.
-     * @param false [in] Description for false.
-     */
+
     setOpaque(false);
 }
 
@@ -39,7 +28,6 @@ void ZoomView::updateZoomState()
     const auto activePoint = owner.getActiveZoomPoint();
     const bool isZooming = zDown || activePoint != ControlPanel::ActiveZoomPoint::None;
 
-    
     if (currentMouseX != lastMouseX || currentMouseY != lastMouseY)
     {
         if (lastMouseX != -1)
@@ -47,7 +35,7 @@ void ZoomView::updateZoomState()
             repaint(lastMouseX - 1, 0, 3, getHeight());
             repaint(0, lastMouseY - 1, getWidth(), 3);
         }
-        
+
         if (currentMouseX != -1)
         {
             repaint(currentMouseX - 1, 0, 3, getHeight());
@@ -58,7 +46,6 @@ void ZoomView::updateZoomState()
         lastMouseY = currentMouseY;
     }
 
-    
     if (isZooming)
     {
         const auto waveformBounds = getLocalBounds();
@@ -79,7 +66,7 @@ void ZoomView::updateZoomState()
         }
         else
         {
-            
+
             repaint(currentPopupBounds.expanded(5));
         }
     }
@@ -100,10 +87,9 @@ void ZoomView::paint(juce::Graphics& g)
     const auto waveformBounds = getLocalBounds();
     const auto& mouse = owner.getMouseHandler();
 
-    
     if (mouse.getMouseCursorX() != -1)
     {
-        
+
         const int localMouseX = mouse.getMouseCursorX() - getX();
         const int localMouseY = mouse.getMouseCursorY() - getY();
 
@@ -145,7 +131,6 @@ void ZoomView::paint(juce::Graphics& g)
         g.fillRect(localMouseX - Config::Layout::Glow::mouseHighlightOffset, waveformBounds.getY(), Config::Layout::Glow::mouseHighlightSize, waveformBounds.getHeight());
         g.fillRect(waveformBounds.getX(), localMouseY - Config::Layout::Glow::mouseHighlightOffset, waveformBounds.getWidth(), Config::Layout::Glow::mouseHighlightSize);
 
-        
         float amplitude = 0.0f;
         if (audioPlayer.getWaveformManager().getThumbnail().getNumChannels() > 0)
         {
@@ -198,7 +183,6 @@ void ZoomView::paint(juce::Graphics& g)
         g.drawHorizontalLine(localMouseY, (float)waveformBounds.getX(), (float)waveformBounds.getRight());
     }
 
-    
     const bool zDown = owner.isZKeyDown();
     const auto activePoint = owner.getActiveZoomPoint();
 
@@ -220,7 +204,6 @@ void ZoomView::paint(juce::Graphics& g)
         const double startTime = zoomCenterTime - (timeRange / 2.0);
         const double endTime = startTime + timeRange;
 
-        
         owner.setZoomPopupBounds(popupBounds.translated(getX(), getY()));
         owner.setZoomTimeRange(startTime, endTime);
 
@@ -267,20 +250,10 @@ void ZoomView::paint(juce::Graphics& g)
         drawShadow(cutOut, endTime, juce::Colours::black.withAlpha(0.5f));
 
         if (startTime < 0.0)
-            /**
-             * @brief Undocumented method.
-             * @param startTime [in] Description for startTime.
-             * @param 0.0 [in] Description for 0.0.
-             * @param juce::Colours::black [in] Description for juce::Colours::black.
-             */
+
             drawShadow(startTime, 0.0, juce::Colours::black);
         if (endTime > audioLength)
-            /**
-             * @brief Undocumented method.
-             * @param audioLength [in] Description for audioLength.
-             * @param endTime [in] Description for endTime.
-             * @param juce::Colours::black [in] Description for juce::Colours::black.
-             */
+
             drawShadow(audioLength, endTime, juce::Colours::black);
 
         auto drawFineLine = [&](double time, juce::Colour color, float thickness) {
@@ -294,29 +267,13 @@ void ZoomView::paint(juce::Graphics& g)
         bool isDraggingCutIn = mouse.getDraggedHandle() == MouseHandler::CutMarkerHandle::In;
         bool isDraggingCutOut = mouse.getDraggedHandle() == MouseHandler::CutMarkerHandle::Out;
 
-        /**
-         * @brief Undocumented method.
-         * @param cutIn [in] Description for cutIn.
-         * @param Config::Colors::cutLine [in] Description for Config::Colors::cutLine.
-         * @param 1.0f [in] Description for 1.0f.
-         */
         drawFineLine(cutIn, Config::Colors::cutLine, 1.0f);
-        /**
-         * @brief Undocumented method.
-         * @param cutOut [in] Description for cutOut.
-         * @param Config::Colors::cutLine [in] Description for Config::Colors::cutLine.
-         * @param 1.0f [in] Description for 1.0f.
-         */
+
         drawFineLine(cutOut, Config::Colors::cutLine, 1.0f);
         drawFineLine(audioPlayer.getCurrentPosition(), Config::Colors::playbackCursor, 1.0f);
 
         if (isDraggingCutIn || isDraggingCutOut)
-            /**
-             * @brief Undocumented method.
-             * @param cutOut [in] Description for cutOut.
-             * @param Config::Colors::zoomPopupTrackingLine [in] Description for Config::Colors::zoomPopupTrackingLine.
-             * @param 2.0f [in] Description for 2.0f.
-             */
+
             drawFineLine(isDraggingCutIn ? cutIn : cutOut, Config::Colors::zoomPopupTrackingLine, 2.0f);
         else
             drawFineLine(audioPlayer.getCurrentPosition(), Config::Colors::zoomPopupPlaybackLine, 2.0f);

@@ -1,8 +1,4 @@
-/**
- * @file SilenceDetector.cpp
- * @brief Defines the SilenceDetector class.
- * @ingroup Engine
- */
+
 
 #include "SilenceDetector.h"
 #include "ControlPanel.h"

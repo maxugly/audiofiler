@@ -1,3 +1,30 @@
-PROJECT_NAME = "audiofiler"
-OUTPUT_DIRECTORY = docs
+# Project Info
+PROJECT_NAME           = "audiofiler"
+OUTPUT_DIRECTORY       = docs
+
+# Input Settings
+INPUT                  = ./Source
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+# Visuals & Graphs (The important part)
+HAVE_DOT               = YES
+DOT_PATH               = /usr/bin
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+CALL_GRAPH             = YES
+INCLUDE_GRAPH          = YES
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+DOT_MULTI_TARGETS      = YES
+
+# JUCE Compatibility
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(x)= \
+                         JUCE_LEAK_DETECTOR(x)=
 GENERATE_HTML = YES
+HIDE_UNDOC_MEMBERS = NO

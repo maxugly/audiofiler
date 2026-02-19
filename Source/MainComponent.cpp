@@ -1,8 +1,4 @@
-/**
- * @file MainComponent.cpp
- * @brief Defines the MainComponent class.
- * @ingroup Views
- */
+
 
 #include "MainComponent.h"
 #include "TimeUtils.h"
@@ -13,43 +9,20 @@
 
 MainComponent::MainComponent()
 {
-    
+
     audioPlayer = std::make_unique<AudioPlayer>(sessionState);
     audioPlayer->addChangeListener(this);
-    
-    
+
     controlPanel = std::make_unique<ControlPanel>(*this, sessionState);
     addAndMakeVisible(controlPanel.get());
-    
-    
+
     keybindHandler = std::make_unique<KeybindHandler>(*this, *audioPlayer, *controlPanel);
     playbackRepeatController = std::make_unique<PlaybackRepeatController>(*audioPlayer, *controlPanel);
 
-    
-    /**
-     * @brief Sets the AudioChannels.
-     * @param 0 [in] Description for 0.
-     * @param 2 [in] Description for 2.
-     */
     setAudioChannels(0, 2);
 
-    
-    /**
-     * @brief Sets the Size.
-     * @param Config::Layout::Window::width [in] Description for Config::Layout::Window::width.
-     * @param Config::Layout::Window::height [in] Description for Config::Layout::Window::height.
-     */
     setSize(Config::Layout::Window::width, Config::Layout::Window::height);
-    
-    
 
-
-    
-    
-    /**
-     * @brief Sets the WantsKeyboardFocus.
-     * @param true [in] Description for true.
-     */
     setWantsKeyboardFocus(true);
     openGLContext.attachTo(*this);
 
@@ -59,13 +32,10 @@ MainComponent::~MainComponent()
 {
     openGLContext.detach();
     audioPlayer->removeChangeListener(this);
-    /**
-     * @brief Undocumented method.
-     */
+
     shutdownAudio();
 
 }
-
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
@@ -82,41 +52,35 @@ void MainComponent::releaseResources()
     audioPlayer->releaseResources();
 }
 
-
 void MainComponent::paint(juce::Graphics& g)
 {
-    
-    
+
     g.fillAll(Config::Colors::Window::background);
 }
 
 void MainComponent::resized()
 {
-    
+
     if (controlPanel != nullptr)
         controlPanel->setBounds(getLocalBounds());
 }
-
 
 void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == audioPlayer.get())
     {
         controlPanel->updatePlayButtonText(audioPlayer->isPlaying());
-        /**
-         * @brief Undocumented method.
-         */
+
         repaint(); 
     }
 }
-
 
 void MainComponent::openButtonClicked()
 {
     chooser = std::make_unique<juce::FileChooser>("Select Audio...",
         juce::File::getSpecialLocation(juce::File::userHomeDirectory),
         audioPlayer->getFormatManager().getWildcardForAllFormats());
-    
+
     auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
 
     chooser->launchAsync(flags, [this](const juce::FileChooser& fc) {
@@ -140,10 +104,7 @@ void MainComponent::openButtonClicked()
                 controlPanel->setStatsDisplayText(result.getErrorMessage(), Config::Colors::statsErrorText);
             }
         }
-        
-        /**
-         * @brief Undocumented method.
-         */
+
         grabKeyboardFocus();
     });
 }
@@ -155,7 +116,7 @@ void MainComponent::seekToPosition(int x)
         auto relativeX = (double)(x - controlPanel->getWaveformBounds().getX());
         auto proportion = relativeX / (double)controlPanel->getWaveformBounds().getWidth();
         auto newPosition = juce::jlimit(0.0, 1.0, proportion) * audioPlayer->getThumbnail().getTotalLength();
-        
+
         audioPlayer->setPlayheadPosition(newPosition);
     }
 }

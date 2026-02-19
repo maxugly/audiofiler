@@ -1,8 +1,4 @@
-/**
- * @file WaveformManager.cpp
- * @brief Defines the WaveformManager class.
- * @ingroup Engine
- */
+
 
 #include "WaveformManager.h"
 

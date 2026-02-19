@@ -1,8 +1,4 @@
-/**
- * @file CutButtonPresenter.cpp
- * @brief Defines the CutButtonPresenter class.
- * @ingroup Presenters
- */
+
 
 #include "CutButtonPresenter.h"
 

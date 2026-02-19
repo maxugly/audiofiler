@@ -1,14 +1,10 @@
-/**
- * @file SessionState.cpp
- * @brief Defines the SessionState class.
- * @ingroup Engine
- */
+
 
 #include "SessionState.h"
 
 SessionState::SessionState()
 {
-    
+
     cutPrefs.cutIn = 0.0;
     cutPrefs.cutOut = 0.0;
 }

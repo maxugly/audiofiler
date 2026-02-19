@@ -1,8 +1,4 @@
-/**
- * @file SilenceAnalysisAlgorithms.cpp
- * @brief Defines the SilenceAnalysisAlgorithms class.
- * @ingroup Engine
- */
+
 
 #include "SilenceAnalysisAlgorithms.h"
 #include <limits>
@@ -12,7 +8,7 @@
 namespace
 {
     constexpr int kChunkSize = 65536;
-    
+
     constexpr int kMaxChannels = 128; 
 }
 
@@ -21,17 +17,9 @@ juce::int64 SilenceAnalysisAlgorithms::findSilenceIn(juce::AudioFormatReader& re
 {
     const juce::int64 lengthInSamples = reader.lengthInSamples;
 
-    
     if (reader.numChannels <= 0 || reader.numChannels > kMaxChannels)
         return -1;
 
-    
-    /**
-     * @brief Undocumented method.
-     * @param reader.numChannels [in] Description for reader.numChannels.
-     * @param kChunkSize [in] Description for kChunkSize.
-     * @return juce::AudioBuffer<float>
-     */
     juce::AudioBuffer<float> buffer(reader.numChannels, kChunkSize);
 
     juce::int64 currentPos = 0;
@@ -64,17 +52,9 @@ juce::int64 SilenceAnalysisAlgorithms::findSilenceOut(juce::AudioFormatReader& r
 {
     const juce::int64 lengthInSamples = reader.lengthInSamples;
 
-    
     if (reader.numChannels <= 0 || reader.numChannels > kMaxChannels)
         return -1;
 
-    
-    /**
-     * @brief Undocumented method.
-     * @param reader.numChannels [in] Description for reader.numChannels.
-     * @param kChunkSize [in] Description for kChunkSize.
-     * @return juce::AudioBuffer<float>
-     */
     juce::AudioBuffer<float> buffer(reader.numChannels, kChunkSize);
 
     juce::int64 currentPos = lengthInSamples;

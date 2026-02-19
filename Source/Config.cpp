@@ -1,8 +1,4 @@
-/**
- * @file Config.cpp
- * @brief Defines the Config class.
- * @ingroup Engine
- */
+
 
 #include "Config.h"
 

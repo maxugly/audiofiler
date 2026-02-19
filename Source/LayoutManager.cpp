@@ -1,8 +1,4 @@
-/**
- * @file LayoutManager.cpp
- * @brief Defines the LayoutManager class.
- * @ingroup Engine
- */
+
 
 #include "LayoutManager.h"
 
@@ -23,28 +19,12 @@ void LayoutManager::performLayout()
     const int margin = Config::Layout::windowBorderMargins;
     const int rowHeight = Config::Layout::buttonHeight + margin * 2;
 
-    /**
-     * @brief Undocumented method.
-     * @param bounds [in] Description for bounds.
-     * @param rowHeight [in] Description for rowHeight.
-     */
     layoutTopRowButtons(bounds, rowHeight);
-    /**
-     * @brief Undocumented method.
-     * @param bounds [in] Description for bounds.
-     * @param rowHeight [in] Description for rowHeight.
-     */
+
     layoutCutControls(bounds, rowHeight);
-    /**
-     * @brief Undocumented method.
-     * @param bounds [in] Description for bounds.
-     * @param rowHeight [in] Description for rowHeight.
-     */
+
     layoutBottomRowAndTextDisplay(bounds, rowHeight);
-    /**
-     * @brief Undocumented method.
-     * @param bounds [in] Description for bounds.
-     */
+
     layoutWaveformAndStats(bounds);
 }
 
@@ -83,8 +63,7 @@ void LayoutManager::layoutCutControls(juce::Rectangle<int>& bounds, int rowHeigh
     const int thresholdEditorWidth = Config::Layout::thresholdEditorWidth;
 
     auto cutRow = bounds.removeFromTop(rowHeight).reduced(margin);
-    
-    
+
     controlPanel.cutInButton.setBounds(cutRow.removeFromLeft(buttonWidth));
     cutRow.removeFromLeft(margin);
     controlPanel.cutInEditor.setBounds(cutRow.removeFromLeft(cutTextWidth));
@@ -94,11 +73,9 @@ void LayoutManager::layoutCutControls(juce::Rectangle<int>& bounds, int rowHeigh
     controlPanel.getSilenceDetector().getInSilenceThresholdEditor().setBounds(cutRow.removeFromLeft(thresholdEditorWidth));
     cutRow.removeFromLeft(margin / 2);
     controlPanel.autoCutInButton.setBounds(cutRow.removeFromLeft(buttonWidth));
-    
-    
+
     cutRow.removeFromLeft(margin * 3);
-    
-    
+
     controlPanel.cutOutButton.setBounds(cutRow.removeFromLeft(buttonWidth));
     cutRow.removeFromLeft(margin);
     controlPanel.cutOutEditor.setBounds(cutRow.removeFromLeft(cutTextWidth));
