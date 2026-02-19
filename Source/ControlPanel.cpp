@@ -52,7 +52,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
 
   zoomView = std::make_unique<ZoomView>(*this);
   addAndMakeVisible(zoomView.get());
-  zoomView->setVisible(false);
+  zoomView->setVisible(true);
 
   statsPresenter = std::make_unique<StatsPresenter>(*this);
   silenceDetectionPresenter = std::make_unique<SilenceDetectionPresenter>(*this, sessionState, *owner.getAudioPlayer());
@@ -154,7 +154,6 @@ void ControlPanel::setZKeyDown(bool isDown) {
   }
 
   if (zoomView != nullptr) {
-    zoomView->setVisible(m_isZKeyDown || m_activeZoomPoint != ActiveZoomPoint::None);
     zoomView->repaint();
   }
   repaint();
@@ -164,7 +163,6 @@ void ControlPanel::setActiveZoomPoint(ActiveZoomPoint point) {
   if (m_activeZoomPoint != point) {
     m_activeZoomPoint = point;
     if (zoomView != nullptr) {
-      zoomView->setVisible(m_isZKeyDown || m_activeZoomPoint != ActiveZoomPoint::None);
       zoomView->repaint();
     }
     repaint();
