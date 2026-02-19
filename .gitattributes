@@ -1,0 +1,6 @@
+# Force everything in Sources/ to be C++
+Sources/** linguist-language=C++
+
+# Optional: Tell github  to ignore any CMake files in that folder specifically
+#Sources/**/*.cmake linguist-vendored
+#Sources/**/CMakeLists.txt linguist-vendored

@@ -1,30 +1,71 @@
-# Project Info
+# --- Project Info ---
 PROJECT_NAME           = "audiofiler"
 OUTPUT_DIRECTORY       = docs
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
 
-# Input Settings
+# --- Input Settings ---
 INPUT                  = ./Source
 RECURSIVE              = YES
+FILE_PATTERNS          = *.cpp *.h *.mm
+SOURCE_BROWSER         = YES
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+# --- Study Guide Extraction Rules ---
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = YES
 EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+INTERNAL_DOCS          = YES
+CASE_SENSE_NAMES       = YES
 
-# Visuals & Graphs (The important part)
+# --- Maximum Visual Detail (Graphviz/Dot) ---
 HAVE_DOT               = YES
 DOT_PATH               = /usr/bin
-CLASS_GRAPH            = YES
-COLLABORATION_GRAPH    = YES
-CALL_GRAPH             = YES
-INCLUDE_GRAPH          = YES
 DOT_IMAGE_FORMAT       = svg
 INTERACTIVE_SVG        = YES
 DOT_MULTI_TARGETS      = YES
+DOT_GRAPH_MAX_NODES    = 100
+MAX_DOT_GRAPH_DEPTH    = 0
+DOT_TRANSPARENT        = YES
 
-# JUCE Compatibility
+# --- Specific Chart Toggles ---
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+UML_LOOK               = YES
+TEMPLATE_RELATIONS     = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
+
+# --- Quality of Life & Navigation ---
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = YES
+HTML_EXTRA_STYLESHEET  = 
+HTML_COLORSTYLE        = TOGGLE # Provides Light/Dark mode for easier study
+
+# --- JUCE Compatibility & Preprocessing ---
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
+SEARCH_INCLUDES        = YES
 PREDEFINED             = JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(x)= \
-                         JUCE_LEAK_DETECTOR(x)=
-GENERATE_HTML = YES
-HIDE_UNDOC_MEMBERS = NO
+                         JUCE_LEAK_DETECTOR(x)= \
+                         JUCE_DECLARE_NON_COPYABLE(x)= \
+                         FOR_TESTSONLY=
+
+# --- Clean Build Settings ---
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
