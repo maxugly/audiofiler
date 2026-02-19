@@ -1,7 +1,12 @@
 #ifndef AUDIOFILER_REPEATBUTTON_H
 #define AUDIOFILER_REPEATBUTTON_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_gui_basics/juce_gui_basics.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include <functional>
 
 /**

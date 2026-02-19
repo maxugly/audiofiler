@@ -109,6 +109,7 @@ void SilenceAnalysisWorker::run()
                      if (detectingIn.load())
                      {
                          metadata.cutIn = resultSeconds;
+                         client.setCutStart((int)result);
                          client.logStatusMessage(juce::String("Silence Boundary (Start) set to sample ") + juce::String(result));
 
                          if (client.isCutModeActive())
@@ -122,6 +123,7 @@ void SilenceAnalysisWorker::run()
                          const double endSeconds = (double)finalEndPoint / (double)sampleRate;
 
                          metadata.cutOut = endSeconds;
+                         client.setCutEnd((int)finalEndPoint);
                          client.logStatusMessage(juce::String("Silence Boundary (End) set to sample ") + juce::String(finalEndPoint));
                      }
                  }

@@ -1,7 +1,13 @@
 #ifndef AUDIOFILER_MAINCOMPONENT_H
 #define AUDIOFILER_MAINCOMPONENT_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_gui_extra/juce_gui_extra.h>
+    #include <juce_opengl/juce_opengl.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include "AudioPlayer.h"
 #include "ControlPanel.h" 
 #include "AppEnums.h"

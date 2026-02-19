@@ -1,7 +1,12 @@
 #ifndef AUDIOFILER_CONTROLPANELCOPY_H
 #define AUDIOFILER_CONTROLPANELCOPY_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_core/juce_core.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include "Config.h"
 
 namespace ControlPanelCopy

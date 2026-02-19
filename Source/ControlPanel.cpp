@@ -48,7 +48,8 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   playbackCursorView->setInterceptsMouseClicks(false, false);
 
   statsPresenter = std::make_unique<StatsPresenter>(*this);
-  silenceDetectionPresenter = std::make_unique<SilenceDetectionPresenter>(*this);
+  silenceDetectionPresenter = std::make_unique<SilenceDetectionPresenter>(*this, sessionState, *owner.getAudioPlayer());
+  owner.getAudioPlayer()->setControlPanel(this);
   playbackTextPresenter = std::make_unique<PlaybackTextPresenter>(*this);
 
   buttonPresenter = std::make_unique<ControlButtonsPresenter>(*this);
@@ -287,11 +288,11 @@ void ControlPanel::updateCutButtonColors() {
     cutButtonPresenter->updateColours();
 }
 
+AudioPlayer &ControlPanel::getAudioPlayer() { return *owner.getAudioPlayer(); }
+
 AudioPlayer &ControlPanel::getAudioPlayer() const {
   return *owner.getAudioPlayer();
 }
-
-AudioPlayer &ControlPanel::getAudioPlayer() { return *owner.getAudioPlayer(); }
 
 const MouseHandler &ControlPanel::getMouseHandler() const {
   return cutPresenter->getMouseHandler();
@@ -307,13 +308,13 @@ juce::TextEditor &ControlPanel::getStatsDisplay() {
 }
 
 void ControlPanel::setCutStart(int sampleIndex) {
-  if (repeatPresenter != nullptr)
-    repeatPresenter->setCutStartFromSample(sampleIndex);
+  if (silenceDetectionPresenter != nullptr)
+    silenceDetectionPresenter->setCutStart(sampleIndex);
 }
 
 void ControlPanel::setCutEnd(int sampleIndex) {
-  if (repeatPresenter != nullptr)
-    repeatPresenter->setCutEndFromSample(sampleIndex);
+  if (silenceDetectionPresenter != nullptr)
+    silenceDetectionPresenter->setCutEnd(sampleIndex);
 }
 
 juce::String ControlPanel::formatTime(double seconds) const {

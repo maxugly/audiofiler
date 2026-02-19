@@ -1,7 +1,11 @@
 #ifndef AUDIOFILER_CUTBUTTONPRESENTER_H
 #define AUDIOFILER_CUTBUTTONPRESENTER_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_core/juce_core.h>
+#else
+    #include <JuceHeader.h>
+#endif
 
 class ControlPanel;
 

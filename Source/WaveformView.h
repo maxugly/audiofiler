@@ -1,7 +1,12 @@
 #ifndef AUDIOFILER_WAVEFORMVIEW_H
 #define AUDIOFILER_WAVEFORMVIEW_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_gui_basics/juce_gui_basics.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include "AppEnums.h"
 #include "Config.h"
 

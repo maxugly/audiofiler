@@ -10,7 +10,12 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_graphics/juce_graphics.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include "Config.h"
 
 class PlaybackCursorGlow

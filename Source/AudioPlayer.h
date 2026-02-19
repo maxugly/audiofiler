@@ -14,12 +14,12 @@
 #include "Config.h"
 #include "SessionState.h"
 #include "MainDomain.h"
-#include "SilenceWorkerClient.h"
-#include "SilenceAnalysisWorker.h"
 #if !defined(JUCE_HEADLESS)
 #include "WaveformManager.h"
 #endif
 #include <mutex>
+
+class ControlPanel;
 
 /**
  * @class AudioPlayer
@@ -28,8 +28,7 @@
 class AudioPlayer : public juce::AudioSource,
                     public juce::ChangeListener,
                     public juce::ChangeBroadcaster,
-                    public SessionState::Listener,
-                    public SilenceWorkerClient
+                    public SessionState::Listener
 {
 public:
     explicit AudioPlayer(SessionState& state);
@@ -42,7 +41,10 @@ public:
     void togglePlayStop();
     bool isPlaying() const;
 
-    /** @brief Starts a background silence analysis. */
+    /** @brief Sets the ControlPanel reference for silence detection delegation. */
+    void setControlPanel(ControlPanel* panel) { controlPanel = panel; }
+
+    /** @brief Starts a background silence analysis (delegated via ControlPanel). */
     void startSilenceAnalysis(float threshold, bool detectingIn);
 
     /** @brief Checks if repeating is enabled. */
@@ -76,13 +78,6 @@ public:
     std::mutex& getReaderMutex() { return readerMutex; }
     bool getReaderInfo(double& sampleRateOut, juce::int64& lengthInSamplesOut) const;
 
-    // SilenceWorkerClient implementation
-    AudioPlayer& getAudioPlayer() override { return *this; }
-    void setCutStart(int sampleIndex) override;
-    void setCutEnd(int sampleIndex) override;
-    void logStatusMessage(const juce::String& message, bool isError = false) override;
-    bool isCutModeActive() const override { return sessionState.getCutPrefs().active; }
-
 private:
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
@@ -95,13 +90,13 @@ private:
 
     juce::File loadedFile;
     SessionState& sessionState;
+    ControlPanel* controlPanel{nullptr};
     float lastAutoCutThresholdIn{-1.0f};
     float lastAutoCutThresholdOut{-1.0f};
     bool lastAutoCutInActive{false};
     bool lastAutoCutOutActive{false};
     mutable std::mutex readerMutex;
 
-    SilenceAnalysisWorker silenceWorker;
     bool repeating = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPlayer)

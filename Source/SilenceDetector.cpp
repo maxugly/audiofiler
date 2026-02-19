@@ -2,6 +2,7 @@
 #include "ControlPanel.h"
 #include "AudioPlayer.h"
 #include "SilenceThresholdPresenter.h"
+#include "SilenceDetectionPresenter.h"
 
 SilenceDetector::SilenceDetector(ControlPanel& ownerPanel)
     : owner(ownerPanel),
@@ -15,10 +16,12 @@ SilenceDetector::~SilenceDetector() = default;
 
 void SilenceDetector::detectInSilence()
 {
-    owner.getAudioPlayer().startSilenceAnalysis(currentInSilenceThreshold, true);
+    if (auto* presenter = owner.getSilenceDetectionPresenter())
+        presenter->startSilenceAnalysis(currentInSilenceThreshold, true);
 }
 
 void SilenceDetector::detectOutSilence()
 {
-    owner.getAudioPlayer().startSilenceAnalysis(currentOutSilenceThreshold, false);
+    if (auto* presenter = owner.getSilenceDetectionPresenter())
+        presenter->startSilenceAnalysis(currentOutSilenceThreshold, false);
 }

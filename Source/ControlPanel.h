@@ -12,7 +12,15 @@ class FocusManager;
 #include "SessionState.h"
 #include "SilenceDetector.h"   // Include the new SilenceDetector class
 #include "SilenceWorkerClient.h"
-#include <JuceHeader.h>
+
+#if defined(JUCE_HEADLESS)
+    #include <juce_core/juce_core.h>
+    #include <juce_gui_basics/juce_gui_basics.h>
+    #include <juce_events/juce_events.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include <memory> // Required for std::unique_ptr
 #include <tuple>
 
@@ -44,8 +52,7 @@ class PlaybackCursorView;
  * audiofiler application.
  */
 class ControlPanel final : public juce::Component,
-                           public juce::Timer,
-                           public SilenceWorkerClient {
+                           public juce::Timer {
 public:
   //==============================================================================
   /** @name Constructors and Destructors
@@ -192,7 +199,7 @@ public:
   void setStatsDisplayText(const juce::String &text,
                            juce::Colour color = Config::Colors::statsText);
   void logStatusMessage(const juce::String &message,
-                        bool isError = false) override;
+                        bool isError = false);
   void updateStatsFromAudio();
 
   /** @} */
@@ -204,7 +211,7 @@ public:
 
   AppEnums::PlacementMode getPlacementMode() const;
   bool shouldAutoplay() const { return m_shouldAutoplay; }
-  bool isCutModeActive() const override { return m_isCutModeActive; }
+  bool isCutModeActive() const { return m_isCutModeActive; }
 
   /** @} */
 
@@ -217,7 +224,7 @@ public:
     return layoutCache.waveformBounds;
   }
 
-  AudioPlayer &getAudioPlayer() override;
+  AudioPlayer &getAudioPlayer();
   AudioPlayer &getAudioPlayer() const;
   SessionState &getSessionState() { return sessionState; }
   const SessionState &getSessionState() const { return sessionState; }
@@ -237,6 +244,8 @@ public:
 
   SilenceDetector &getSilenceDetector() { return *silenceDetector; }
   const SilenceDetector &getSilenceDetector() const { return *silenceDetector; }
+
+  SilenceDetectionPresenter* getSilenceDetectionPresenter() { return silenceDetectionPresenter.get(); }
 
   int getBottomRowTopY() const { return layoutCache.bottomRowTopY; }
 

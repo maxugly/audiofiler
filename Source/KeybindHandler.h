@@ -1,7 +1,11 @@
 #ifndef AUDIOFILER_KEYBINDHANDLER_H
 #define AUDIOFILER_KEYBINDHANDLER_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_gui_basics/juce_gui_basics.h>
+#else
+    #include <JuceHeader.h>
+#endif
 
 class MainComponent;
 class AudioPlayer;

@@ -2,6 +2,10 @@
 #include "PlaybackHelpers.h"
 #include "SessionState.h"
 #include "FileMetadata.h"
+#if !defined(JUCE_HEADLESS)
+#include "ControlPanel.h"
+#include "SilenceDetectionPresenter.h"
+#endif
 #include <algorithm>
 
 AudioPlayer::AudioPlayer(SessionState& state)
@@ -11,8 +15,7 @@ AudioPlayer::AudioPlayer(SessionState& state)
     :
     #endif
       readAheadThread("Audio File Reader"),
-      sessionState(state),
-      silenceWorker(*this, state)
+      sessionState(state)
 {
     formatManager.registerBasicFormats();
     sessionState.addListener(this);
@@ -35,7 +38,6 @@ AudioPlayer::~AudioPlayer()
 
 juce::Result AudioPlayer::loadFile(const juce::File& file)
 {
-    silenceWorker.signalThreadShouldExit();
     auto* reader = formatManager.createReaderFor(file);
 
     if (reader != nullptr)
@@ -94,8 +96,17 @@ juce::File AudioPlayer::getLoadedFile() const
 
 void AudioPlayer::startSilenceAnalysis(float threshold, bool detectingIn)
 {
-    silenceWorker.startAnalysis(threshold, detectingIn);
+#if !defined(JUCE_HEADLESS)
+    if (controlPanel != nullptr)
+    {
+        if (auto* presenter = controlPanel->getSilenceDetectionPresenter())
+            presenter->startSilenceAnalysis(threshold, detectingIn);
+    }
+#else
+    juce::ignoreUnused(threshold, detectingIn);
+#endif
 }
+
 
 void AudioPlayer::togglePlayStop()
 {
@@ -250,23 +261,4 @@ void AudioPlayer::setPlayheadPosition(double seconds)
     transportSource.setPosition(juce::jlimit(effectiveIn, effectiveOut, seconds));
 }
 
-void AudioPlayer::setCutStart(int sampleIndex)
-{
-    double sampleRate = 0.0;
-    juce::int64 length = 0;
-    if (getReaderInfo(sampleRate, length) && sampleRate > 0.0)
-        sessionState.setCutIn((double)sampleIndex / sampleRate);
-}
 
-void AudioPlayer::setCutEnd(int sampleIndex)
-{
-    double sampleRate = 0.0;
-    juce::int64 length = 0;
-    if (getReaderInfo(sampleRate, length) && sampleRate > 0.0)
-        sessionState.setCutOut((double)sampleIndex / sampleRate);
-}
-
-void AudioPlayer::logStatusMessage(const juce::String& message, bool isError)
-{
-    juce::ignoreUnused(message, isError);
-}

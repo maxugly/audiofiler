@@ -1,10 +1,15 @@
 #ifndef AUDIOFILER_CONTROLPANELLAYOUTCACHE_H
 #define AUDIOFILER_CONTROLPANELLAYOUTCACHE_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_core/juce_core.h>
+    #include <juce_graphics/juce_graphics.h>
+#else
+    #include <JuceHeader.h>
+#endif
 
 /**
- * @class ControlPanelLayoutCache
+ * @struct ControlPanelLayoutCache
  * @brief Stores geometry values computed during ControlPanel layout.
  */
 struct ControlPanelLayoutCache

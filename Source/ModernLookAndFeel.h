@@ -1,7 +1,12 @@
 #ifndef AUDIOFILER_MODERNLOOKANDFEEL_H
 #define AUDIOFILER_MODERNLOOKANDFEEL_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_gui_basics/juce_gui_basics.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include "Config.h" // Include Config.h
 
 /**

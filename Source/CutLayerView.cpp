@@ -69,17 +69,19 @@ void CutLayerView::paint(juce::Graphics& g)
 
     const double actualIn = juce::jmin(cutIn, cutOut);
     const double actualOut = juce::jmax(cutIn, cutOut);
-    const float inX = (float)bounds.getX() + (float)bounds.getWidth() * (float)(actualIn / audioLength);
-    const float outX = (float)bounds.getX() + (float)bounds.getWidth() * (float)(actualOut / audioLength);
+    
+    const float inX = juce::jlimit((float)bounds.getX(), (float)bounds.getRight(), (float)bounds.getX() + (float)bounds.getWidth() * (float)(actualIn / audioLength));
+    const float outX = juce::jlimit((float)bounds.getX(), (float)bounds.getRight(), (float)bounds.getX() + (float)bounds.getWidth() * (float)(actualOut / audioLength));
+    
     const float fadeLength = bounds.getWidth() * Config::Layout::Waveform::cutRegionFadeProportion;
     const float boxHeight = (float)Config::Layout::Glow::cutMarkerBoxHeight;
 
-    const juce::Rectangle<float> leftRegion((float)bounds.getX(), (float)bounds.getY(), inX - (float)bounds.getX(), (float)bounds.getHeight());
+    const juce::Rectangle<float> leftRegion((float)bounds.getX(), (float)bounds.getY(), juce::jmax(0.0f, inX - (float)bounds.getX()), (float)bounds.getHeight());
     if (leftRegion.getWidth() > 0.0f)
     {
         const float actualFade = juce::jmin(fadeLength, leftRegion.getWidth());
 
-        juce::Rectangle<float> solidBlackLeft = leftRegion.withWidth(leftRegion.getWidth() - actualFade);
+        juce::Rectangle<float> solidBlackLeft = leftRegion.withWidth(juce::jmax(0.0f, leftRegion.getWidth() - actualFade));
         g.setColour(juce::Colours::black);
         g.fillRect(solidBlackLeft);
 
@@ -90,13 +92,13 @@ void CutLayerView::paint(juce::Graphics& g)
         g.fillRect(fadeAreaLeft);
     }
 
-    const juce::Rectangle<float> rightRegion(outX, (float)bounds.getY(), (float)bounds.getRight() - outX, (float)bounds.getHeight());
+    const juce::Rectangle<float> rightRegion(outX, (float)bounds.getY(), juce::jmax(0.0f, (float)bounds.getRight() - outX), (float)bounds.getHeight());
     if (rightRegion.getWidth() > 0.0f)
     {
         const float actualFade = juce::jmin(fadeLength, rightRegion.getWidth());
 
         float solidBlackStart = outX + actualFade;
-        juce::Rectangle<float> solidBlackRight(solidBlackStart, (float)bounds.getY(), (float)bounds.getRight() - solidBlackStart, (float)bounds.getHeight());
+        juce::Rectangle<float> solidBlackRight(solidBlackStart, (float)bounds.getY(), juce::jmax(0.0f, (float)bounds.getRight() - solidBlackStart), (float)bounds.getHeight());
         g.setColour(juce::Colours::black);
         g.fillRect(solidBlackRight);
 

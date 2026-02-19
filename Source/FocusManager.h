@@ -6,7 +6,11 @@
 #ifndef AUDIOFILER_FOCUSMANAGER_H
 #define AUDIOFILER_FOCUSMANAGER_H
 
-#include <JuceHeader.h>
+#if defined(JUCE_HEADLESS)
+    #include <juce_core/juce_core.h>
+#else
+    #include <JuceHeader.h>
+#endif
 
 class ControlPanel;
 

@@ -172,6 +172,7 @@ void PlaybackTextPresenter::applyTimeEdit(juce::TextEditor &editor) {
   } else if (&editor == &owner.cutLengthEditor) {
     double currentIn = owner.getCutInPosition();
     newTime = juce::jlimit(0.0, totalLength, newTime);
+    
     double proposedOut = currentIn + newTime;
 
     if (proposedOut > totalLength) {
@@ -301,7 +302,17 @@ void PlaybackTextPresenter::mouseWheelMove(
     double total = owner.getAudioPlayer().getThumbnail().getTotalLength();
     owner.getAudioPlayer().setPlayheadPosition(total - newVal);
   } else if (editor == &owner.cutLengthEditor) {
-    owner.setCutOutPosition(owner.getCutInPosition() + newVal);
+    const double totalLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
+    newVal = juce::jlimit(0.0, totalLength, newVal);
+    double proposedOut = owner.getCutInPosition() + newVal;
+    
+    if (proposedOut > totalLength) {
+        owner.setCutInPosition(totalLength - newVal);
+        owner.setCutOutPosition(totalLength);
+    } else {
+        owner.setCutOutPosition(proposedOut);
+    }
+    
     owner.ensureCutOrder();
     owner.updateCutLabels();
   }
