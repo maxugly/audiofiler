@@ -202,7 +202,8 @@ void AudioPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
         return;
     }
 
-    if (!sessionState.getCutPrefs().active)
+    const auto prefs = sessionState.getCutPrefs();
+    if (!prefs.active)
     {
         transportSource.getNextAudioBlock(bufferToFill);
         return;
@@ -216,8 +217,8 @@ void AudioPlayer::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
         return;
     }
 
-    const double cutIn = sessionState.getCutPrefs().cutIn;
-    const double cutOut = sessionState.getCutPrefs().cutOut;
+    const double cutIn = prefs.cutIn;
+    const double cutOut = prefs.cutOut;
     const double startPos = transportSource.getCurrentPosition();
 
     if (startPos >= cutOut)
@@ -367,10 +368,11 @@ void AudioPlayer::setPlayheadPosition(double seconds)
     double cutIn = 0.0;
     double cutOut = totalDuration;
 
-    if (sessionState.getCutPrefs().active)
+    const auto prefs = sessionState.getCutPrefs();
+    if (prefs.active)
     {
-        cutIn = sessionState.getCutPrefs().cutIn;
-        cutOut = sessionState.getCutPrefs().cutOut;
+        cutIn = prefs.cutIn;
+        cutOut = prefs.cutOut;
     }
 
     double clampedPos = juce::jlimit(cutIn, cutOut, seconds);

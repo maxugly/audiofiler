@@ -50,11 +50,7 @@ public:
     void removeListener(Listener* listener);
 
     // Getters
-    /**
-     * @brief Gets the CutPrefs.
-     * @return const MainDomain::CutPreferences&
-     */
-    const MainDomain::CutPreferences& getCutPrefs() const { return cutPrefs; }
+    MainDomain::CutPreferences getCutPrefs() const;
 
     // Setters
     /**
@@ -92,32 +88,10 @@ public:
      * @param value [in] Description for value.
      */
     void setCutOut(double value);
-    /**
-     * @brief Gets the CutIn.
-     * @return double
-     */
-    double getCutIn() const { return getMetadataForFile(currentFilePath).cutIn; }
-    /**
-     * @brief Gets the CutOut.
-     * @return double
-     */
-    double getCutOut() const { return getMetadataForFile(currentFilePath).cutOut; }
-    /**
-     * @brief Gets the MetadataForFile.
-     * @param filePath [in] Description for filePath.
-     * @return FileMetadata
-     */
+    double getCutIn() const;
+    double getCutOut() const;
     FileMetadata getMetadataForFile(const juce::String& filePath) const;
-    /**
-     * @brief Gets the CurrentMetadata.
-     * @return FileMetadata
-     */
-    FileMetadata getCurrentMetadata() const { return getMetadataForFile(currentFilePath); }
-    /**
-     * @brief Sets the MetadataForFile.
-     * @param filePath [in] Description for filePath.
-     * @param newMetadata [in] Description for newMetadata.
-     */
+    FileMetadata getCurrentMetadata() const;
     void setMetadataForFile(const juce::String& filePath, const FileMetadata& newMetadata);
     /**
      * @brief Checks if sMetadataForFile.
@@ -125,20 +99,14 @@ public:
      * @return bool
      */
     bool hasMetadataForFile(const juce::String& filePath) const;
-    /**
-     * @brief Sets the CurrentFilePath.
-     * @param filePath [in] Description for filePath.
-     */
-    void setCurrentFilePath(const juce::String& filePath) { currentFilePath = filePath; }
-    /**
-     * @brief Gets the CurrentFilePath.
-     * @return const juce::String&
-     */
-    const juce::String& getCurrentFilePath() const { return currentFilePath; }
+    void setCurrentFilePath(const juce::String& filePath);
+    juce::String getCurrentFilePath() const;
 
 private:
     MainDomain::CutPreferences cutPrefs;
     juce::String currentFilePath;
     std::map<juce::String, FileMetadata> metadataCache;
     juce::ListenerList<Listener> listeners;
+
+    mutable juce::CriticalSection stateLock;
 };
