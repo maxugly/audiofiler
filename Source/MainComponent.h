@@ -17,6 +17,38 @@ class KeybindHandler;
 
 class PlaybackRepeatController;
 
+/**
+ * @defgroup UI UI Components
+ * @brief User interface classes, including custom components, views, and presenters.
+ *
+ * @defgroup AudioEngine Audio Engine
+ * @brief Core audio processing, file handling, and playback logic.
+ *
+ * @defgroup State State Management
+ * @brief Data models, configuration, and application state.
+ *
+ * @defgroup Threading Threading/Workers
+ * @brief Background threads for analysis and file reading.
+ *
+ * @defgroup Helpers Helpers
+ * @brief Utility functions and static helper classes.
+ */
+
+/**
+ * @ingroup UI
+ * @class MainComponent
+ * @brief The root component of the application.
+ * @details This class is the main entry point for the UI and audio processing.
+ *          It owns the high-level `AudioPlayer` (audio engine) and `ControlPanel` (UI),
+ *          and manages the `SessionState` (data model).
+ *
+ *          It implements `juce::AudioAppComponent` to handle audio callbacks and
+ *          `juce::ChangeListener` to respond to transport changes.
+ *
+ * @see AudioPlayer
+ * @see ControlPanel
+ * @see SessionState
+ */
 class MainComponent  : public juce::AudioAppComponent,
                     public juce::ChangeListener
 {

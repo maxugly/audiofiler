@@ -56,6 +56,19 @@ class PlaybackCursorView;
 
 class ZoomView;
 
+/**
+ * @ingroup UI
+ * @class ControlPanel
+ * @brief The main container for UI controls and waveform visualization.
+ * @details This component instantiates and manages all the presenters and views (e.g.,
+ *          `WaveformView`, `TransportPresenter`). It handles the layout logic and
+ *          coordinates communication between the UI and the `SessionState`.
+ *
+ *          It acts as the "Glue" layer, ensuring presenters have access to the models they need.
+ *
+ * @see MainComponent
+ * @see SessionState
+ */
 class ControlPanel final : public juce::Component,
                            public juce::Timer {
 public:
@@ -233,24 +246,59 @@ private:
   friend class PlaybackTextPresenter;
 
   MainComponent &owner;
+  /** @brief Reference to the shared application state. */
   SessionState &sessionState;
   ModernLookAndFeel modernLF;
+
+  /** @brief Handles silence detection logic and background workers. */
   std::unique_ptr<SilenceDetector> silenceDetector;
+
+  /** @brief Manages the logic for cut operations (in/out points). */
   std::unique_ptr<CutPresenter> cutPresenter;
+
+  /** @brief Calculates and caches component positions. */
   std::unique_ptr<LayoutManager> layoutManager;
+
+  /** @brief Renders the static waveform visualization. */
   std::unique_ptr<WaveformView> waveformView;
+
+  /** @brief Renders the overlay for cut regions. */
   std::unique_ptr<CutLayerView> cutLayerView;
+
+  /** @brief Manages playback position text display. */
   std::unique_ptr<PlaybackTextPresenter> playbackTextPresenter;
+
+  /** @brief Manages file statistics (sample rate, bit depth, etc.). */
   std::unique_ptr<StatsPresenter> statsPresenter;
+
+  /** @brief Manages repeat/loop functionality. */
   std::unique_ptr<RepeatPresenter> repeatPresenter;
+
+  /** @brief Updates UI state based on SessionState changes. */
   std::unique_ptr<ControlStatePresenter> controlStatePresenter;
+
+  /** @brief Manages transport controls (Play/Stop). */
   std::unique_ptr<TransportPresenter> transportPresenter;
+
+  /** @brief Presenter for silence detection settings. */
   std::unique_ptr<SilenceDetectionPresenter> silenceDetectionPresenter;
+
+  /** @brief Manages general control buttons (Open, Save, etc.). */
   std::unique_ptr<ControlButtonsPresenter> buttonPresenter;
+
+  /** @brief Manages cut button interactions. */
   std::unique_ptr<CutButtonPresenter> cutButtonPresenter;
+
+  /** @brief Manages reset buttons for cut points. */
   std::unique_ptr<CutResetPresenter> cutResetPresenter;
+
+  /** @brief Handles keyboard focus navigation. */
   std::unique_ptr<FocusManager> focusManager;
+
+  /** @brief Renders the playback cursor and glow effects. */
   std::unique_ptr<PlaybackCursorView> playbackCursorView;
+
+  /** @brief Renders the zoom window. */
   std::unique_ptr<ZoomView> zoomView;
 
   int lastCursorX{-1};

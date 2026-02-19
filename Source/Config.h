@@ -1,5 +1,3 @@
-
-
 #ifndef AUDIOFILER_CONFIG_H
 #define AUDIOFILER_CONFIG_H
 
@@ -10,6 +8,14 @@
 #include <juce_graphics/juce_graphics.h> 
 #endif
 
+/**
+ * @ingroup State
+ * @namespace Config
+ * @brief Global configuration constants and settings.
+ * @details This namespace contains static configuration for colors, layout, animation,
+ *          and audio settings. It provides a centralized place to tweak the application's
+ *          look and feel and behavior.
+ */
 namespace Config {
 
     namespace Colors {

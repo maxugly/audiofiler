@@ -1,5 +1,3 @@
-
-
 #ifndef AUDIOFILER_AUDIOPLAYER_H
 #define AUDIOFILER_AUDIOPLAYER_H
 
@@ -23,6 +21,19 @@
 
 class ControlPanel;
 
+/**
+ * @ingroup AudioEngine
+ * @class AudioPlayer
+ * @brief High-level audio playback and file handling class.
+ * @details This class wraps `juce::AudioTransportSource` and handles loading audio files,
+ *          managing playback position, and enforcing cut regions defined in `SessionState`.
+ *
+ *          It runs a background `juce::TimeSliceThread` for read-ahead buffering to ensure
+ *          smooth playback.
+ *
+ * @see SessionState
+ * @see MainComponent
+ */
 class AudioPlayer : public juce::AudioSource,
                     public juce::ChangeListener,
                     public juce::ChangeBroadcaster,
@@ -73,6 +84,21 @@ public:
 
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
 
+    /**
+     * @brief Processes the next block of audio samples.
+     * @details This is the core audio processing callback. The logic sequence is:
+     *          1. Check if a valid reader source exists. If not, clear the buffer.
+     *          2. Retrieve the current cut preferences from `SessionState`.
+     *          3. If cut mode is inactive, simply delegate to `transportSource`.
+     *          4. If active, check the current playback position against `cutIn` and `cutOut`.
+     *          5. If the position exceeds `cutOut`:
+     *             - If looping is enabled, seek back to `cutIn`.
+     *             - If not, stop playback.
+     *          6. If the current block crosses the `cutOut` boundary, fade out or truncate
+     *             the buffer to ensure no audio is played past the cut point.
+     *
+     * @param bufferToFill The buffer to populate with audio data.
+     */
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
 
     void releaseResources() override;

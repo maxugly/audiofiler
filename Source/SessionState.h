@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include "MainDomain.h"
@@ -7,6 +5,19 @@
 #include <juce_core/juce_core.h>
 #include <map>
 
+/**
+ * @ingroup State
+ * @class SessionState
+ * @brief The central data model for the application.
+ * @details This class holds the current application state, including file metadata,
+ *          cut preferences, and other user settings. It acts as a "hub" for communication,
+ *          allowing components to listen for state changes without tight coupling.
+ *
+ *          It uses `juce::ListenerList` to notify registered listeners when properties change.
+ *
+ * @see AudioPlayer
+ * @see ControlPanel
+ */
 class SessionState {
 public:
 

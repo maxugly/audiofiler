@@ -1,5 +1,3 @@
-
-
 #ifndef AUDIOFILER_SILENCEANALYSISWORKER_H
 #define AUDIOFILER_SILENCEANALYSISWORKER_H
 
@@ -16,6 +14,19 @@
 
 class SessionState;
 
+/**
+ * @ingroup Threading
+ * @class SilenceAnalysisWorker
+ * @brief Background thread for detecting silence in audio files.
+ * @details This worker offloads the heavy processing of scanning large audio files
+ *          to a separate thread to prevent UI freezing. It uses `SilenceAnalysisAlgorithms`
+ *          to perform the actual sample analysis.
+ *
+ *          When analysis is complete, it updates `SessionState` (via `SilenceWorkerClient` or
+ *          direct callback) with the detected silence boundaries.
+ *
+ * @see SilenceAnalysisAlgorithms
+ */
 class SilenceAnalysisWorker : public juce::Thread
 {
 public:
