@@ -95,6 +95,7 @@ public:
   bool isZKeyDown() const;
 
   void playbackTimerTick() override;
+  void animationUpdate (float breathingPulse) override;
 
   // SessionState::Listener
   void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) override;
@@ -172,6 +173,9 @@ public:
                            juce::Colour color = Config::Colors::statsText);
   void logStatusMessage(const juce::String &message,
                         bool isError = false);
+
+  juce::TextButton& getAutoCutInButton() { return autoCutInButton; }
+  juce::TextButton& getAutoCutOutButton() { return autoCutOutButton; }
 
   void updateStatsFromAudio();
 

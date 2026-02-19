@@ -57,6 +57,11 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   addAndMakeVisible(zoomView.get());
   zoomView->setVisible(true);
 
+  playbackTimerManager = std::make_unique<PlaybackTimerManager>(sessionState, getAudioPlayer());
+  playbackTimerManager->addListener(playbackCursorView.get());
+  playbackTimerManager->addListener(zoomView.get());
+  playbackTimerManager->addListener(this);
+
   statsPresenter = std::make_unique<StatsPresenter>(*this);
   silenceDetectionPresenter = std::make_unique<SilenceDetectionPresenter>(*this, sessionState, *owner.getAudioPlayer());
   owner.getAudioPlayer()->setControlPanel(this);
@@ -74,11 +79,6 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
 
   controlStatePresenter = std::make_unique<ControlStatePresenter>(*this);
   transportPresenter = std::make_unique<TransportPresenter>(*this);
-
-  playbackTimerManager = std::make_unique<PlaybackTimerManager>(sessionState, getAudioPlayer());
-  playbackTimerManager->addListener(playbackCursorView.get());
-  playbackTimerManager->addListener(zoomView.get());
-  playbackTimerManager->addListener(this);
 
   sessionState.addListener(this);
 
@@ -182,6 +182,10 @@ void ControlPanel::playbackTimerTick() {
   }
 
   updateCutLabels();
+}
+
+void ControlPanel::animationUpdate(float breathingPulse) {
+  juce::ignoreUnused(breathingPulse);
 }
 
 void ControlPanel::cutPreferenceChanged(const MainDomain::CutPreferences& prefs) {

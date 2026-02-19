@@ -39,6 +39,8 @@ public:
 
     bool isBusy() const;
 
+    bool isDetectingIn() const { return detectingIn.load(); }
+
 private:
 
     void run() override;

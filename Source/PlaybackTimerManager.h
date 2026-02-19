@@ -36,6 +36,9 @@ public:
 
         /** @brief Called at a 60Hz frequency to trigger UI updates. */
         virtual void playbackTimerTick() = 0;
+
+        /** @brief Called at a 60Hz frequency to broadcast the master pulse. */
+        virtual void animationUpdate (float breathingPulse) = 0;
     };
 
     /**
@@ -57,6 +60,12 @@ public:
     /** @brief Returns true if the 'z' key is currently held down. */
     bool isZKeyDown() const { return m_isZKeyDown; }
 
+    /** @brief Returns the master animation phase (0.0 to 1.0). */
+    float getMasterPhase() const { return m_masterPhase; }
+
+    /** @brief Returns the breathing pulse value (0.0 to 1.0). */
+    float getBreathingPulse() const { return m_breathingPulse; }
+
     /** @brief Internal timer callback. */
     void timerCallback() override;
 
@@ -67,6 +76,8 @@ private:
     juce::ListenerList<Listener> listeners;
     
     bool m_isZKeyDown = false;
+    float m_masterPhase = 0.0f;
+    float m_breathingPulse = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlaybackTimerManager)
 };

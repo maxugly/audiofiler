@@ -26,6 +26,7 @@ public:
     void paint(juce::Graphics& g) override;
 
     void playbackTimerTick() override;
+    void animationUpdate (float breathingPulse) override;
 
 private:
     ControlPanel& owner;

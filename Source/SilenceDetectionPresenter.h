@@ -12,18 +12,23 @@
 #include "SilenceWorkerClient.h"
 #include "SilenceAnalysisWorker.h"
 #include "SessionState.h"
+#include "PlaybackTimerManager.h"
 
 class ControlPanel;
 
 class AudioPlayer;
 
 class SilenceDetectionPresenter final : public SilenceWorkerClient,
-                                         public SessionState::Listener
+                                         public SessionState::Listener,
+                                         public PlaybackTimerManager::Listener
 {
 public:
 
     SilenceDetectionPresenter(ControlPanel& ownerPanel, SessionState& sessionState, AudioPlayer& audioPlayer);
     ~SilenceDetectionPresenter() override;
+
+    void playbackTimerTick() override;
+    void animationUpdate(float breathingPulse) override;
 
     void handleAutoCutInToggle(bool isActive);
 

@@ -51,6 +51,11 @@ void PlaybackCursorView::playbackTimerTick()
     }
 }
 
+void PlaybackCursorView::animationUpdate(float breathingPulse)
+{
+    juce::ignoreUnused(breathingPulse);
+}
+
 void PlaybackCursorView::paint(juce::Graphics& g)
 {
     auto& audioPlayer = owner.getAudioPlayer();

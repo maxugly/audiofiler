@@ -1,6 +1,8 @@
 #include "PlaybackTimerManager.h"
 #include "SessionState.h"
 #include "AudioPlayer.h"
+#include "UIAnimationHelper.h"
+#include "Config.h"
 
 PlaybackTimerManager::PlaybackTimerManager(SessionState& sessionStateIn, AudioPlayer& audioPlayerIn)
     : sessionState(sessionStateIn), audioPlayer(audioPlayerIn)
@@ -28,6 +30,15 @@ void PlaybackTimerManager::timerCallback()
     const bool isZDown = juce::KeyPress::isKeyCurrentlyDown('z') || juce::KeyPress::isKeyCurrentlyDown('Z');
     m_isZKeyDown = isZDown;
 
-    // Notify all high-frequency listeners (Cursor, Zoom views, etc.)
+    // Update master animation clock - 4 second cycle
+    m_masterPhase += (1.0f / (60.0f * 4.0f));
+    if (m_masterPhase >= 1.0f)
+        m_masterPhase = 0.0f;
+
+    // Calculate breathing pulse at 1Hz (multiplier = 4.0f since cycle is 4s)
+    m_breathingPulse = UIAnimationHelper::getSinePulse(m_masterPhase, 4.0f);
+
+    // Notify all high-frequency listeners
     listeners.call(&Listener::playbackTimerTick);
+    listeners.call(&Listener::animationUpdate, m_breathingPulse);
 }

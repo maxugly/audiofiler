@@ -48,8 +48,18 @@ public:
     g.setColour (currentBackgroundColour);
     g.fillRoundedRectangle (bounds, cornerSize);
 
-    g.setColour (Config::Colors::Button::outline);
-    g.drawRoundedRectangle (bounds, cornerSize, outlineThickness); }
+    if (button.getProperties().getWithDefault("isProcessing", false))
+    {
+        float pulseAlpha = button.getProperties().getWithDefault("pulseAlpha", 0.0f);
+        g.setColour (Config::Colors::Button::outline.withAlpha (pulseAlpha));
+        g.drawRoundedRectangle (bounds, cornerSize, outlineThickness * 2.5f);
+    }
+    else
+    {
+        g.setColour (Config::Colors::Button::outline);
+        g.drawRoundedRectangle (bounds, cornerSize, outlineThickness);
+    }
+  }
 
   juce::Font getTextButtonFont (juce::TextButton& button, int buttonHeight) override {
     juce::Font font = LookAndFeel_V4::getTextButtonFont (button, buttonHeight);

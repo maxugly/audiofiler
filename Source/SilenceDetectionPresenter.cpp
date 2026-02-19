@@ -15,11 +15,42 @@ SilenceDetectionPresenter::SilenceDetectionPresenter(ControlPanel& ownerPanel, S
       silenceWorker(*this, sessionStateIn)
 {
     sessionState.addListener(this);
+    owner.getPlaybackTimerManager().addListener(this);
 }
 
 SilenceDetectionPresenter::~SilenceDetectionPresenter()
 {
+    owner.getPlaybackTimerManager().removeListener(this);
     sessionState.removeListener(this);
+}
+
+void SilenceDetectionPresenter::playbackTimerTick()
+{
+}
+
+void SilenceDetectionPresenter::animationUpdate(float breathingPulse)
+{
+    if (silenceWorker.isBusy())
+    {
+        auto& button = silenceWorker.isDetectingIn() ? owner.getAutoCutInButton() : owner.getAutoCutOutButton();
+        button.getProperties().set("isProcessing", true);
+        button.getProperties().set("pulseAlpha", breathingPulse);
+        button.repaint();
+    }
+    else
+    {
+        // Ensure both buttons have the property cleared when analysis is not running
+        if (owner.getAutoCutInButton().getProperties().getWithDefault("isProcessing", false))
+        {
+            owner.getAutoCutInButton().getProperties().set("isProcessing", false);
+            owner.getAutoCutInButton().repaint();
+        }
+        if (owner.getAutoCutOutButton().getProperties().getWithDefault("isProcessing", false))
+        {
+            owner.getAutoCutOutButton().getProperties().set("isProcessing", false);
+            owner.getAutoCutOutButton().repaint();
+        }
+    }
 }
 
 void SilenceDetectionPresenter::handleAutoCutInToggle(bool isActive)

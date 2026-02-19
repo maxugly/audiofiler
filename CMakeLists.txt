@@ -132,6 +132,7 @@ if (NOT BUILD_TESTS_ONLY)
             Source/PlaybackCursorView.cpp
             Source/PlaybackTimerManager.h
             Source/PlaybackTimerManager.cpp
+            Source/UIAnimationHelper.h
     )
 
     target_link_libraries(audiofiler PRIVATE

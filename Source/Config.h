@@ -143,6 +143,7 @@ namespace Config {
         constexpr float buttonPressedDarkness = 0.1f;
         constexpr float mouseAmplitudeLineLength = 50.0f;
         constexpr float thresholdLineWidth = 100.0f;
+        constexpr float masterPhaseDurationSeconds = 2.0f;
     }
 
     namespace Audio {

@@ -77,6 +77,11 @@ void ZoomView::playbackTimerTick()
     }
 }
 
+void ZoomView::animationUpdate(float breathingPulse)
+{
+    juce::ignoreUnused(breathingPulse);
+}
+
 void ZoomView::paint(juce::Graphics& g)
 {
     auto& audioPlayer = owner.getAudioPlayer();
