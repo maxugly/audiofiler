@@ -54,6 +54,19 @@ public:
 
     CutMarkerHandle getDraggedHandle() const { return draggedHandle; }
 
+    /** @brief Returns true if the given handle is currently hovered, dragged, or armed. */
+    bool isHandleActive(CutMarkerHandle handle) const {
+        if (draggedHandle == handle) return true;
+        if (hoveredHandle == handle) return true;
+        
+        if (handle == CutMarkerHandle::In && currentPlacementMode == AppEnums::PlacementMode::CutIn)
+            return true;
+        if (handle == CutMarkerHandle::Out && currentPlacementMode == AppEnums::PlacementMode::CutOut)
+            return true;
+            
+        return false;
+    }
+
     bool isScrubbing() const { return isScrubbingState; }
 
 private:

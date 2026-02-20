@@ -154,12 +154,6 @@ void CutLayerView::paint(juce::Graphics& g)
         g.fillRect(fadeAreaRight);
     }
 
-    const juce::Colour glowColor = Config::Colors::cutLine.withAlpha(Config::Colors::cutLine.getFloatAlpha() * (1.0f - glowAlphaProvider()));
-    g.setColour(glowColor);
-    g.fillRect(inX - (Config::Layout::Glow::cutLineGlowThickness * Config::Layout::Glow::offsetFactor - 0.5f), (float)bounds.getY() + boxHeight, Config::Layout::Glow::cutLineGlowThickness, (float)bounds.getHeight() - (2.0f * boxHeight));
-    g.fillRect(outX - (Config::Layout::Glow::cutLineGlowThickness * Config::Layout::Glow::offsetFactor - 0.5f), (float)bounds.getY() + boxHeight, Config::Layout::Glow::cutLineGlowThickness, (float)bounds.getHeight() - (2.0f * boxHeight));
-
-    g.setColour(Config::Colors::cutLine);
     auto drawCutMarker = [&](float x, MouseHandler::CutMarkerHandle handleType) {
         juce::Colour markerColor = Config::Colors::cutLine;
 
@@ -169,16 +163,43 @@ void CutLayerView::paint(juce::Graphics& g)
             markerColor = Config::Colors::cutMarkerAuto;
 
         float thickness = Config::Layout::Glow::cutBoxOutlineThickness;
+        bool shouldPulse = false;
 
-        if (mouseHandler != nullptr && mouseHandler->getDraggedHandle() == handleType)
+        if (mouseHandler != nullptr)
         {
-            markerColor = Config::Colors::cutMarkerDrag;
-            thickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
+            shouldPulse = mouseHandler->isHandleActive(handleType) || 
+                          mouseHandler->getDraggedHandle() == MouseHandler::CutMarkerHandle::Full ||
+                          mouseHandler->getHoveredHandle() == MouseHandler::CutMarkerHandle::Full;
+
+            if (mouseHandler->getDraggedHandle() == handleType || 
+                (handleType != MouseHandler::CutMarkerHandle::Full && mouseHandler->getDraggedHandle() == MouseHandler::CutMarkerHandle::Full))
+            {
+                markerColor = Config::Colors::cutMarkerDrag;
+                thickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
+            }
+            else if (mouseHandler->getHoveredHandle() == handleType ||
+                     (handleType != MouseHandler::CutMarkerHandle::Full && mouseHandler->getHoveredHandle() == MouseHandler::CutMarkerHandle::Full))
+            {
+                markerColor = Config::Colors::cutMarkerHover;
+                thickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
+            }
         }
-        else if (mouseHandler != nullptr && mouseHandler->getHoveredHandle() == handleType)
+
+        // Draw Glow if active
+        if (shouldPulse)
         {
-            markerColor = Config::Colors::cutMarkerHover;
-            thickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
+            const float pulse = glowAlphaProvider();
+            const juce::Colour glowColor = Config::Colors::cutLine.withAlpha(Config::Colors::cutLine.getFloatAlpha() * (0.2f + 0.8f * pulse));
+            g.setColour(glowColor);
+            g.fillRect(x - (Config::Layout::Glow::cutLineGlowThickness * Config::Layout::Glow::offsetFactor - 0.5f), 
+                       (float)bounds.getY() + boxHeight, 
+                       Config::Layout::Glow::cutLineGlowThickness, 
+                       (float)bounds.getHeight() - (2.0f * boxHeight));
+        }
+        else
+        {
+            g.setColour(Config::Colors::cutLine.withAlpha(0.3f));
+            g.fillRect(x - 0.5f, (float)bounds.getY() + boxHeight, 1.0f, (float)bounds.getHeight() - (2.0f * boxHeight));
         }
 
         const float boxWidth = Config::Layout::Glow::cutMarkerBoxWidth;
@@ -196,34 +217,43 @@ void CutLayerView::paint(juce::Graphics& g)
     };
 
     drawCutMarker(inX, MouseHandler::CutMarkerHandle::In);
-
     drawCutMarker(outX, MouseHandler::CutMarkerHandle::Out);
 
     juce::Colour hollowColor = Config::Colors::cutLine;
-    float thickness = Config::Layout::Glow::cutBoxOutlineThickness;
+    float hollowThickness = Config::Layout::Glow::cutBoxOutlineThickness;
+    bool regionActive = false;
 
-    if (mouseHandler != nullptr && mouseHandler->getDraggedHandle() == MouseHandler::CutMarkerHandle::Full)
+    if (mouseHandler != nullptr)
     {
-        hollowColor = Config::Colors::cutMarkerDrag;
-        thickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
-    }
-    else if (mouseHandler != nullptr && mouseHandler->getHoveredHandle() == MouseHandler::CutMarkerHandle::Full)
-    {
-        hollowColor = Config::Colors::cutMarkerHover;
-        thickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
+        regionActive = mouseHandler->getDraggedHandle() == MouseHandler::CutMarkerHandle::Full ||
+                       mouseHandler->getHoveredHandle() == MouseHandler::CutMarkerHandle::Full;
+
+        if (mouseHandler->getDraggedHandle() == MouseHandler::CutMarkerHandle::Full)
+        {
+            hollowColor = Config::Colors::cutMarkerDrag;
+            hollowThickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
+        }
+        else if (mouseHandler->getHoveredHandle() == MouseHandler::CutMarkerHandle::Full)
+        {
+            hollowColor = Config::Colors::cutMarkerHover;
+            hollowThickness = Config::Layout::Glow::cutBoxOutlineThicknessInteracting;
+        }
     }
 
-    g.setColour(hollowColor);
+    if (regionActive)
+        g.setColour(hollowColor.withAlpha(0.5f + 0.5f * glowAlphaProvider()));
+    else
+        g.setColour(hollowColor.withAlpha(0.4f));
+
     const float halfBoxWidth = Config::Layout::Glow::cutMarkerBoxWidth / 2.0f;
-
     const float startX = inX + halfBoxWidth;
     const float endX = outX - halfBoxWidth;
 
     if (startX < endX)
     {
-        g.drawLine(startX, (float)bounds.getY(), endX, (float)bounds.getY(), thickness);
-        g.drawLine(startX, (float)bounds.getY() + boxHeight, endX, (float)bounds.getY() + boxHeight, thickness);
-        g.drawLine(startX, (float)bounds.getBottom() - 1.0f, endX, (float)bounds.getBottom() - 1.0f, thickness);
-        g.drawLine(startX, (float)bounds.getBottom() - boxHeight, endX, (float)bounds.getBottom() - boxHeight, thickness);
+        g.drawLine(startX, (float)bounds.getY(), endX, (float)bounds.getY(), hollowThickness);
+        g.drawLine(startX, (float)bounds.getY() + boxHeight, endX, (float)bounds.getY() + boxHeight, hollowThickness);
+        g.drawLine(startX, (float)bounds.getBottom() - 1.0f, endX, (float)bounds.getBottom() - 1.0f, hollowThickness);
+        g.drawLine(startX, (float)bounds.getBottom() - boxHeight, endX, (float)bounds.getBottom() - boxHeight, hollowThickness);
     }
 }

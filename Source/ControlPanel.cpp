@@ -188,6 +188,9 @@ void ControlPanel::playbackTimerTick() {
 void ControlPanel::animationUpdate(float breathingPulse) {
   m_currentPulseAlpha = breathingPulse;
 
+  if (cutLayerView != nullptr)
+    cutLayerView->repaint();
+
   if (autoCutInButton.getProperties().getWithDefault("isProcessing", false))
     autoCutInButton.repaint();
 
