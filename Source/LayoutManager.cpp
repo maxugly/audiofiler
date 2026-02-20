@@ -43,8 +43,11 @@ void LayoutManager::layoutTopRowButtons(juce::Rectangle<int>& bounds, int rowHei
     controlPanel.openButton.setBounds(topRow.removeFromLeft(buttonWidth));
     topRow.removeFromLeft(margin);
 
-    // Transport Group (Left, Middle, Middle, Right)
+    // Transport Group (Left, Middle, Middle, Middle, Right)
     controlPanel.playStopButton.setBounds(topRow.removeFromLeft(buttonWidth));
+    topRow.removeFromLeft(spacing);
+
+    controlPanel.stopButton.setBounds(topRow.removeFromLeft(buttonWidth));
     topRow.removeFromLeft(spacing);
 
     controlPanel.autoplayButton.setBounds(topRow.removeFromLeft(buttonWidth));

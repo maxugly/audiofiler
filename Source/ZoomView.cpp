@@ -18,6 +18,11 @@ ZoomView::ZoomView(ControlPanel& ownerIn)
     setOpaque(false);
 }
 
+ZoomView::~ZoomView()
+{
+    owner.getPlaybackTimerManager().removeListener(this);
+}
+
 void ZoomView::playbackTimerTick()
 {
     const auto& mouse = owner.getMouseHandler();

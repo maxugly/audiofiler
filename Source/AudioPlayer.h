@@ -76,6 +76,8 @@ public:
 
     void stopPlayback();
 
+    void stopPlaybackAndReset();
+
     juce::AudioFormatManager& getFormatManager();
 
     juce::AudioFormatReader* getAudioFormatReader() const;

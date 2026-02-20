@@ -31,6 +31,7 @@ CutLayerView::CutLayerView(ControlPanel& ownerIn,
 
 CutLayerView::~CutLayerView()
 {
+    owner.getPlaybackTimerManager().removeListener(this);
     waveformManager.removeChangeListener(this);
 }
 

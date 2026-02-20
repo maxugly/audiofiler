@@ -24,7 +24,7 @@ void PlaybackRepeatController::tick()
             if (lastIsPlaying)
             {
                 // Condition B: User manually stopped or playback ended naturally
-                sessionState.setAutoPlay(false);
+                sessionState.setAutoPlayActive(false);
             }
             else
             {

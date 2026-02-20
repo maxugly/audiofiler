@@ -17,14 +17,16 @@ public:
     #endif
     mainWindow.reset (new MainWindow (getApplicationName())); }
 
-  void shutdown() override { mainWindow.reset(); }
+  void shutdown() override { 
+    mainWindow.reset(); 
+  }
 
 private:
 
     class MainWindow : public juce::DocumentWindow {
     public:
 
-      MainWindow (juce::String name) : DocumentWindow (name, Config::Colors::Window::background, allButtons) {
+      MainWindow (juce::String name) : DocumentWindow (name, Config::Colors::Window::background, juce::DocumentWindow::allButtons) {
 
         setUsingNativeTitleBar (true);
         setContentOwned (new MainComponent(), true);

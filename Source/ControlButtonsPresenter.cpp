@@ -25,6 +25,8 @@ void ControlButtonsPresenter::initialiseAllButtons()
 
     initialisePlayStopButton();
 
+    initialiseStopButton();
+
     initialiseModeButton();
 
     initialiseChannelViewButton();
@@ -63,6 +65,18 @@ void ControlButtonsPresenter::initialisePlayStopButton()
     owner.playStopButton.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Left);
     owner.playStopButton.onClick = [this] { owner.getAudioPlayer().togglePlayStop(); };
     owner.playStopButton.setEnabled(false);
+}
+
+void ControlButtonsPresenter::initialiseStopButton()
+{
+    owner.addAndMakeVisible(owner.stopButton);
+    owner.stopButton.setButtonText(Config::Labels::stopButton);
+    owner.stopButton.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Middle);
+    owner.stopButton.onClick = [this] {
+        owner.getAudioPlayer().stopPlaybackAndReset();
+        owner.getSessionState().setAutoPlayActive(false);
+    };
+    owner.stopButton.setEnabled(false);
 }
 
 void ControlButtonsPresenter::initialiseModeButton()

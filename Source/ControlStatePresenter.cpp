@@ -29,6 +29,7 @@ void ControlStatePresenter::updateGeneralButtonStates(bool enabled)
     owner.cutButton.setEnabled(true);
 
     owner.playStopButton.setEnabled(enabled);
+    owner.stopButton.setEnabled(enabled);
     owner.modeButton.setEnabled(enabled);
     owner.statsButton.setEnabled(enabled);
     owner.channelViewButton.setEnabled(enabled);

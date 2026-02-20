@@ -17,6 +17,11 @@ PlaybackCursorView::PlaybackCursorView(ControlPanel& ownerPanel)
     setOpaque(false);
 }
 
+PlaybackCursorView::~PlaybackCursorView()
+{
+    owner.getPlaybackTimerManager().removeListener(this);
+}
+
 void PlaybackCursorView::playbackTimerTick()
 {
     const auto& audioPlayer = owner.getAudioPlayer();

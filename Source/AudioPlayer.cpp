@@ -171,6 +171,12 @@ void AudioPlayer::stopPlayback()
     transportSource.stop();
 }
 
+void AudioPlayer::stopPlaybackAndReset()
+{
+    transportSource.stop();
+    setPlayheadPosition(sessionState.getCutIn());
+}
+
 juce::AudioFormatManager& AudioPlayer::getFormatManager()
 {
     return formatManager;

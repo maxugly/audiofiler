@@ -18,7 +18,7 @@ void TransportPresenter::handleRepeatToggle(bool shouldRepeat)
 
 void TransportPresenter::handleAutoplayToggle(bool shouldAutoplay)
 {
-    owner.getSessionState().setAutoPlay(shouldAutoplay);
+    owner.getSessionState().setAutoPlayActive(shouldAutoplay);
 }
 
 void TransportPresenter::handleCutModeToggle(bool enableCutMode)

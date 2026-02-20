@@ -19,6 +19,8 @@ private:
 
     void initialisePlayStopButton();
 
+    void initialiseStopButton();
+
     void initialiseModeButton();
 
     void initialiseChannelViewButton();

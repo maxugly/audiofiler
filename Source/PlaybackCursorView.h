@@ -19,7 +19,7 @@ class PlaybackCursorView : public juce::Component,
 public:
 
     explicit PlaybackCursorView(ControlPanel& owner);
-    ~PlaybackCursorView() override = default;
+    ~PlaybackCursorView() override;
 
     void paint(juce::Graphics& g) override;
 

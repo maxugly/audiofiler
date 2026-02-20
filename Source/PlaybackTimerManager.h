@@ -74,6 +74,7 @@ private:
     AudioPlayer& audioPlayer;
     
     juce::ListenerList<Listener> listeners;
+    juce::CriticalSection listenerLock;
     
     bool m_isZKeyDown = false;
     float m_masterPhase = 0.0f;

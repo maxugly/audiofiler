@@ -254,6 +254,9 @@ private:
   SessionState &sessionState;
   ModernLookAndFeel modernLF;
 
+  /** @brief Manages high-frequency updates. */
+  std::unique_ptr<PlaybackTimerManager> playbackTimerManager;
+
   /** @brief Handles silence detection logic and background workers. */
   std::unique_ptr<SilenceDetector> silenceDetector;
 
@@ -305,13 +308,10 @@ private:
   /** @brief Renders the zoom window. */
   std::unique_ptr<ZoomView> zoomView;
 
-  /** @brief Manages high-frequency updates. */
-  std::unique_ptr<PlaybackTimerManager> playbackTimerManager;
-
   /** @brief Manages repeat and autoplay logic. */
   std::unique_ptr<PlaybackRepeatController> playbackRepeatController;
 
-  juce::TextButton openButton, playStopButton, modeButton, exitButton,
+  juce::TextButton openButton, playStopButton, stopButton, modeButton, exitButton,
       statsButton, repeatButton, channelViewButton;
   juce::TextButton resetInButton, resetOutButton;
   juce::TextEditor cutInEditor, cutOutEditor;

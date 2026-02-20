@@ -94,9 +94,13 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
 }
 
 ControlPanel::~ControlPanel() {
-  sessionState.removeListener(this);
-  playbackTimerManager.reset();
+  if (playbackTimerManager != nullptr) {
+    playbackTimerManager->stopTimer();
+  }
 
+  getAudioPlayer().setControlPanel(nullptr);
+  sessionState.removeListener(this);
+  
   setLookAndFeel(nullptr);
 }
 

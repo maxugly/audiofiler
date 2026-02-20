@@ -9,7 +9,6 @@ PlaybackTimerManager::PlaybackTimerManager(SessionState& sessionStateIn, AudioPl
 {
     startTimerHz(60);
 }
-
 PlaybackTimerManager::~PlaybackTimerManager()
 {
     stopTimer();
@@ -17,11 +16,13 @@ PlaybackTimerManager::~PlaybackTimerManager()
 
 void PlaybackTimerManager::addListener(Listener* l)
 {
+    const juce::ScopedLock lock(listenerLock);
     listeners.add(l);
 }
 
 void PlaybackTimerManager::removeListener(Listener* l)
 {
+    const juce::ScopedLock lock(listenerLock);
     listeners.remove(l);
 }
 
@@ -39,6 +40,7 @@ void PlaybackTimerManager::timerCallback()
     m_breathingPulse = UIAnimationHelper::getSinePulse(m_masterPhase, 4.0f);
 
     // Notify all high-frequency listeners
+    const juce::ScopedLock lock(listenerLock);
     listeners.call(&Listener::playbackTimerTick);
     listeners.call(&Listener::animationUpdate, m_breathingPulse);
 }

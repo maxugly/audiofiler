@@ -21,7 +21,7 @@ class ZoomView : public juce::Component,
 public:
 
     explicit ZoomView(ControlPanel& owner);
-    ~ZoomView() override = default;
+    ~ZoomView() override;
 
     void paint(juce::Graphics& g) override;
 
