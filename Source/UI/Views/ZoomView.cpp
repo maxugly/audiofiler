@@ -110,13 +110,14 @@ void ZoomView::paint(juce::Graphics& g)
         const int localMouseX = mouse.getMouseCursorX() - getX();
         const int localMouseY = mouse.getMouseCursorY() - getY();
 
-        juce::Colour currentLineColor;
-        juce::Colour currentHighlightColor;
-        juce::Colour currentGlowColor;
-        float currentGlowThickness = 0.0f;
+        juce::Colour currentLineColor = Config::Colors::mouseCursorLine;
+        juce::Colour currentHighlightColor = Config::Colors::mouseCursorHighlight;
+        juce::Colour currentGlowColor = Config::Colors::mouseAmplitudeGlow;
+        float currentGlowThickness = Config::Layout::Glow::thickness;
 
-        if (mouse.getCurrentPlacementMode() == AppEnums::PlacementMode::CutIn
-            || mouse.getCurrentPlacementMode() == AppEnums::PlacementMode::CutOut)
+        const auto placementMode = owner.getPlacementMode();
+        if (placementMode == AppEnums::PlacementMode::CutIn
+            || placementMode == AppEnums::PlacementMode::CutOut)
         {
             currentLineColor = Config::Colors::mousePlacementMode;
             currentHighlightColor = Config::Colors::mousePlacementMode.withAlpha(0.4f);
@@ -129,19 +130,10 @@ void ZoomView::paint(juce::Graphics& g)
             g.fillRect(waveformBounds.getX(), localMouseY - (int)(currentGlowThickness * Config::Layout::Glow::offsetFactor) - 1,
                        waveformBounds.getWidth(), (int)currentGlowThickness + Config::Layout::Glow::mousePadding);
         }
-        else
+        else if (owner.getPlaybackTimerManager().isZKeyDown())
         {
-            if (owner.getPlaybackTimerManager().isZKeyDown())
-            {
-                currentLineColor = Config::Colors::mousePlacementMode;
-                currentHighlightColor = Config::Colors::mousePlacementMode.withAlpha(0.4f);
-            }
-            else
-            {
-                currentLineColor = Config::Colors::mouseCursorLine;
-                currentHighlightColor = Config::Colors::mouseCursorHighlight;
-            }
-            currentGlowColor = Config::Colors::mouseAmplitudeGlow;
+            currentLineColor = Config::Colors::mousePlacementMode;
+            currentHighlightColor = Config::Colors::mousePlacementMode.withAlpha(0.4f);
         }
 
         g.setColour(currentHighlightColor);

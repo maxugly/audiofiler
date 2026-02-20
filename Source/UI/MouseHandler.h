@@ -39,10 +39,6 @@ public:
 
     double getMouseCursorTime() const { return mouseCursorTime; }
 
-    AppEnums::PlacementMode getCurrentPlacementMode() const { return currentPlacementMode; }
-
-    void setPlacementMode(AppEnums::PlacementMode mode) { currentPlacementMode = mode; }
-
     enum class CutMarkerHandle {
         None,
         In,
@@ -55,28 +51,19 @@ public:
     CutMarkerHandle getDraggedHandle() const { return draggedHandle; }
 
     /** @brief Returns true if the given handle is currently hovered, dragged, or armed. */
-    bool isHandleActive(CutMarkerHandle handle) const {
-        if (draggedHandle == handle) return true;
-        if (hoveredHandle == handle) return true;
-        
-        if (handle == CutMarkerHandle::In && currentPlacementMode == AppEnums::PlacementMode::CutIn)
-            return true;
-        if (handle == CutMarkerHandle::Out && currentPlacementMode == AppEnums::PlacementMode::CutOut)
-            return true;
-            
-        return false;
-    }
+    bool isHandleActive(CutMarkerHandle handle) const;
 
     bool isScrubbing() const { return isScrubbingState; }
 
 private:
+    double getMouseTime(int x, const juce::Rectangle<int>& bounds, double duration) const;
+
     ControlPanel& owner;
     int mouseCursorX = -1, mouseCursorY = -1;
     double mouseCursorTime = 0.0;
     bool isDragging = false;
     double currentPlaybackPosOnDragStart = 0.0;
     int mouseDragStartX = 0;
-    AppEnums::PlacementMode currentPlacementMode = AppEnums::PlacementMode::None;
 
     CutMarkerHandle hoveredHandle = CutMarkerHandle::None;
     CutMarkerHandle draggedHandle = CutMarkerHandle::None;

@@ -13,7 +13,7 @@ CutButtonPresenter::CutButtonPresenter(ControlPanel& ownerPanel)
 
 void CutButtonPresenter::updateColours()
 {
-    const auto placementMode = owner.getMouseHandler().getCurrentPlacementMode();
+    const auto placementMode = owner.getPlacementMode();
     
     if (owner.inStrip != nullptr)
         owner.inStrip->getMarkerButton().setColour(juce::TextButton::buttonColourId,

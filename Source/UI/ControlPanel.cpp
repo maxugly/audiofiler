@@ -98,7 +98,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
 
   inStrip = std::make_unique<MarkerStrip>(MarkerStrip::MarkerType::In, getAudioPlayer(), sessionState, *silenceDetector);
   inStrip->onMarkerRightClick = [this] {
-    getMouseHandler().setPlacementMode(AppEnums::PlacementMode::CutIn);
+    setPlacementMode(AppEnums::PlacementMode::CutIn);
     updateCutButtonColors();
     repaint();
   };
@@ -106,7 +106,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
 
   outStrip = std::make_unique<MarkerStrip>(MarkerStrip::MarkerType::Out, getAudioPlayer(), sessionState, *silenceDetector);
   outStrip->onMarkerRightClick = [this] {
-    getMouseHandler().setPlacementMode(AppEnums::PlacementMode::CutOut);
+    setPlacementMode(AppEnums::PlacementMode::CutOut);
     updateCutButtonColors();
     repaint();
   };
@@ -422,10 +422,6 @@ juce::String ControlPanel::formatTime(double seconds) const {
 
 const juce::LookAndFeel &ControlPanel::getLookAndFeel() const {
   return modernLF;
-}
-
-AppEnums::PlacementMode ControlPanel::getPlacementMode() const {
-  return getMouseHandler().getCurrentPlacementMode();
 }
 
 void ControlPanel::mouseMove(const juce::MouseEvent &event) {

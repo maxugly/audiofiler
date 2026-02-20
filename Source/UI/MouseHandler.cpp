@@ -6,49 +6,36 @@
 #include "Core/AudioPlayer.h"
 #include "Utils/CoordinateMapper.h"
 
-MouseHandler::MouseHandler(ControlPanel& controlPanel) : owner(controlPanel)
-{
+MouseHandler::MouseHandler(ControlPanel& controlPanel) : owner(controlPanel) {}
+
+double MouseHandler::getMouseTime(int x, const juce::Rectangle<int>& bounds, double duration) const {
+    if (duration <= 0.0) return 0.0;
+    double rawTime = CoordinateMapper::pixelsToSeconds((float)(x - bounds.getX()), (float)bounds.getWidth(), duration);
+    
+    double sampleRate = 0.0;
+    juce::int64 length = 0;
+    owner.getAudioPlayer().getReaderInfo(sampleRate, length);
+    return owner.getInteractionCoordinator().getSnappedTime(rawTime, sampleRate);
 }
 
-void MouseHandler::mouseMove(const juce::MouseEvent& event)
-{
+void MouseHandler::mouseMove(const juce::MouseEvent& event) {
     const auto waveformBounds = owner.getWaveformBounds();
-    if (waveformBounds.contains(event.getPosition()))
-    {
+    if (waveformBounds.contains(event.getPosition())) {
         mouseCursorX = event.x;
         mouseCursorY = event.y;
-
         hoveredHandle = getHandleAtPosition(event.getPosition());
 
-        if (Config::Audio::lockHandlesWhenAutoCutActive)
-        {
-            const auto& silenceDetector = owner.getSilenceDetector();
-            if ((hoveredHandle == CutMarkerHandle::In && silenceDetector.getIsAutoCutInActive()) ||
-                (hoveredHandle == CutMarkerHandle::Out && silenceDetector.getIsAutoCutOutActive()) ||
-                (hoveredHandle == CutMarkerHandle::Full && (silenceDetector.getIsAutoCutInActive() || silenceDetector.getIsAutoCutOutActive())))
-            {
+        if (Config::Audio::lockHandlesWhenAutoCutActive) {
+            const auto& sd = owner.getSilenceDetector();
+            if ((hoveredHandle == CutMarkerHandle::In && sd.getIsAutoCutInActive()) ||
+                (hoveredHandle == CutMarkerHandle::Out && sd.getIsAutoCutOutActive()) ||
+                (hoveredHandle == CutMarkerHandle::Full && (sd.getIsAutoCutInActive() || sd.getIsAutoCutOutActive()))) {
                 hoveredHandle = CutMarkerHandle::None;
             }
         }
-
-        AudioPlayer& audioPlayer = owner.getAudioPlayer();
-        auto audioLength = audioPlayer.getThumbnail().getTotalLength();
-        if (audioLength > 0.0)
-        {
-            mouseCursorTime = CoordinateMapper::pixelsToSeconds((float)(mouseCursorX - waveformBounds.getX()), 
-                                                                (float)waveformBounds.getWidth(), 
-                                                                audioLength);
-        }
-        else
-        {
-            mouseCursorTime = 0.0;
-            isScrubbingState = false;
-        }
-    }
-    else
-    {
-        mouseCursorX = -1;
-        mouseCursorY = -1;
+        mouseCursorTime = getMouseTime(mouseCursorX, waveformBounds, owner.getAudioPlayer().getThumbnail().getTotalLength());
+    } else {
+        mouseCursorX = mouseCursorY = -1;
         mouseCursorTime = 0.0;
         isScrubbingState = false;
         hoveredHandle = CutMarkerHandle::None;
@@ -56,448 +43,244 @@ void MouseHandler::mouseMove(const juce::MouseEvent& event)
     owner.repaint();
 }
 
-void MouseHandler::mouseDown(const juce::MouseEvent& event)
-{
-
+void MouseHandler::mouseDown(const juce::MouseEvent& event) {
     clearTextEditorFocusIfNeeded(event);
-
     auto& coordinator = owner.getInteractionCoordinator();
-    if (coordinator.getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None)
-    {
-        auto zoomBounds = coordinator.getZoomPopupBounds();
-        if (zoomBounds.contains(event.getPosition()))
-        {
+    const double audioLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
+
+    if (coordinator.getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None) {
+        auto zb = coordinator.getZoomPopupBounds();
+        if (zb.contains(event.getPosition())) {
             interactionStartedInZoom = true;
-            auto timeRange = coordinator.getZoomTimeRange();
-            double zoomedTime = CoordinateMapper::pixelsToSeconds((float)(event.x - zoomBounds.getX()), 
-                                                                  (float)zoomBounds.getWidth(), 
-                                                                  timeRange.second - timeRange.first) + timeRange.first;
+            auto tr = coordinator.getZoomTimeRange();
+            double zoomedTime = CoordinateMapper::pixelsToSeconds((float)(event.x - zb.getX()), (float)zb.getWidth(), tr.second - tr.first) + tr.first;
 
-            if (event.mods.isLeftButtonDown())
-            {
+            if (event.mods.isLeftButtonDown()) {
                 coordinator.setNeedsJumpToCutIn(true);
-                if (currentPlacementMode == AppEnums::PlacementMode::CutIn)
-                {
-                    owner.setCutInPosition(zoomedTime);
-                    owner.setAutoCutInActive(false);
-                }
-                else if (currentPlacementMode == AppEnums::PlacementMode::CutOut)
-                {
-                    owner.setCutOutPosition(zoomedTime);
-                    owner.setAutoCutOutActive(false);
-                }
-                else
-                {
-                    double cutPointTime = (coordinator.getActiveZoomPoint() == AppEnums::ActiveZoomPoint::In)
-                                           ? owner.getCutInPosition() : owner.getCutOutPosition();
+                const auto pm = coordinator.getPlacementMode();
+                if (pm != AppEnums::PlacementMode::None) {
+                    auto marker = (pm == AppEnums::PlacementMode::CutIn) ? AppEnums::ActiveZoomPoint::In : AppEnums::ActiveZoomPoint::Out;
+                    coordinator.validateMarkerPosition(marker, zoomedTime, owner.getCutInPosition(), owner.getCutOutPosition(), audioLength);
+                    if (pm == AppEnums::PlacementMode::CutIn) { owner.setCutInPosition(zoomedTime); owner.setAutoCutInActive(false); }
+                    else { owner.setCutOutPosition(zoomedTime); owner.setAutoCutOutActive(false); }
+                } else {
+                    const auto azp = coordinator.getActiveZoomPoint();
+                    double cpt = (azp == AppEnums::ActiveZoomPoint::In) ? owner.getCutInPosition() : owner.getCutOutPosition();
+                    float indicatorX = (float)zb.getX() + CoordinateMapper::secondsToPixels(cpt - tr.first, (float)zb.getWidth(), tr.second - tr.first);
 
-                    float indicatorX = (float)zoomBounds.getX() + 
-                                       CoordinateMapper::secondsToPixels(cutPointTime - timeRange.first, 
-                                                                         (float)zoomBounds.getWidth(), 
-                                                                         timeRange.second - timeRange.first);
-
-                    if (std::abs(event.x - (int)indicatorX) < 20)
-                    {
-                        draggedHandle = (coordinator.getActiveZoomPoint() == AppEnums::ActiveZoomPoint::In) 
-                                         ? CutMarkerHandle::In : CutMarkerHandle::Out;
-                        dragStartMouseOffset = zoomedTime - cutPointTime;
-
-                        if (draggedHandle == CutMarkerHandle::In)
-                            owner.setAutoCutInActive(false);
-                        else
-                            owner.setAutoCutOutActive(false);
-                    }
-                    else
-                    {
+                    if (std::abs(event.x - (int)indicatorX) < 20) {
+                        draggedHandle = (azp == AppEnums::ActiveZoomPoint::In) ? CutMarkerHandle::In : CutMarkerHandle::Out;
+                        dragStartMouseOffset = zoomedTime - cpt;
+                        if (draggedHandle == CutMarkerHandle::In) owner.setAutoCutInActive(false); else owner.setAutoCutOutActive(false);
+                    } else {
                         owner.getAudioPlayer().setPlayheadPosition(zoomedTime);
-                        isDragging = true;
-                        isScrubbingState = true;
+                        isDragging = isScrubbingState = true;
                         mouseDragStartX = event.x;
                     }
                 }
-                owner.repaint();
-                return;
+                owner.repaint(); return;
             }
         }
     }
 
     interactionStartedInZoom = false;
-    const auto waveformBounds = owner.getWaveformBounds();
-    if (! waveformBounds.contains(event.getPosition()))
-        return;
+    const auto wb = owner.getWaveformBounds();
+    if (!wb.contains(event.getPosition())) return;
 
-    if (event.mods.isLeftButtonDown())
-    {
+    if (event.mods.isLeftButtonDown()) {
         draggedHandle = getHandleAtPosition(event.getPosition());
-        auto& silenceDetector = owner.getSilenceDetector();
+        auto& sd = owner.getSilenceDetector();
 
-        if (Config::Audio::lockHandlesWhenAutoCutActive)
-        {
-            if ((draggedHandle == CutMarkerHandle::In && silenceDetector.getIsAutoCutInActive()) ||
-                (draggedHandle == CutMarkerHandle::Out && silenceDetector.getIsAutoCutOutActive()) ||
-                (draggedHandle == CutMarkerHandle::Full && (silenceDetector.getIsAutoCutInActive() || silenceDetector.getIsAutoCutOutActive())))
-            {
-                draggedHandle = CutMarkerHandle::None;
-            }
+        if (Config::Audio::lockHandlesWhenAutoCutActive && 
+           ((draggedHandle == CutMarkerHandle::In && sd.getIsAutoCutInActive()) ||
+            (draggedHandle == CutMarkerHandle::Out && sd.getIsAutoCutOutActive()) ||
+            (draggedHandle == CutMarkerHandle::Full && (sd.getIsAutoCutInActive() || sd.getIsAutoCutOutActive())))) {
+            draggedHandle = CutMarkerHandle::None;
         }
 
-        if (draggedHandle != CutMarkerHandle::None)
-        {
-            if (draggedHandle == CutMarkerHandle::In || draggedHandle == CutMarkerHandle::Full)
-            {
-                if (silenceDetector.getIsAutoCutInActive()) { owner.setAutoCutInActive(false); }
+        if (draggedHandle != CutMarkerHandle::None) {
+            if (draggedHandle == CutMarkerHandle::In || draggedHandle == CutMarkerHandle::Full) owner.setAutoCutInActive(false);
+            if (draggedHandle == CutMarkerHandle::Out || draggedHandle == CutMarkerHandle::Full) owner.setAutoCutOutActive(false);
+            
+            if (draggedHandle == CutMarkerHandle::Full) {
+                dragStartCutLength = std::abs(owner.getCutOutPosition() - owner.getCutInPosition());
+                dragStartMouseOffset = getMouseTime(event.x, wb, audioLength) - owner.getCutInPosition();
             }
-            if (draggedHandle == CutMarkerHandle::Out || draggedHandle == CutMarkerHandle::Full)
-            {
-                if (silenceDetector.getIsAutoCutOutActive()) { owner.setAutoCutOutActive(false); }
-            }
-        }
-
-        if (draggedHandle == CutMarkerHandle::Full)
-        {
-            dragStartCutLength = std::abs(owner.getCutOutPosition() - owner.getCutInPosition());
-
-            const auto waveformBounds = owner.getWaveformBounds();
-            AudioPlayer& audioPlayer = owner.getAudioPlayer();
-            auto audioLength = audioPlayer.getThumbnail().getTotalLength();
-            double mouseTime = CoordinateMapper::pixelsToSeconds((float)(event.x - waveformBounds.getX()), 
-                                                                 (float)waveformBounds.getWidth(), 
-                                                                 audioLength);
-
-            dragStartMouseOffset = mouseTime - owner.getCutInPosition();
             owner.repaint();
-        }
-        else if (draggedHandle == CutMarkerHandle::None)
-        {
-            isDragging = true;
-            isScrubbingState = true;
+        } else {
+            isDragging = isScrubbingState = true;
             mouseDragStartX = event.x;
-            currentPlaybackPosOnDragStart = owner.getAudioPlayer().getCurrentPosition();
-
             seekToMousePosition(event.x);
         }
-        else
-        {
-            owner.repaint();
-        }
-    }
-    else if (event.mods.isRightButtonDown())
-    {
-
+    } else if (event.mods.isRightButtonDown()) {
         handleRightClickForCutPlacement(event.x);
     }
 }
 
-void MouseHandler::mouseDrag(const juce::MouseEvent& event)
-{
-    const auto waveformBounds = owner.getWaveformBounds();
-    if (!event.mods.isLeftButtonDown())
-        return;
-
-    AudioPlayer& audioPlayer = owner.getAudioPlayer();
-    auto audioLength = audioPlayer.getThumbnail().getTotalLength();
-
-    if (waveformBounds.contains(event.getPosition()))
-    {
-        mouseCursorX = event.x;
-        mouseCursorY = event.y;
-        if (audioLength > 0.0)
-        {
-            mouseCursorTime = CoordinateMapper::pixelsToSeconds((float)(mouseCursorX - waveformBounds.getX()), 
-                                                                (float)waveformBounds.getWidth(), 
-                                                                audioLength);
-        }
-    }
-
+void MouseHandler::mouseDrag(const juce::MouseEvent& event) {
+    if (!event.mods.isLeftButtonDown()) return;
+    const auto wb = owner.getWaveformBounds();
+    const double audioLength = owner.getAudioPlayer().getThumbnail().getTotalLength();
     auto& coordinator = owner.getInteractionCoordinator();
-    if (interactionStartedInZoom && coordinator.getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None && (draggedHandle != CutMarkerHandle::None || isDragging))
-    {
-        auto zoomBounds = coordinator.getZoomPopupBounds();
-        if (zoomBounds.contains(event.getPosition()) || draggedHandle != CutMarkerHandle::None || isDragging)
-        {
-            auto timeRange = coordinator.getZoomTimeRange();
-            int clampedX = juce::jlimit(zoomBounds.getX(), zoomBounds.getRight(), event.x);
-            double zoomedTime = CoordinateMapper::pixelsToSeconds((float)(clampedX - zoomBounds.getX()), 
-                                                                  (float)zoomBounds.getWidth(), 
-                                                                  timeRange.second - timeRange.first) + timeRange.first;
 
-            if (draggedHandle != CutMarkerHandle::None)
-            {
-                double offset = (currentPlacementMode == AppEnums::PlacementMode::None) ? dragStartMouseOffset : 0.0;
-
-                if (draggedHandle == CutMarkerHandle::In)
-                    owner.getAudioPlayer().setCutIn(zoomedTime - offset);
-                else if (draggedHandle == CutMarkerHandle::Out)
-                    owner.getAudioPlayer().setCutOut(zoomedTime - offset);
-                owner.ensureCutOrder();
-            }
-            else if (isDragging)
-            {
-                owner.getAudioPlayer().setPlayheadPosition(zoomedTime);
-            }
-
-            owner.refreshLabels();
-            owner.repaint();
-            return;
-        }
+    if (wb.contains(event.getPosition())) {
+        mouseCursorX = event.x; mouseCursorY = event.y;
+        mouseCursorTime = getMouseTime(event.x, wb, audioLength);
     }
 
-    if (draggedHandle != CutMarkerHandle::None)
-    {
-        if (audioLength > 0.0)
-        {
-            int clampedX = juce::jlimit(waveformBounds.getX(), waveformBounds.getRight(), event.x);
-            double mouseTime = CoordinateMapper::pixelsToSeconds((float)(clampedX - waveformBounds.getX()), 
-                                                                 (float)waveformBounds.getWidth(), 
-                                                                 audioLength);
+    if (interactionStartedInZoom && coordinator.getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None && (draggedHandle != CutMarkerHandle::None || isDragging)) {
+        auto zb = coordinator.getZoomPopupBounds();
+        auto tr = coordinator.getZoomTimeRange();
+        int cx = juce::jlimit(zb.getX(), zb.getRight(), event.x);
+        double zt = CoordinateMapper::pixelsToSeconds((float)(cx - zb.getX()), (float)zb.getWidth(), tr.second - tr.first) + tr.first;
 
-            if (draggedHandle == CutMarkerHandle::In)
-            {
-                owner.getAudioPlayer().setCutIn(mouseTime);
-            }
-            else if (draggedHandle == CutMarkerHandle::Out)
-            {
-                owner.getAudioPlayer().setCutOut(mouseTime);
-            }
-            else if (draggedHandle == CutMarkerHandle::Full)
-            {
-                double newIn = mouseTime - dragStartMouseOffset;
-                double newOut = newIn + dragStartCutLength;
-
-                if (newIn < 0.0)
-                {
-                    newIn = 0.0;
-                    newOut = dragStartCutLength;
-                }
-                else if (newOut > audioLength)
-                {
-                    newOut = audioLength;
-                    newIn = audioLength - dragStartCutLength;
-                }
-
-                owner.getAudioPlayer().setCutIn(newIn);
-                owner.getAudioPlayer().setCutOut(newOut);
-
-                audioPlayer.setPlayheadPosition(audioPlayer.getCurrentPosition());
-            }
-
+        if (draggedHandle != CutMarkerHandle::None) {
+            double offset = (coordinator.getPlacementMode() == AppEnums::PlacementMode::None) ? dragStartMouseOffset : 0.0;
+            double tt = zt - offset;
+            auto marker = (draggedHandle == CutMarkerHandle::In) ? AppEnums::ActiveZoomPoint::In : AppEnums::ActiveZoomPoint::Out;
+            coordinator.validateMarkerPosition(marker, tt, owner.getCutInPosition(), owner.getCutOutPosition(), audioLength);
+            if (draggedHandle == CutMarkerHandle::In) owner.getAudioPlayer().setCutIn(tt); else owner.getAudioPlayer().setCutOut(tt);
             owner.ensureCutOrder();
-            owner.refreshLabels();
-            owner.repaint();
+        } else if (isDragging) {
+            owner.getAudioPlayer().setPlayheadPosition(zt);
         }
+        owner.refreshLabels(); owner.repaint(); return;
     }
-    else if (isDragging && waveformBounds.contains(event.getPosition()))
-    {
 
-        seekToMousePosition(event.x);
-        owner.repaint();
+    if (draggedHandle != CutMarkerHandle::None) {
+        double mt = getMouseTime(juce::jlimit(wb.getX(), wb.getRight(), event.x), wb, audioLength);
+        if (draggedHandle == CutMarkerHandle::Full) {
+            double ni = mt - dragStartMouseOffset, no = ni + dragStartCutLength;
+            coordinator.constrainFullRegionMove(ni, no, dragStartCutLength, audioLength);
+            owner.getAudioPlayer().setCutIn(ni); owner.getAudioPlayer().setCutOut(no);
+            owner.getAudioPlayer().setPlayheadPosition(owner.getAudioPlayer().getCurrentPosition());
+        } else {
+            auto marker = (draggedHandle == CutMarkerHandle::In) ? AppEnums::ActiveZoomPoint::In : AppEnums::ActiveZoomPoint::Out;
+            coordinator.validateMarkerPosition(marker, mt, owner.getCutInPosition(), owner.getCutOutPosition(), audioLength);
+            if (draggedHandle == CutMarkerHandle::In) owner.getAudioPlayer().setCutIn(mt); else owner.getAudioPlayer().setCutOut(mt);
+        }
+        owner.ensureCutOrder(); owner.refreshLabels(); owner.repaint();
+    } else if (isDragging && wb.contains(event.getPosition())) {
+        seekToMousePosition(event.x); owner.repaint();
     }
 }
 
-void MouseHandler::mouseUp(const juce::MouseEvent& event)
-{
-    if (owner.getInteractionCoordinator().getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None && (isDragging || draggedHandle != CutMarkerHandle::None || currentPlacementMode != AppEnums::PlacementMode::None))
-    {
-        if (currentPlacementMode != AppEnums::PlacementMode::None)
-        {
-            currentPlacementMode = AppEnums::PlacementMode::None;
+void MouseHandler::mouseUp(const juce::MouseEvent& event) {
+    auto& coordinator = owner.getInteractionCoordinator();
+    if (coordinator.getActiveZoomPoint() != AppEnums::ActiveZoomPoint::None && (isDragging || draggedHandle != CutMarkerHandle::None || coordinator.getPlacementMode() != AppEnums::PlacementMode::None)) {
+        if (coordinator.getPlacementMode() != AppEnums::PlacementMode::None) {
+            coordinator.setPlacementMode(AppEnums::PlacementMode::None);
             owner.updateCutButtonColors();
         }
-        isDragging = false;
-        isScrubbingState = false;
-        draggedHandle = CutMarkerHandle::None;
-        owner.repaint();
-        return;
+        isDragging = isScrubbingState = false; draggedHandle = CutMarkerHandle::None;
+        owner.repaint(); return;
     }
 
-    isDragging = false;
-    isScrubbingState = false;
-    draggedHandle = CutMarkerHandle::None;
+    isDragging = isScrubbingState = false; draggedHandle = CutMarkerHandle::None;
     owner.jumpToCutIn();
 
-    const auto waveformBounds = owner.getWaveformBounds();
-    if (waveformBounds.contains(event.getPosition()) && event.mods.isLeftButtonDown())
-    {
-        if (currentPlacementMode != AppEnums::PlacementMode::None)
-        {
-            AudioPlayer& audioPlayer = owner.getAudioPlayer();
-            auto audioLength = audioPlayer.getThumbnail().getTotalLength();
-            if (audioLength > 0.0)
-            {
-                double time = CoordinateMapper::pixelsToSeconds((float)(event.x - waveformBounds.getX()), 
-                                                                (float)waveformBounds.getWidth(), 
-                                                                audioLength);
-
-                if (currentPlacementMode == AppEnums::PlacementMode::CutIn)
-                {
-                    owner.setCutInPosition(time);
-                    owner.setAutoCutInActive(false);
-                }
-                else if (currentPlacementMode == AppEnums::PlacementMode::CutOut)
-                {
-                    owner.setCutOutPosition(time);
-                    owner.setAutoCutOutActive(false);
-                }
-                owner.ensureCutOrder();
-                owner.refreshLabels();
-                owner.jumpToCutIn();
-            }
-            currentPlacementMode = AppEnums::PlacementMode::None;
+    const auto wb = owner.getWaveformBounds();
+    if (wb.contains(event.getPosition()) && event.mods.isLeftButtonDown()) {
+        const auto pm = coordinator.getPlacementMode();
+        if (pm != AppEnums::PlacementMode::None) {
+            double t = getMouseTime(event.x, wb, owner.getAudioPlayer().getThumbnail().getTotalLength());
+            auto marker = (pm == AppEnums::PlacementMode::CutIn) ? AppEnums::ActiveZoomPoint::In : AppEnums::ActiveZoomPoint::Out;
+            coordinator.validateMarkerPosition(marker, t, owner.getCutInPosition(), owner.getCutOutPosition(), owner.getAudioPlayer().getThumbnail().getTotalLength());
+            if (pm == AppEnums::PlacementMode::CutIn) { owner.setCutInPosition(t); owner.setAutoCutInActive(false); }
+            else { owner.setCutOutPosition(t); owner.setAutoCutOutActive(false); }
+            owner.ensureCutOrder(); owner.refreshLabels(); owner.jumpToCutIn();
+            coordinator.setPlacementMode(AppEnums::PlacementMode::None);
             owner.updateCutButtonColors();
-            owner.repaint();
-        }
-        else if (mouseDragStartX == event.x)
-        {
-
+        } else if (mouseDragStartX == event.x) {
             seekToMousePosition(event.x);
         }
     }
-}
-
-void MouseHandler::mouseExit(const juce::MouseEvent& event)
-{
-
-    juce::ignoreUnused(event);
-    mouseCursorX = -1;
-    mouseCursorY = -1;
-    mouseCursorTime = 0.0;
-    isScrubbingState = false;
-    hoveredHandle = CutMarkerHandle::None;
     owner.repaint();
 }
 
-void MouseHandler::mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)
-{
-    const auto waveformBounds = owner.getWaveformBounds();
-    if (!waveformBounds.contains(event.getPosition()))
-        return;
+void MouseHandler::mouseExit(const juce::MouseEvent&) {
+    mouseCursorX = mouseCursorY = -1; mouseCursorTime = 0.0;
+    isScrubbingState = false; hoveredHandle = CutMarkerHandle::None;
+    owner.repaint();
+}
 
-    if (event.mods.isCtrlDown() && !event.mods.isShiftDown())
-    {
-        float currentZoom = owner.getZoomFactor();
-        float zoomDelta = wheel.deltaY > 0 ? 1.1f : 0.9f;
-        owner.setZoomFactor(currentZoom * zoomDelta);
+void MouseHandler::mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) {
+    const auto wb = owner.getWaveformBounds();
+    if (!wb.contains(event.getPosition())) return;
+
+    if (event.mods.isCtrlDown() && !event.mods.isShiftDown()) {
+        owner.setZoomFactor(owner.getZoomFactor() * (wheel.deltaY > 0 ? 1.1f : 0.9f));
         return;
     }
 
-    AudioPlayer& audioPlayer = owner.getAudioPlayer();
-    double currentPos = audioPlayer.getCurrentPosition();
-    double multiplier = FocusManager::getStepMultiplier(event.mods.isShiftDown(), event.mods.isCtrlDown());
-    double step = 0.01 * multiplier;
-
-    if (event.mods.isAltDown())
-        step *= 10.0;
-
-    double direction = (wheel.deltaY > 0) ? 1.0 : -1.0;
-    double newPos = currentPos + (direction * step);
-
-    audioPlayer.setPlayheadPosition(newPos);
+    double step = 0.01 * FocusManager::getStepMultiplier(event.mods.isShiftDown(), event.mods.isCtrlDown());
+    if (event.mods.isAltDown()) step *= 10.0;
+    owner.getAudioPlayer().setPlayheadPosition(owner.getAudioPlayer().getCurrentPosition() + ((wheel.deltaY > 0) ? 1.0 : -1.0) * step);
     owner.repaint();
 }
 
-void MouseHandler::handleRightClickForCutPlacement(int x)
-{
-    AudioPlayer& audioPlayer = owner.getAudioPlayer();
-    auto audioLength = audioPlayer.getThumbnail().getTotalLength();
-    if (audioLength <= 0.0) return;
+void MouseHandler::handleRightClickForCutPlacement(int x) {
+    const auto wb = owner.getWaveformBounds();
+    const double al = owner.getAudioPlayer().getThumbnail().getTotalLength();
+    if (al <= 0.0) return;
 
-    const auto waveformBounds = owner.getWaveformBounds();
-    double time = CoordinateMapper::pixelsToSeconds((float)(x - waveformBounds.getX()), 
-                                                    (float)waveformBounds.getWidth(), 
-                                                    audioLength);
-
-    if (currentPlacementMode == AppEnums::PlacementMode::CutIn)
-    {
-        owner.setCutInPosition(time);
-        owner.setAutoCutInActive(false);
+    double t = getMouseTime(x, wb, al);
+    auto& coordinator = owner.getInteractionCoordinator();
+    const auto pm = coordinator.getPlacementMode();
+    if (pm != AppEnums::PlacementMode::None) {
+        auto m = (pm == AppEnums::PlacementMode::CutIn) ? AppEnums::ActiveZoomPoint::In : AppEnums::ActiveZoomPoint::Out;
+        coordinator.validateMarkerPosition(m, t, owner.getCutInPosition(), owner.getCutOutPosition(), al);
+        if (pm == AppEnums::PlacementMode::CutIn) { owner.setCutInPosition(t); owner.setAutoCutInActive(false); }
+        else { owner.setCutOutPosition(t); owner.setAutoCutOutActive(false); }
+        owner.ensureCutOrder(); owner.updateCutButtonColors(); owner.refreshLabels();
     }
-    else if (currentPlacementMode == AppEnums::PlacementMode::CutOut)
-    {
-        owner.setCutOutPosition(time);
-        owner.setAutoCutOutActive(false);
-    }
-    owner.ensureCutOrder();
-    owner.updateCutButtonColors();
-    owner.refreshLabels();
     owner.repaint();
 }
 
-void MouseHandler::seekToMousePosition(int x)
-{
-    AudioPlayer& audioPlayer = owner.getAudioPlayer();
-    auto audioLength = audioPlayer.getThumbnail().getTotalLength();
-
-    const auto waveformBounds = owner.getWaveformBounds();
-    double time = CoordinateMapper::pixelsToSeconds((float)(x - waveformBounds.getX()), 
-                                                    (float)waveformBounds.getWidth(), 
-                                                    audioLength);
-
-    audioPlayer.setPlayheadPosition(time);
+void MouseHandler::seekToMousePosition(int x) {
+    const auto wb = owner.getWaveformBounds();
+    owner.getAudioPlayer().setPlayheadPosition(getMouseTime(x, wb, owner.getAudioPlayer().getThumbnail().getTotalLength()));
 }
 
-void MouseHandler::clearTextEditorFocusIfNeeded(const juce::MouseEvent& event)
-{
-    const auto screenPos = event.getScreenPosition();
-
-    for (int i = 0; i < owner.getNumChildComponents(); ++i)
-    {
-        auto* child = owner.getChildComponent(i);
-        if (auto* editorChild = dynamic_cast<juce::TextEditor*>(child))
-        {
-            if (editorChild->getScreenBounds().contains(screenPos))
-                return;
+void MouseHandler::clearTextEditorFocusIfNeeded(const juce::MouseEvent& event) {
+    const auto sp = event.getScreenPosition();
+    for (int i = 0; i < owner.getNumChildComponents(); ++i) {
+        auto* c = owner.getChildComponent(i);
+        if (auto* e = dynamic_cast<juce::TextEditor*>(c)) {
+            if (e->getScreenBounds().contains(sp)) return;
         }
     }
-
-    for (int i = 0; i < owner.getNumChildComponents(); ++i)
-    {
-        if (auto* editorChild = dynamic_cast<juce::TextEditor*>(owner.getChildComponent(i)))
-        {
-            if (editorChild->hasKeyboardFocus(false))
-                editorChild->giveAwayKeyboardFocus();
+    for (int i = 0; i < owner.getNumChildComponents(); ++i) {
+        if (auto* e = dynamic_cast<juce::TextEditor*>(owner.getChildComponent(i))) {
+            if (e->hasKeyboardFocus(false)) e->giveAwayKeyboardFocus();
         }
     }
 }
 
-MouseHandler::CutMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int> pos) const
-{
-    const auto waveformBounds = owner.getWaveformBounds();
-    AudioPlayer& audioPlayer = owner.getAudioPlayer();
-    auto audioLength = audioPlayer.getThumbnail().getTotalLength();
-    if (audioLength <= 0.0) return CutMarkerHandle::None;
+bool MouseHandler::isHandleActive(CutMarkerHandle h) const {
+    if (draggedHandle == h || hoveredHandle == h) return true;
+    auto& c = owner.getInteractionCoordinator();
+    return (h == CutMarkerHandle::In && c.getPlacementMode() == AppEnums::PlacementMode::CutIn) ||
+           (h == CutMarkerHandle::Out && c.getPlacementMode() == AppEnums::PlacementMode::CutOut);
+}
 
-    auto checkHandle = [&](double time) -> bool {
-        float x = (float)waveformBounds.getX() + 
-                  CoordinateMapper::secondsToPixels(time, (float)waveformBounds.getWidth(), audioLength);
+MouseHandler::CutMarkerHandle MouseHandler::getHandleAtPosition(juce::Point<int> pos) const {
+    const auto wb = owner.getWaveformBounds();
+    const double al = owner.getAudioPlayer().getThumbnail().getTotalLength();
+    if (al <= 0.0) return CutMarkerHandle::None;
 
-        juce::Rectangle<int> hitStrip((int)(x - Config::Layout::Glow::cutMarkerBoxWidth / 2.0f),
-                                      waveformBounds.getY(), 
-                                      (int)Config::Layout::Glow::cutMarkerBoxWidth,
-                                      waveformBounds.getHeight());
-
-        return hitStrip.contains(pos);
+    auto check = [&](double t) {
+        float x = (float)wb.getX() + CoordinateMapper::secondsToPixels(t, (float)wb.getWidth(), al);
+        return juce::Rectangle<int>((int)(x - Config::Layout::Glow::cutMarkerBoxWidth / 2.0f), wb.getY(), (int)Config::Layout::Glow::cutMarkerBoxWidth, wb.getHeight()).contains(pos);
     };
 
-    if (checkHandle(owner.getCutInPosition())) return CutMarkerHandle::In;
-    if (checkHandle(owner.getCutOutPosition())) return CutMarkerHandle::Out;
+    if (check(owner.getCutInPosition())) return CutMarkerHandle::In;
+    if (check(owner.getCutOutPosition())) return CutMarkerHandle::Out;
 
-    const double cutIn = owner.getCutInPosition();
-    const double cutOut = owner.getCutOutPosition();
-    const double actualIn = juce::jmin(cutIn, cutOut);
-    const double actualOut = juce::jmax(cutIn, cutOut);
-
-    float inX = (float)waveformBounds.getX() + 
-                CoordinateMapper::secondsToPixels(actualIn, (float)waveformBounds.getWidth(), audioLength);
-    float outX = (float)waveformBounds.getX() + 
-                 CoordinateMapper::secondsToPixels(actualOut, (float)waveformBounds.getWidth(), audioLength);
-
-    int hollowHeight = Config::Layout::Glow::cutMarkerBoxHeight;
-
-    juce::Rectangle<int> topHollow((int)inX, waveformBounds.getY(), (int)(outX - inX), hollowHeight);
-    juce::Rectangle<int> bottomHollow((int)inX, waveformBounds.getBottom() - hollowHeight, (int)(outX - inX), hollowHeight);
-
-    if (topHollow.contains(pos) || bottomHollow.contains(pos))
-        return CutMarkerHandle::Full;
+    const double actualIn = juce::jmin(owner.getCutInPosition(), owner.getCutOutPosition()), actualOut = juce::jmax(owner.getCutInPosition(), owner.getCutOutPosition());
+    float inX = (float)wb.getX() + CoordinateMapper::secondsToPixels(actualIn, (float)wb.getWidth(), al), outX = (float)wb.getX() + CoordinateMapper::secondsToPixels(actualOut, (float)wb.getWidth(), al);
+    int hh = Config::Layout::Glow::cutMarkerBoxHeight;
+    if (juce::Rectangle<int>((int)inX, wb.getY(), (int)(outX - inX), hh).contains(pos) || juce::Rectangle<int>((int)inX, wb.getBottom() - hh, (int)(outX - inX), hh).contains(pos)) return CutMarkerHandle::Full;
 
     return CutMarkerHandle::None;
 }

@@ -169,7 +169,9 @@ public:
 
   void updateStatsFromAudio();
 
-  AppEnums::PlacementMode getPlacementMode() const;
+  AppEnums::PlacementMode getPlacementMode() const { return interactionCoordinator->getPlacementMode(); }
+
+  void setPlacementMode(AppEnums::PlacementMode mode) { interactionCoordinator->setPlacementMode(mode); }
 
   bool shouldAutoplay() const { return sessionState.getCutPrefs().autoplay; }
 

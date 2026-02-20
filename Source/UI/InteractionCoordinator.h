@@ -59,6 +59,21 @@ public:
     /** @brief Sets whether eye candy should be shown. */
     void setShouldShowEyeCandy(bool shouldShow) { m_showEyeCandy = shouldShow; }
 
+    /** @brief Returns the current placement mode. */
+    AppEnums::PlacementMode getPlacementMode() const { return m_placementMode; }
+
+    /** @brief Sets the current placement mode. */
+    void setPlacementMode(AppEnums::PlacementMode mode) { m_placementMode = mode; }
+
+    /** @brief Snaps a raw time to relevant boundaries (e.g. zero-crossings or samples). */
+    double getSnappedTime(double rawTime, double sampleRate) const;
+
+    /** @brief Validates and constraints a marker position based on project rules. */
+    void validateMarkerPosition(AppEnums::ActiveZoomPoint marker, double& newPosition, double cutIn, double cutOut, double duration) const;
+
+    /** @brief Handles the logic for moving a full cut region. */
+    void constrainFullRegionMove(double& newIn, double& newOut, double length, double duration) const;
+
 private:
     AppEnums::ActiveZoomPoint m_activeZoomPoint = AppEnums::ActiveZoomPoint::None;
     AppEnums::ActiveZoomPoint m_manualZoomPoint = AppEnums::ActiveZoomPoint::None;
@@ -66,6 +81,7 @@ private:
     juce::Rectangle<int> m_zoomPopupBounds;
     std::pair<double, double> m_zoomTimeRange;
     bool m_showEyeCandy = false;
+    AppEnums::PlacementMode m_placementMode = AppEnums::PlacementMode::None;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(InteractionCoordinator)
 };
