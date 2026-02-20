@@ -9,7 +9,7 @@
 
 #include "Core/AudioPlayer.h"
 #include "Core/SessionState.h"
-#include "Config.h"
+#include "Utils/Config.h"
 
 /**
  * @ingroup UI

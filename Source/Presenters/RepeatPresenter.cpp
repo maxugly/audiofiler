@@ -1,15 +1,15 @@
 
 
 #include "Presenters/RepeatPresenter.h"
-#include "FocusManager.h"
-#include "TimeUtils.h"
+#include "UI/FocusManager.h"
+#include "Utils/TimeUtils.h"
 
 #include "Core/AudioPlayer.h"
-#include "Config.h"
-#include "ControlPanel.h"
-#include "SilenceDetector.h"
-#include "TimeEntryHelpers.h"
-#include "TimeUtils.h"
+#include "Utils/Config.h"
+#include "UI/ControlPanel.h"
+#include "Workers/SilenceDetector.h"
+#include "Utils/TimeEntryHelpers.h"
+#include "Utils/TimeUtils.h"
 #include <utility>
 
 RepeatPresenter::RepeatPresenter(ControlPanel &ownerPanel,

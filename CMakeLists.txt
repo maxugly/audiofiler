@@ -51,92 +51,107 @@ if (NOT BUILD_TESTS_ONLY)
     )
 
     target_sources(audiofiler PRIVATE
+            # Root
             Source/Main.cpp
-            Source/Config.h
-            Source/Config.cpp
             Source/MainComponent.h
             Source/MainComponent.cpp
-            Source/TimeUtils.h
-            Source/TimeUtils.cpp
+            Source/MainDomain.h
+
+            # Utils
+            Source/Utils/Config.h
+            Source/Utils/Config.cpp
+            Source/Utils/TimeUtils.h
+            Source/Utils/TimeUtils.cpp
+            Source/Utils/UIAnimationHelper.h
+            Source/Utils/CoordinateMapper.h
+            Source/Utils/TimeEntryHelpers.h
+            Source/Utils/TimeEntryHelpers.cpp
+            Source/Utils/PlaybackHelpers.h
+            Source/Utils/PlaybackHelpers.cpp
+
+            # Core
             Source/Core/AudioPlayer.h
             Source/Core/AudioPlayer.cpp
-            Source/MainDomain.h
             Source/Core/SessionState.h
             Source/Core/SessionState.cpp
-            Source/FileMetadata.h
-            Source/CoordinateMapper.h
-            Source/SilenceWorkerClient.h
-            Source/ControlPanel.h
-            Source/ControlPanel.cpp
             Source/Core/AppEnums.h
-            Source/UI/Views/CutLayerView.h
-            Source/UI/Views/CutLayerView.cpp
-            Source/CutPresenter.h
-            Source/CutPresenter.cpp
-            Source/SilenceDetector.h
-            Source/SilenceDetector.cpp
-            Source/UI/Components/ModernLookAndFeel.h
-            Source/LayoutManager.h
-            Source/LayoutManager.cpp
-            Source/WaveformManager.h
-            Source/WaveformManager.cpp
-            Source/UI/Views/WaveformView.h
-            Source/UI/Views/WaveformView.cpp
-            Source/KeybindHandler.h
-            Source/KeybindHandler.cpp
-            Source/UI/Views/ZoomView.h
-            Source/UI/Views/ZoomView.cpp
-            Source/ControlStatePresenter.h
-            Source/ControlStatePresenter.cpp
-            Source/TransportPresenter.h
-            Source/TransportPresenter.cpp
-            Source/Presenters/SilenceDetectionPresenter.h
-            Source/Presenters/SilenceDetectionPresenter.cpp
             Source/Core/SilenceAnalysisWorker.h
             Source/Core/SilenceAnalysisWorker.cpp
-            Source/SilenceAnalysisAlgorithms.h
-            Source/SilenceAnalysisAlgorithms.cpp
-            Source/SilenceDetectionLogger.h
-            Source/SilenceDetectionLogger.cpp
-            Source/ControlPanelCopy.h
-            Source/ControlButtonsPresenter.h
-            Source/ControlButtonsPresenter.cpp
-            Source/SilenceThresholdPresenter.h
-            Source/SilenceThresholdPresenter.cpp
-            Source/CutResetPresenter.h
-            Source/CutResetPresenter.cpp
+            Source/Core/WaveformManager.h
+            Source/Core/WaveformManager.cpp
+            Source/Core/FileMetadata.h
 
-            Source/CutButtonPresenter.h
-            Source/CutButtonPresenter.cpp
+            # Workers
+            Source/Workers/SilenceWorkerClient.h
+            Source/Workers/SilenceDetector.h
+            Source/Workers/SilenceDetector.cpp
+            Source/Workers/SilenceAnalysisAlgorithms.h
+            Source/Workers/SilenceAnalysisAlgorithms.cpp
+            Source/Workers/SilenceDetectionLogger.h
+            Source/Workers/SilenceDetectionLogger.cpp
+
+            # Presenters
+            Source/Presenters/ControlButtonsPresenter.h
+            Source/Presenters/ControlButtonsPresenter.cpp
+            Source/Presenters/ControlStatePresenter.h
+            Source/Presenters/ControlStatePresenter.cpp
+            Source/Presenters/CutButtonPresenter.h
+            Source/Presenters/CutButtonPresenter.cpp
+            Source/Presenters/CutPresenter.h
+            Source/Presenters/CutPresenter.cpp
+            Source/Presenters/CutResetPresenter.h
+            Source/Presenters/CutResetPresenter.cpp
+            Source/Presenters/PlaybackTextPresenter.h
+            Source/Presenters/PlaybackTextPresenter.cpp
+            Source/Presenters/SilenceThresholdPresenter.h
+            Source/Presenters/SilenceThresholdPresenter.cpp
+            Source/Presenters/StatsPresenter.h
+            Source/Presenters/StatsPresenter.cpp
+            Source/Presenters/TransportPresenter.h
+            Source/Presenters/TransportPresenter.cpp
+            Source/Presenters/SilenceDetectionPresenter.h
+            Source/Presenters/SilenceDetectionPresenter.cpp
             Source/Presenters/RepeatPresenter.h
             Source/Presenters/RepeatPresenter.cpp
+            Source/Presenters/PlaybackTimerManager.h
+            Source/Presenters/PlaybackTimerManager.cpp
+            Source/Presenters/PlaybackRepeatController.h
+            Source/Presenters/PlaybackRepeatController.cpp
+
+            # UI
+            Source/UI/ControlPanel.h
+            Source/UI/ControlPanel.cpp
+            Source/UI/MouseHandler.h
+            Source/UI/MouseHandler.cpp
+            Source/UI/KeybindHandler.h
+            Source/UI/KeybindHandler.cpp
+            Source/UI/LayoutManager.h
+            Source/UI/LayoutManager.cpp
+            Source/UI/FocusManager.h
+            Source/UI/FocusManager.cpp
+
+            # UI/Components
             Source/UI/Components/TransportButton.h
             Source/UI/Components/TransportButton.cpp
             Source/UI/Components/TransportStrip.h
             Source/UI/Components/TransportStrip.cpp
             Source/UI/Components/MarkerStrip.h
             Source/UI/Components/MarkerStrip.cpp
-            Source/PlaybackRepeatController.h
-            Source/PlaybackRepeatController.cpp
-            Source/PlaybackTextPresenter.h
-            Source/PlaybackTextPresenter.cpp
-            Source/TimeEntryHelpers.h
-            Source/TimeEntryHelpers.cpp
-            Source/StatsPresenter.h
-            Source/StatsPresenter.cpp
-            Source/MouseHandler.h
-            Source/MouseHandler.cpp
-            Source/FocusManager.h
-            Source/FocusManager.cpp
-            Source/PlaybackHelpers.h
-            Source/PlaybackHelpers.cpp
-            Source/PlaybackCursorGlow.h
-            Source/PlaybackCursorGlow.cpp
+
+            # UI/Views
+            Source/UI/Views/CutLayerView.h
+            Source/UI/Views/CutLayerView.cpp
+            Source/UI/Views/WaveformView.h
+            Source/UI/Views/WaveformView.cpp
+            Source/UI/Views/ZoomView.h
+            Source/UI/Views/ZoomView.cpp
             Source/UI/Views/PlaybackCursorView.h
             Source/UI/Views/PlaybackCursorView.cpp
-            Source/Presenters/PlaybackTimerManager.h
-            Source/Presenters/PlaybackTimerManager.cpp
-            Source/UIAnimationHelper.h
+            Source/UI/Views/PlaybackCursorGlow.h
+            Source/UI/Views/PlaybackCursorGlow.cpp
+
+            # UI/LookAndFeel
+            Source/UI/LookAndFeel/ModernLookAndFeel.h
     )
 
     target_link_libraries(audiofiler PRIVATE
@@ -158,17 +173,17 @@ endif()
 add_executable(tests
     Tests/TestMain.cpp
     Tests/TimeUtilsTest.cpp
-    Source/TimeUtils.cpp
-    Source/PlaybackHelpers.cpp
+    Source/Utils/TimeUtils.cpp
+    Source/Utils/PlaybackHelpers.cpp
     Tests/PlaybackHelpersTest.cpp
     Tests/SecurityFixTest.cpp
     Source/Core/AudioPlayer.cpp
     Tests/AudioPlayerTest.cpp
-    Source/Config.cpp
+    Source/Utils/Config.cpp
     Source/Core/SessionState.cpp
-    Source/SilenceAnalysisAlgorithms.cpp
+    Source/Workers/SilenceAnalysisAlgorithms.cpp
     Source/Core/SilenceAnalysisWorker.cpp
-    Source/SilenceDetectionLogger.cpp
+    Source/Workers/SilenceDetectionLogger.cpp
     Tests/SilenceAnalysisTest.cpp
 )
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MainDomain.h"
-#include "FileMetadata.h"
+#include "Core/FileMetadata.h"
 #include <juce_core/juce_core.h>
 #include <map>
 

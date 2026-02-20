@@ -3,11 +3,11 @@
 #include "UI/Views/CutLayerView.h"
 
 #include "Core/SessionState.h"
-#include "SilenceDetector.h"
-#include "MouseHandler.h"
-#include "WaveformManager.h"
-#include "CoordinateMapper.h"
-#include "ControlPanel.h"
+#include "Workers/SilenceDetector.h"
+#include "UI/MouseHandler.h"
+#include "Core/WaveformManager.h"
+#include "Utils/CoordinateMapper.h"
+#include "UI/ControlPanel.h"
 
 CutLayerView::CutLayerView(ControlPanel& ownerIn,
                            SessionState& sessionStateIn,

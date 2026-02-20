@@ -10,7 +10,7 @@
 #endif
 
 #include "Core/AppEnums.h"
-#include "Config.h"
+#include "Utils/Config.h"
 
 class WaveformManager;
 

@@ -1,13 +1,13 @@
 
 
 #include "UI/Views/ZoomView.h"
-#include "ControlPanel.h"
+#include "UI/ControlPanel.h"
 #include "Core/AudioPlayer.h"
-#include "CoordinateMapper.h"
-#include "FocusManager.h"
-#include "MouseHandler.h"
-#include "Config.h"
-#include "PlaybackCursorGlow.h"
+#include "Utils/CoordinateMapper.h"
+#include "UI/FocusManager.h"
+#include "UI/MouseHandler.h"
+#include "Utils/Config.h"
+#include "UI/Views/PlaybackCursorGlow.h"
 
 ZoomView::ZoomView(ControlPanel& ownerIn)
     : owner(ownerIn)

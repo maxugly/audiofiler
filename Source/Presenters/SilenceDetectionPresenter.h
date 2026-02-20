@@ -9,7 +9,7 @@
     #include <JuceHeader.h>
 #endif
 
-#include "SilenceWorkerClient.h"
+#include "Workers/SilenceWorkerClient.h"
 #include "Core/SilenceAnalysisWorker.h"
 #include "Core/SessionState.h"
 #include "Presenters/PlaybackTimerManager.h"

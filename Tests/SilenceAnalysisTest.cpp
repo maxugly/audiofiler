@@ -1,6 +1,6 @@
 #include <juce_core/juce_core.h>
 #include <juce_audio_formats/juce_audio_formats.h>
-#include "SilenceAnalysisAlgorithms.h"
+#include "Workers/SilenceAnalysisAlgorithms.h"
 
 // Mock Reader that simulates a large file (e.g. 3 billion samples)
 class LargeFileMockReader : public juce::AudioFormatReader

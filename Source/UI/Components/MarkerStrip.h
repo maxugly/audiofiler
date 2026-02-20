@@ -9,10 +9,10 @@
 
 #include "Core/AudioPlayer.h"
 #include "Core/SessionState.h"
-#include "SilenceDetector.h"
+#include "Workers/SilenceDetector.h"
 #include "UI/Components/TransportButton.h"
 #include "Presenters/RepeatPresenter.h"
-#include "Config.h"
+#include "Utils/Config.h"
 
 /**
  * @ingroup UI

@@ -1,7 +1,7 @@
 #include "UI/Components/MarkerStrip.h"
-#include "ControlPanelCopy.h"
+#include "Utils/Config.h"
 #include "Core/AppEnums.h"
-#include "TimeUtils.h"
+#include "Utils/TimeUtils.h"
 
 MarkerStrip::MarkerStrip(MarkerType type, AudioPlayer& player, SessionState& state, SilenceDetector& detector)
     : markerType(type), audioPlayer(player), sessionState(state), silenceDetector(detector)
@@ -13,7 +13,7 @@ void MarkerStrip::initialiseComponents()
 {
     // Marker Button (In/Out)
     addAndMakeVisible(markerButton);
-    markerButton.setButtonText(markerType == MarkerType::In ? ControlPanelCopy::cutInButtonText() : ControlPanelCopy::cutOutButtonText());
+    markerButton.setButtonText(markerType == MarkerType::In ? Config::Labels::cutInButton : Config::Labels::cutOutButton);
     markerButton.getProperties().set("GroupPosition", (int)(markerType == MarkerType::In ? AppEnums::GroupPosition::Left : AppEnums::GroupPosition::Right));
     markerButton.onLeftClick = [this] {
         if (markerType == MarkerType::In)
@@ -35,7 +35,7 @@ void MarkerStrip::initialiseComponents()
 
     // Reset Button
     addAndMakeVisible(resetButton);
-    resetButton.setButtonText(ControlPanelCopy::clearButtonText());
+    resetButton.setButtonText(Config::Labels::clearButton);
     resetButton.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Middle);
     resetButton.setColour(juce::TextButton::buttonColourId, Config::Colors::Button::clear);
     resetButton.onClick = [this] {
@@ -55,7 +55,7 @@ void MarkerStrip::initialiseComponents()
 
     // AutoCut Button
     addAndMakeVisible(autoCutButton);
-    autoCutButton.setButtonText(markerType == MarkerType::In ? ControlPanelCopy::autoCutInButtonText() : ControlPanelCopy::autoCutOutButtonText());
+    autoCutButton.setButtonText(markerType == MarkerType::In ? Config::Labels::autoCutInButton : Config::Labels::autoCutOutButton);
     autoCutButton.getProperties().set("GroupPosition", (int)(markerType == MarkerType::In ? AppEnums::GroupPosition::Right : AppEnums::GroupPosition::Left));
     autoCutButton.setClickingTogglesState(true);
     autoCutButton.onClick = [this] {

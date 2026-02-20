@@ -9,7 +9,7 @@
 #endif
 
 #include "Core/AudioPlayer.h"
-#include "ControlPanel.h" 
+#include "UI/ControlPanel.h" 
 #include "Core/AppEnums.h"
 #include "Core/SessionState.h"
 

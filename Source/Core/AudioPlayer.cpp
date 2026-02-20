@@ -1,11 +1,11 @@
 
 
 #include "Core/AudioPlayer.h"
-#include "PlaybackHelpers.h"
+#include "Utils/PlaybackHelpers.h"
 #include "Core/SessionState.h"
-#include "FileMetadata.h"
+#include "Core/FileMetadata.h"
 #if !defined(JUCE_HEADLESS)
-#include "ControlPanel.h"
+#include "UI/ControlPanel.h"
 #include "Presenters/SilenceDetectionPresenter.h"
 #endif
 #include <algorithm>

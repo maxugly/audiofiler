@@ -1,11 +1,11 @@
 
 
 #include "Core/SilenceAnalysisWorker.h"
-#include "SilenceAnalysisAlgorithms.h"
+#include "Workers/SilenceAnalysisAlgorithms.h"
 #include "Core/AudioPlayer.h"
-#include "SilenceDetectionLogger.h"
+#include "Workers/SilenceDetectionLogger.h"
 #include "Core/SessionState.h"
-#include "FileMetadata.h"
+#include "Core/FileMetadata.h"
 
 #include <algorithm>
 #include <cmath>

@@ -11,11 +11,11 @@
     #include <JuceHeader.h>
 #endif
 
-#include "Config.h"
+#include "Utils/Config.h"
 #include "Core/SessionState.h"
 #include "MainDomain.h"
 #if !defined(JUCE_HEADLESS)
-#include "WaveformManager.h"
+#include "Core/WaveformManager.h"
 #endif
 #include <mutex>
 

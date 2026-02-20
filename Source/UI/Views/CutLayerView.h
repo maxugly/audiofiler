@@ -9,7 +9,7 @@
     #include <JuceHeader.h>
 #endif
 
-#include "Config.h"
+#include "Utils/Config.h"
 #include "Core/AppEnums.h"
 #include "Presenters/PlaybackTimerManager.h"
 

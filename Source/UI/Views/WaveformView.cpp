@@ -1,8 +1,8 @@
 
 
 #include "UI/Views/WaveformView.h"
-#include "WaveformManager.h"
-#include "Config.h"
+#include "Core/WaveformManager.h"
+#include "Utils/Config.h"
 
 WaveformView::WaveformView(WaveformManager& waveformManagerIn)
     : waveformManager(waveformManagerIn)

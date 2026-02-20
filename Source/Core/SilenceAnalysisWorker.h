@@ -10,7 +10,7 @@
 
 #include <atomic>
 #include <memory>
-#include "SilenceWorkerClient.h"
+#include "Workers/SilenceWorkerClient.h"
 
 class SessionState;
 

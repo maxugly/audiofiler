@@ -2,8 +2,8 @@
 
 #include "Presenters/SilenceDetectionPresenter.h"
 
-#include "ControlPanel.h"
-#include "SilenceDetector.h"
+#include "UI/ControlPanel.h"
+#include "Workers/SilenceDetector.h"
 #include "Core/AudioPlayer.h"
 #include "Core/SessionState.h"
 #include "Core/SilenceAnalysisWorker.h"

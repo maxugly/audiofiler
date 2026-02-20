@@ -1,10 +1,10 @@
 
 
 #include "MainComponent.h"
-#include "TimeUtils.h"
-#include "ControlPanel.h"
-#include "Config.h"
-#include "KeybindHandler.h"
+#include "Utils/TimeUtils.h"
+#include "UI/ControlPanel.h"
+#include "Utils/Config.h"
+#include "UI/KeybindHandler.h"
 
 MainComponent::MainComponent()
 {

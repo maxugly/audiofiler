@@ -1,6 +1,6 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "MainComponent.h"
-#include "Config.h"
+#include "Utils/Config.h"
 
 class GuiAppApplication : public juce::JUCEApplication {
 public:

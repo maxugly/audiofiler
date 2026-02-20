@@ -1,8 +1,8 @@
 #include "Presenters/PlaybackTimerManager.h"
 #include "Core/SessionState.h"
 #include "Core/AudioPlayer.h"
-#include "UIAnimationHelper.h"
-#include "Config.h"
+#include "Utils/UIAnimationHelper.h"
+#include "Utils/Config.h"
 
 PlaybackTimerManager::PlaybackTimerManager(SessionState& sessionStateIn, AudioPlayer& audioPlayerIn)
     : sessionState(sessionStateIn), audioPlayer(audioPlayerIn)

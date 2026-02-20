@@ -1,5 +1,5 @@
 #include "UI/Components/TransportStrip.h"
-#include "ControlPanelCopy.h"
+#include "Utils/Config.h"
 #include "Core/AppEnums.h"
 
 TransportStrip::TransportStrip(AudioPlayer& player, SessionState& state)
@@ -12,7 +12,7 @@ void TransportStrip::initialiseButtons()
 {
     // Play/Stop Button
     addAndMakeVisible(playStopButton);
-    playStopButton.setButtonText(ControlPanelCopy::playButtonText());
+    playStopButton.setButtonText(Config::Labels::playButton);
     playStopButton.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Left);
     playStopButton.onClick = [this] { audioPlayer.togglePlayStop(); };
     playStopButton.setEnabled(false);
@@ -29,7 +29,7 @@ void TransportStrip::initialiseButtons()
 
     // Autoplay Button
     addAndMakeVisible(autoplayButton);
-    autoplayButton.setButtonText(ControlPanelCopy::autoplayButtonText());
+    autoplayButton.setButtonText(Config::Labels::autoplayButton);
     autoplayButton.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Middle);
     autoplayButton.setClickingTogglesState(true);
     autoplayButton.setToggleState(sessionState.getCutPrefs().autoplay, juce::dontSendNotification);
@@ -39,7 +39,7 @@ void TransportStrip::initialiseButtons()
 
     // Repeat Button
     addAndMakeVisible(repeatButton);
-    repeatButton.setButtonText(ControlPanelCopy::repeatButtonText());
+    repeatButton.setButtonText(Config::Labels::repeatButton);
     repeatButton.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Middle);
     repeatButton.setClickingTogglesState(true);
     repeatButton.onClick = [this] {
@@ -48,7 +48,7 @@ void TransportStrip::initialiseButtons()
 
     // Cut Button
     addAndMakeVisible(cutButton);
-    cutButton.setButtonText(ControlPanelCopy::cutButtonText());
+    cutButton.setButtonText(Config::Labels::cutButton);
     cutButton.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Right);
     cutButton.setClickingTogglesState(true);
     cutButton.setToggleState(sessionState.getCutPrefs().active, juce::dontSendNotification);
@@ -87,7 +87,7 @@ void TransportStrip::resized()
 
 void TransportStrip::updatePlayButtonText(bool isPlaying)
 {
-    playStopButton.setButtonText(isPlaying ? ControlPanelCopy::stopButtonText() : ControlPanelCopy::playButtonText());
+    playStopButton.setButtonText(isPlaying ? Config::Labels::stopButton : Config::Labels::playButton);
 }
 
 void TransportStrip::updateCutModeState(bool isCutModeActive)
