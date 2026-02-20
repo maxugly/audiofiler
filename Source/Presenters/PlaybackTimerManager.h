@@ -9,9 +9,11 @@
 #endif
 
 #include "Core/AppEnums.h"
+#include <functional>
 
 class SessionState;
 class AudioPlayer;
+class PlaybackRepeatController;
 
 /**
  * @class PlaybackTimerManager
@@ -39,6 +41,9 @@ public:
 
         /** @brief Called at a 60Hz frequency to broadcast the master pulse. */
         virtual void animationUpdate (float breathingPulse) = 0;
+
+        /** @brief Called when the active zoom point changes (e.g., via 'Z' key). */
+        virtual void activeZoomPointChanged(AppEnums::ActiveZoomPoint newPoint) { juce::ignoreUnused(newPoint); }
     };
 
     /**
@@ -50,6 +55,18 @@ public:
     
     /** @brief Destructor. stops the timer. */
     ~PlaybackTimerManager() override;
+
+    /** @brief Sets the repeat controller to be ticked by this manager. */
+    void setRepeatController(PlaybackRepeatController* controller) { m_repeatController = controller; }
+
+    /** @brief Sets the provider for the active zoom point. */
+    void setZoomPointProvider(std::function<AppEnums::ActiveZoomPoint()> provider) { m_zoomPointProvider = std::move(provider); }
+
+    /** @brief Sets a manual override for the zoom point (e.g. from mouse hover). */
+    void setManualZoomPoint(AppEnums::ActiveZoomPoint point);
+
+    /** @brief Returns the current active zoom point. */
+    AppEnums::ActiveZoomPoint getActiveZoomPoint() const { return m_activeZoomPoint; }
 
     /** @brief Registers a listener for timer ticks. */
     void addListener(Listener* l);
@@ -72,11 +89,16 @@ public:
 private:
     SessionState& sessionState;
     AudioPlayer& audioPlayer;
+    PlaybackRepeatController* m_repeatController = nullptr;
+    std::function<AppEnums::ActiveZoomPoint()> m_zoomPointProvider;
     
     juce::ListenerList<Listener> listeners;
     juce::CriticalSection listenerLock;
     
     bool m_isZKeyDown = false;
+    bool m_wasZKeyDown = false;
+    AppEnums::ActiveZoomPoint m_activeZoomPoint = AppEnums::ActiveZoomPoint::None;
+    AppEnums::ActiveZoomPoint m_manualZoomPoint = AppEnums::ActiveZoomPoint::None;
     float m_masterPhase = 0.0f;
     float m_breathingPulse = 0.0f;
 

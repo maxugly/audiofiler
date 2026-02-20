@@ -173,7 +173,26 @@ bool SessionState::hasMetadataForFile(const juce::String& filePath) const
 void SessionState::setCurrentFilePath(const juce::String& filePath)
 {
     const juce::ScopedLock lock(stateLock);
-    currentFilePath = filePath;
+    if (currentFilePath != filePath)
+    {
+        currentFilePath = filePath;
+        
+        // Sync cutPrefs from metadata cache for the new current file
+        const auto it = metadataCache.find(filePath);
+        if (it != metadataCache.end())
+        {
+            const auto& metadata = it->second;
+            const double inVal = juce::jlimit(0.0, totalDuration, metadata.cutIn);
+            const double outVal = juce::jlimit(0.0, totalDuration, metadata.cutOut);
+            
+            cutPrefs.cutIn = juce::jmin(inVal, outVal);
+            cutPrefs.cutOut = juce::jmax(inVal, outVal);
+
+            listeners.call([this](Listener& l) { l.cutPreferenceChanged(cutPrefs); });
+        }
+
+        listeners.call([filePath](Listener& l) { l.fileChanged(filePath); });
+    }
 }
 
 juce::String SessionState::getCurrentFilePath() const

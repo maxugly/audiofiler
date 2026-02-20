@@ -19,8 +19,6 @@
 #endif
 #include <mutex>
 
-class ControlPanel;
-
 /**
  * @ingroup AudioEngine
  * @class AudioPlayer
@@ -45,45 +43,58 @@ public:
 
     ~AudioPlayer() override;
 
+    /** @brief Seeks to the specified position in seconds, clamped by cut boundaries if active. */
     void setPlayheadPosition(double seconds);
 
+    /** @brief Loads an audio file and synchronizes SessionState with its metadata. */
     juce::Result loadFile(const juce::File& file);
 
+    /** @brief Toggles between playback and paused states. */
     void togglePlayStop();
 
+    /** @brief Returns true if the transport is currently playing. */
     bool isPlaying() const;
 
+    /** @brief Returns the current transport position in seconds. */
     double getCurrentPosition() const;
 
-    void setControlPanel(ControlPanel* panel) { controlPanel = panel; }
-
-    void startSilenceAnalysis(float threshold, bool detectingIn);
-
+    /** @brief Returns true if the player is set to loop between cut points. */
     bool isRepeating() const;
 
+    /** @brief Sets whether the player should loop between cut points. */
     void setRepeating(bool shouldRepeat);
 
     #if !defined(JUCE_HEADLESS)
 
+    /** @brief Returns the audio thumbnail for waveform rendering. */
     juce::AudioThumbnail& getThumbnail();
 
+    /** @brief Provides access to the WaveformManager for thumbnail updates. */
     WaveformManager& getWaveformManager();
 
+    /** @brief Provides read-only access to the WaveformManager. */
     const WaveformManager& getWaveformManager() const;
     #endif
 
+    /** @brief Starts audio playback. */
     void startPlayback();
 
+    /** @brief Stops audio playback. */
     void stopPlayback();
 
+    /** @brief Stops playback and seeks back to the cut-in position. */
     void stopPlaybackAndReset();
 
+    /** @brief Provides access to the global audio format manager. */
     juce::AudioFormatManager& getFormatManager();
 
+    /** @brief Returns the underlying audio format reader for the loaded file. */
     juce::AudioFormatReader* getAudioFormatReader() const;
 
+    /** @brief Returns the juce::File handle for the currently loaded audio. */
     juce::File getLoadedFile() const;
 
+    /** @brief Initializes audio processing parameters. */
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
 
     /**
@@ -138,7 +149,6 @@ private:
 
     juce::File loadedFile;
     SessionState& sessionState;
-    ControlPanel* controlPanel{nullptr};
     float lastAutoCutThresholdIn{-1.0f};
     float lastAutoCutThresholdOut{-1.0f};
     bool lastAutoCutInActive{false};

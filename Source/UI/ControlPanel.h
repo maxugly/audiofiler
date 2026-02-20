@@ -93,9 +93,7 @@ public:
 
   ~ControlPanel() override;
 
-  AppEnums::ActiveZoomPoint getActiveZoomPoint() const { return m_activeZoomPoint; }
-
-  void setActiveZoomPoint(AppEnums::ActiveZoomPoint point);
+  AppEnums::ActiveZoomPoint getActiveZoomPoint() const;
 
   float getZoomFactor() const { return m_zoomFactor; }
 
@@ -109,6 +107,7 @@ public:
 
   void playbackTimerTick() override;
   void animationUpdate (float breathingPulse) override;
+  void activeZoomPointChanged(AppEnums::ActiveZoomPoint newPoint) override;
 
   // SessionState::Listener
   void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) override;
@@ -345,7 +344,6 @@ private:
   int cutInTextX = 0, cutOutTextX = 0, cutTextY = 0;
 
   bool m_isCutModeActive = false;
-  AppEnums::ActiveZoomPoint m_activeZoomPoint = AppEnums::ActiveZoomPoint::None;
   float m_zoomFactor = 10.0f;
   float m_currentPulseAlpha = 0.0f;
   bool m_needsJumpToCutIn = false;

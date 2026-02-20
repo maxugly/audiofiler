@@ -25,6 +25,7 @@ public:
     public:
         virtual ~Listener() = default;
 
+        virtual void fileChanged(const juce::String& filePath) { juce::ignoreUnused(filePath); }
         virtual void cutPreferenceChanged(const MainDomain::CutPreferences& prefs) { juce::ignoreUnused(prefs); }
         virtual void cutInChanged(double value) { juce::ignoreUnused(value); }
         virtual void cutOutChanged(double value) { juce::ignoreUnused(value); }

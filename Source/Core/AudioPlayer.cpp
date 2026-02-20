@@ -4,10 +4,6 @@
 #include "Utils/PlaybackHelpers.h"
 #include "Core/SessionState.h"
 #include "Core/FileMetadata.h"
-#if !defined(JUCE_HEADLESS)
-#include "UI/ControlPanel.h"
-#include "Presenters/SilenceDetectionPresenter.h"
-#endif
 #include <algorithm>
 #include <cmath>
 
@@ -46,8 +42,6 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
     if (reader != nullptr)
     {
         const juce::String filePath = file.getFullPathName();
-        sessionState.setCurrentFilePath(filePath);
-
         const double totalDuration = (double)reader->lengthInSamples / reader->sampleRate;
         sessionState.setTotalDuration(totalDuration);
 
@@ -82,14 +76,7 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
         }
         setPlayheadPosition(sessionState.getCutPrefs().cutIn);
 
-        const FileMetadata activeMetadata = sessionState.getMetadataForFile(filePath);
-        if (!activeMetadata.isAnalyzed)
-        {
-            if (sessionState.getCutPrefs().autoCut.inActive)
-                startSilenceAnalysis(sessionState.getCutPrefs().autoCut.thresholdIn, true);
-            if (sessionState.getCutPrefs().autoCut.outActive)
-                startSilenceAnalysis(sessionState.getCutPrefs().autoCut.thresholdOut, false);
-        }
+        sessionState.setCurrentFilePath(filePath);
 
         return juce::Result::ok();
     }
@@ -100,20 +87,6 @@ juce::Result AudioPlayer::loadFile(const juce::File& file)
 juce::File AudioPlayer::getLoadedFile() const
 {
     return loadedFile;
-}
-
-void AudioPlayer::startSilenceAnalysis(float threshold, bool detectingIn)
-{
-#if !defined(JUCE_HEADLESS)
-    if (controlPanel != nullptr)
-    {
-        if (auto* presenter = controlPanel->getSilenceDetectionPresenter())
-            presenter->startSilenceAnalysis(threshold, detectingIn);
-    }
-#else
-
-    juce::ignoreUnused(threshold, detectingIn);
-#endif
 }
 
 void AudioPlayer::togglePlayStop()
@@ -277,20 +250,6 @@ void AudioPlayer::changeListenerCallback(juce::ChangeBroadcaster* source)
 void AudioPlayer::cutPreferenceChanged(const MainDomain::CutPreferences& prefs)
 {
     const auto& autoCut = prefs.autoCut;
-    const bool inThresholdChanged = autoCut.thresholdIn != lastAutoCutThresholdIn;
-    const bool outThresholdChanged = autoCut.thresholdOut != lastAutoCutThresholdOut;
-    const bool inActiveChanged = autoCut.inActive != lastAutoCutInActive;
-    const bool outActiveChanged = autoCut.outActive != lastAutoCutOutActive;
-
-    const bool shouldAnalyzeIn = (inThresholdChanged || inActiveChanged) && autoCut.inActive;
-    const bool shouldAnalyzeOut = (outThresholdChanged || outActiveChanged) && autoCut.outActive;
-
-    if (shouldAnalyzeIn)
-
-        startSilenceAnalysis(autoCut.thresholdIn, true);
-    else if (shouldAnalyzeOut)
-
-        startSilenceAnalysis(autoCut.thresholdOut, false);
 
     lastAutoCutThresholdIn = autoCut.thresholdIn;
     lastAutoCutThresholdOut = autoCut.thresholdOut;

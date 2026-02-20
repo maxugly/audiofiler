@@ -234,8 +234,7 @@ void RepeatPresenter::textEditorFocusLost(juce::TextEditor &editor) {
     applyCutOutFromEditor(newPosition, editor);
   }
 
-  owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::None);
-  owner.performDelayedJumpIfNeeded();
+  owner.getPlaybackTimerManager().setManualZoomPoint(AppEnums::ActiveZoomPoint::None);
 }
 
 void RepeatPresenter::mouseDown(const juce::MouseEvent &event) {
@@ -322,16 +321,15 @@ void RepeatPresenter::syncEditorToPosition(juce::TextEditor &editor,
 
 void RepeatPresenter::mouseEnter(const juce::MouseEvent &event) {
   if (event.eventComponent == &cutInEditor)
-    owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::In);
+    owner.getPlaybackTimerManager().setManualZoomPoint(AppEnums::ActiveZoomPoint::In);
   else if (event.eventComponent == &cutOutEditor)
-    owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::Out);
+    owner.getPlaybackTimerManager().setManualZoomPoint(AppEnums::ActiveZoomPoint::Out);
 }
 
 void RepeatPresenter::mouseExit(const juce::MouseEvent &event) {
   auto *editor = dynamic_cast<juce::TextEditor *>(event.eventComponent);
   if (editor != nullptr && !editor->hasKeyboardFocus(false)) {
-    owner.setActiveZoomPoint(AppEnums::ActiveZoomPoint::None);
-    owner.performDelayedJumpIfNeeded();
+    owner.getPlaybackTimerManager().setManualZoomPoint(AppEnums::ActiveZoomPoint::None);
   }
 }
 
