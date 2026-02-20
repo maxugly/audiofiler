@@ -11,6 +11,7 @@
 
 #include "Config.h"
 #include "AppEnums.h"
+#include "PlaybackTimerManager.h"
 
 class SessionState;
 
@@ -23,7 +24,8 @@ class WaveformManager;
 class ControlPanel;
 
 class CutLayerView : public juce::Component,
-                     public juce::ChangeListener
+                     public juce::ChangeListener,
+                     public PlaybackTimerManager::Listener
 {
 public:
     CutLayerView(ControlPanel& owner,
@@ -45,6 +47,9 @@ public:
     void paint(juce::Graphics& g) override;
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+    void playbackTimerTick() override {}
+    void animationUpdate(float breathingPulse) override;
 
 private:
     ControlPanel& owner;

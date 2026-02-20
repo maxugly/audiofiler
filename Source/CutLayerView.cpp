@@ -41,6 +41,12 @@ void CutLayerView::changeListenerCallback(juce::ChangeBroadcaster* source)
         repaint();
 }
 
+void CutLayerView::animationUpdate(float breathingPulse)
+{
+    juce::ignoreUnused(breathingPulse);
+    repaint();
+}
+
 void CutLayerView::setChannelMode(AppEnums::ChannelViewMode mode)
 {
     if (currentChannelMode == mode) return;

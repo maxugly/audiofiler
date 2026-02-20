@@ -58,11 +58,11 @@ public:
                             
         g.setOpacity (mappedAlpha);
         g.setColour (Config::Colors::Button::outline);
-        g.drawRoundedRectangle (bounds, cornerSize, outlineThickness);
+        g.drawRoundedRectangle (bounds, cornerSize, Config::UI::ButtonOutlineThickness);
+        g.setOpacity (1.0f);
     }
     else
     {
-        g.setOpacity (1.0f);
         g.setColour (Config::Colors::Button::outline);
         g.drawRoundedRectangle (bounds, cornerSize, outlineThickness);
     }

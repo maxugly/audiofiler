@@ -202,7 +202,7 @@ public:
     return currentChannelViewMode;
   }
 
-  float getGlowAlpha() const { return glowAlpha; }
+  float getGlowAlpha() const { return m_currentPulseAlpha; }
 
   const MouseHandler &getMouseHandler() const;
   MouseHandler &getMouseHandler();
@@ -333,10 +333,10 @@ private:
   int cutInTextX = 0, cutOutTextX = 0, cutTextY = 0;
 
   bool m_shouldAutoplay = false;
-  float glowAlpha = 0.0f;
   bool m_isCutModeActive = false;
   AppEnums::ActiveZoomPoint m_activeZoomPoint = AppEnums::ActiveZoomPoint::None;
   float m_zoomFactor = 10.0f;
+  float m_currentPulseAlpha = 0.0f;
   bool m_needsJumpToCutIn = false;
   juce::Rectangle<int> m_zoomPopupBounds;
   std::pair<double, double> m_zoomTimeRange;

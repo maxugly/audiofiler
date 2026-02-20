@@ -60,6 +60,7 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   playbackTimerManager = std::make_unique<PlaybackTimerManager>(sessionState, getAudioPlayer());
   playbackTimerManager->addListener(playbackCursorView.get());
   playbackTimerManager->addListener(zoomView.get());
+  playbackTimerManager->addListener(cutLayerView.get());
   playbackTimerManager->addListener(this);
 
   statsPresenter = std::make_unique<StatsPresenter>(*this);
@@ -185,7 +186,13 @@ void ControlPanel::playbackTimerTick() {
 }
 
 void ControlPanel::animationUpdate(float breathingPulse) {
-  juce::ignoreUnused(breathingPulse);
+  m_currentPulseAlpha = breathingPulse;
+
+  if (autoCutInButton.getProperties().getWithDefault("isProcessing", false))
+    autoCutInButton.repaint();
+
+  if (autoCutOutButton.getProperties().getWithDefault("isProcessing", false))
+    autoCutOutButton.repaint();
 }
 
 void ControlPanel::cutPreferenceChanged(const MainDomain::CutPreferences& prefs) {
