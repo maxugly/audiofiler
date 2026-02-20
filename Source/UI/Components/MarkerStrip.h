@@ -11,6 +11,7 @@
 #include "Core/SessionState.h"
 #include "SilenceDetector.h"
 #include "UI/Components/TransportButton.h"
+#include "Presenters/RepeatPresenter.h"
 #include "Config.h"
 
 /**
@@ -35,6 +36,8 @@ public:
     void updateAutoCutState(bool isActive);
     void updateMarkerButtonColor(juce::Colour color);
 
+    void setPresenter(RepeatPresenter* p) { repeatPresenter = p; }
+
     std::function<void()> onMarkerRightClick;
 
     TransportButton& getMarkerButton() { return markerButton; }
@@ -48,6 +51,7 @@ private:
     AudioPlayer& audioPlayer;
     SessionState& sessionState;
     SilenceDetector& silenceDetector;
+    RepeatPresenter* repeatPresenter = nullptr;
 
     TransportButton markerButton;
     juce::TextEditor timerEditor;

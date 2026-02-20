@@ -17,20 +17,19 @@ void PlaybackRepeatController::tick()
     const bool autoPlayPreference = sessionState.getCutPrefs().autoplay;
     const bool isPlaying = audioPlayer.isPlaying();
 
-    if (autoPlayPreference)
+    // Only take action if the preference has changed OR if playback state changed
+    if (autoPlayPreference != lastAutoPlayPreference || isPlaying != lastIsPlaying)
     {
-        if (!isPlaying)
+        if (autoPlayPreference && !lastAutoPlayPreference && !isPlaying)
         {
-            if (lastIsPlaying)
-            {
-                // Condition B: User manually stopped or playback ended naturally
-                sessionState.setAutoPlayActive(false);
-            }
-            else
-            {
-                // Condition A: AutoPlay is active but not playing yet
-                audioPlayer.startPlayback();
-            }
+            // Transition: User just enabled AutoPlay while NOT playing -> Start immediately
+            audioPlayer.startPlayback();
+        }
+        else if (autoPlayPreference && !isPlaying && lastIsPlaying)
+        {
+            // Transition: AutoPlay was on, and we JUST stopped (naturally or manual stop)
+            // In CD-style transport, manual Stop or end-of-track kills AutoPlay
+            sessionState.setAutoPlayActive(false);
         }
     }
 

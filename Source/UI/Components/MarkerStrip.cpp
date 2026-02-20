@@ -23,7 +23,6 @@ void MarkerStrip::initialiseComponents()
         
         updateAutoCutState(false);
     };
-
     markerButton.onRightClick = [this] {
         if (onMarkerRightClick)
             onMarkerRightClick();
@@ -31,11 +30,8 @@ void MarkerStrip::initialiseComponents()
 
     // Timer Editor
     addAndMakeVisible(timerEditor);
-    timerEditor.setReadOnly(true);
-    timerEditor.setJustification(juce::Justification::centred);
-    timerEditor.setColour(juce::TextEditor::backgroundColourId, Config::Colors::textEditorBackground);
-    timerEditor.setColour(juce::TextEditor::textColourId, Config::Colors::playbackText);
-    timerEditor.setFont(juce::Font(juce::FontOptions(Config::Layout::Text::playbackSize)));
+    // Style will be applied by RepeatPresenter::initialiseEditors()
+    timerEditor.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Middle);
 
     // Reset Button
     addAndMakeVisible(resetButton);
@@ -52,7 +48,7 @@ void MarkerStrip::initialiseComponents()
         }
     };
 
-    // Threshold Editor (Use the ones from SilenceDetector for now to keep the presenter working)
+    // Threshold Editor (percentage input)
     auto& detectorEditor = (markerType == MarkerType::In) ? silenceDetector.getInSilenceThresholdEditor() : silenceDetector.getOutSilenceThresholdEditor();
     addAndMakeVisible(detectorEditor);
     detectorEditor.getProperties().set("GroupPosition", (int)AppEnums::GroupPosition::Middle);
@@ -77,31 +73,37 @@ void MarkerStrip::resized()
     const int spacing = (int)Config::UI::GroupSpacing;
     auto& detectorEditor = (markerType == MarkerType::In) ? silenceDetector.getInSilenceThresholdEditor() : silenceDetector.getOutSilenceThresholdEditor();
 
+    const int markerWidth = (int)(Config::UI::CutButtonWidthUnits * unit);
+    const int timerWidth = (int)(Config::UI::TimerWidthUnits * unit);
+    const int resetWidth = (int)(Config::UI::ResetButtonWidthUnits * unit);
+    const int thresholdWidth = (int)(Config::UI::ThresholdWidthUnits * unit);
+    const int autoCutWidth = (int)(Config::UI::CutButtonWidthUnits * unit);
+
     if (markerType == MarkerType::In)
     {
         // [In(L), Timer, Reset, Threshold, AutoCut(R)]
-        markerButton.setBounds(b.removeFromLeft((int)(Config::UI::CutButtonWidthUnits * unit)));
+        markerButton.setBounds(b.removeFromLeft(markerWidth));
         b.removeFromLeft(spacing);
-        timerEditor.setBounds(b.removeFromLeft((int)(Config::UI::TimerWidthUnits * unit)));
+        timerEditor.setBounds(b.removeFromLeft(timerWidth));
         b.removeFromLeft(spacing);
-        resetButton.setBounds(b.removeFromLeft((int)(Config::UI::ResetButtonWidthUnits * unit)));
+        resetButton.setBounds(b.removeFromLeft(resetWidth));
         b.removeFromLeft(spacing);
-        detectorEditor.setBounds(b.removeFromLeft((int)(Config::UI::ThresholdWidthUnits * unit)));
+        detectorEditor.setBounds(b.removeFromLeft(thresholdWidth));
         b.removeFromLeft(spacing);
-        autoCutButton.setBounds(b.removeFromLeft((int)(Config::UI::CutButtonWidthUnits * unit)));
+        autoCutButton.setBounds(b.removeFromLeft(autoCutWidth));
     }
     else
     {
         // [AutoCut(L), Threshold, Reset, Timer, Out(R)]
-        markerButton.setBounds(b.removeFromRight((int)(Config::UI::CutButtonWidthUnits * unit)));
+        markerButton.setBounds(b.removeFromRight(markerWidth));
         b.removeFromRight(spacing);
-        timerEditor.setBounds(b.removeFromRight((int)(Config::UI::TimerWidthUnits * unit)));
+        timerEditor.setBounds(b.removeFromRight(timerWidth));
         b.removeFromRight(spacing);
-        resetButton.setBounds(b.removeFromRight((int)(Config::UI::ResetButtonWidthUnits * unit)));
+        resetButton.setBounds(b.removeFromRight(resetWidth));
         b.removeFromRight(spacing);
-        detectorEditor.setBounds(b.removeFromRight((int)(Config::UI::ThresholdWidthUnits * unit)));
+        detectorEditor.setBounds(b.removeFromRight(thresholdWidth));
         b.removeFromRight(spacing);
-        autoCutButton.setBounds(b.removeFromRight((int)(Config::UI::CutButtonWidthUnits * unit)));
+        autoCutButton.setBounds(b.removeFromRight(autoCutWidth));
     }
 }
 

@@ -28,11 +28,11 @@ namespace Config {
         /** @brief Standard corner rounding for all buttons. */
         inline constexpr float ButtonCornerSize = 6.0f;
         /** @brief Width for Cut In/Out buttons in units. */
-        inline constexpr float CutButtonWidthUnits = 2.0f;
+        inline constexpr float CutButtonWidthUnits = 2.5f;
         /** @brief Width for Time Editors (Timers) in units. */
         inline constexpr float TimerWidthUnits = 5.5f;
         /** @brief Width for Reset buttons in units. */
-        inline constexpr float ResetButtonWidthUnits = 1.0f;
+        inline constexpr float ResetButtonWidthUnits = 1.5f;
         /** @brief Width for Threshold editors in units. */
         inline constexpr float ThresholdWidthUnits = 1.5f;
         /** @brief The base unit for widgets. */

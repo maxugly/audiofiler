@@ -69,6 +69,17 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   transportStrip = std::make_unique<TransportStrip>(getAudioPlayer(), sessionState);
   addAndMakeVisible(transportStrip.get());
 
+  statsPresenter = std::make_unique<StatsPresenter>(*this);
+  silenceDetectionPresenter = std::make_unique<SilenceDetectionPresenter>(*this, sessionState, *owner.getAudioPlayer());
+  owner.getAudioPlayer()->setControlPanel(this);
+  playbackTextPresenter = std::make_unique<PlaybackTextPresenter>(*this);
+
+  buttonPresenter = std::make_unique<ControlButtonsPresenter>(*this);
+  buttonPresenter->initialiseAllButtons();
+
+  cutButtonPresenter = std::make_unique<CutButtonPresenter>(*this);
+  cutResetPresenter = std::make_unique<CutResetPresenter>(*this);
+
   inStrip = std::make_unique<MarkerStrip>(MarkerStrip::MarkerType::In, getAudioPlayer(), sessionState, *silenceDetector);
   inStrip->onMarkerRightClick = [this] {
     getMouseHandler().setPlacementMode(AppEnums::PlacementMode::CutIn);
@@ -85,19 +96,12 @@ ControlPanel::ControlPanel(MainComponent &ownerComponent, SessionState &sessionS
   };
   addAndMakeVisible(outStrip.get());
 
-  statsPresenter = std::make_unique<StatsPresenter>(*this);
-  silenceDetectionPresenter = std::make_unique<SilenceDetectionPresenter>(*this, sessionState, *owner.getAudioPlayer());
-  owner.getAudioPlayer()->setControlPanel(this);
-  playbackTextPresenter = std::make_unique<PlaybackTextPresenter>(*this);
-
-  buttonPresenter = std::make_unique<ControlButtonsPresenter>(*this);
-  buttonPresenter->initialiseAllButtons();
-
-  cutButtonPresenter = std::make_unique<CutButtonPresenter>(*this);
-  cutResetPresenter = std::make_unique<CutResetPresenter>(*this);
   repeatPresenter = std::make_unique<RepeatPresenter>(*this, *silenceDetector,
                                                   inStrip->getTimerEditor(), outStrip->getTimerEditor());
   repeatPresenter->initialiseEditors();
+
+  inStrip->setPresenter(repeatPresenter.get());
+  outStrip->setPresenter(repeatPresenter.get());
 
   controlStatePresenter = std::make_unique<ControlStatePresenter>(*this);
   transportPresenter = std::make_unique<TransportPresenter>(*this);
